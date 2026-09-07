@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+
+<html class="light" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ürün Detayı</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-tint": "#494bd6",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-container": "#626566",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#6063ee",
+                        "tertiary-container": "#00885d",
+                        "primary-fixed": "#e1e0ff",
+                        "on-primary-container": "#fffbff",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "on-secondary-fixed-variant": "#454748",
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#f8f9ff",
+                        "on-primary-fixed": "#07006c",
+                        "background": "#f8f9ff",
+                        "tertiary": "#006c49",
+                        "on-error-container": "#93000a",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "surface-container-high": "#dee9fc",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "secondary-container": "#e1e3e4",
+                        "on-background": "#121c2a",
+                        "surface-container-highest": "#d9e3f6",
+                        "on-secondary-fixed": "#191c1d",
+                        "on-tertiary-container": "#000703",
+                        "on-tertiary-fixed": "#002113",
+                        "surface-variant": "#d9e3f6",
+                        "outline": "#767586",
+                        "outline-variant": "#c7c4d7",
+                        "secondary-fixed": "#e1e3e4",
+                        "secondary-fixed-dim": "#c5c7c8",
+                        "inverse-surface": "#27313f",
+                        "primary": "#4648d4",
+                        "inverse-primary": "#c0c1ff",
+                        "surface-container": "#e6eeff",
+                        "on-surface-variant": "#464554",
+                        "surface-dim": "#d0dbed",
+                        "on-tertiary": "#ffffff",
+                        "on-surface": "#121c2a",
+                        "surface": "#f8f9ff",
+                        "secondary": "#5c5f60",
+                        "surface-container-low": "#eff4ff",
+                        "inverse-on-surface": "#eaf1ff",
+                        "tertiary-fixed": "#6ffbbe"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "1.5rem",
+                        "stack-sm": "0.5rem",
+                        "section-gap": "2rem",
+                        "container-margin": "1rem",
+                        "stack-md": "1rem",
+                        "gutter": "1rem"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["22px", { "lineHeight": "30px", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen pb-[80px]">
+<!-- Top Navigation (Contextual: Task-focused, so standard JSON TopAppBar is suppressed in favor of a back nav) -->
+<header class="flex items-center justify-between px-container-margin py-stack-md sticky top-0 bg-background/80 backdrop-blur-md z-40">
+<div class="flex items-center gap-4">
+<button aria-label="Geri Dön" class="p-2 -ml-2 rounded-full hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-on-background" style="font-size: 24px;">arrow_back</span>
+</button>
+<h1 class="font-headline-md text-headline-md text-on-background">Ürün Detayı</h1>
+</div>
+<button aria-label="Düzenle" class="p-2 -mr-2 rounded-full hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-size: 24px;">edit</span>
+</button>
+</header>
+<main class="px-container-margin py-stack-sm space-y-stack-lg max-w-2xl mx-auto">
+<!-- Product Image Hero -->
+<section class="w-full rounded-xl overflow-hidden bg-surface-container-lowest shadow-sm border border-surface-variant">
+<img alt="Ürün Görseli" class="w-full h-48 object-cover object-center" data-alt="A modern, high-definition Samsung QLED television displaying a vibrant, photorealistic landscape with mountains and a clear blue sky. The TV is sleek with thin bezels, sitting on a minimalist stand against a clean, light-mode background. The lighting is soft and even, emphasizing the screen's vivid colors and the premium aesthetic of the device. Professional product photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9iZ3ruSr4WXq91bPksEd2z3BVVqPZs0h3ikdv8O_lAY0VgC6I7yXrQkjAikWOTyKbyNRmpV3JbI1-g76YkCSJu_7dxY_qjeBbUU2qSgBEof3VJF7rqmEKaTUk9TA9e3r0Xbyx16hG-KgIBWPPtdr4F_kbOX88Uu6Pr23WZVeohqaTcq7LOztaGv8XtEWILhn6Ns1bZ3HBGJ2GCU0q9Xz_rtQdYMQikM15zFInp5LQuElz4_8yXkpr"/>
+</section>
+<!-- Product Header & Status -->
+<section class="flex flex-col gap-1">
+<div class="flex justify-between items-start gap-4">
+<h2 class="font-headline-md text-headline-md text-on-background">Samsung QLED TV</h2>
+<span class="inline-flex items-center px-2.5 py-1 rounded-full bg-tertiary-container/10 text-tertiary font-label-md text-label-md">
+                    Devam Ediyor
+                </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Televizyon · Samsung</p>
+</section>
+<!-- Product Details List -->
+<section class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-variant divide-y divide-surface-variant overflow-hidden">
+<div class="p-4 flex items-center justify-between">
+<div class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-size: 20px;">memory</span>
+<span class="font-body-md text-body-md">Model</span>
+</div>
+<span class="font-body-md text-body-md font-medium text-on-background">Q60B</span>
+</div>
+<div class="p-4 flex items-center justify-between">
+<div class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-size: 20px;">qr_code</span>
+<span class="font-body-md text-body-md">Seri Numarası</span>
+</div>
+<span class="font-body-md text-body-md font-medium text-on-background">0A18C2D3E4F5</span>
+</div>
+<div class="p-4 flex items-center justify-between">
+<div class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-size: 20px;">category</span>
+<span class="font-body-md text-body-md">Kategori</span>
+</div>
+<span class="font-body-md text-body-md font-medium text-on-background">Televizyon</span>
+</div>
+<div class="p-4 flex items-center justify-between">
+<div class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-size: 20px;">calendar_today</span>
+<span class="font-body-md text-body-md">Satın Alma Tarihi</span>
+</div>
+<span class="font-body-md text-body-md font-medium text-on-background">12.04.2023</span>
+</div>
+<div class="p-4 flex items-center justify-between">
+<div class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-size: 20px;">payments</span>
+<span class="font-body-md text-body-md">Satın Alınan Fiyatı</span>
+</div>
+<span class="font-body-md text-body-md font-medium text-on-background">₺24.999</span>
+</div>
+<div class="p-4 flex items-center justify-between">
+<div class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-size: 20px;">event_available</span>
+<span class="font-body-md text-body-md">Garanti Bitiş Tarihi</span>
+</div>
+<span class="font-body-md text-body-md font-medium text-on-background">12.04.2028</span>
+</div>
+<div class="p-4 flex items-center justify-between">
+<div class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-size: 20px;">storefront</span>
+<span class="font-body-md text-body-md">Satın Alınan Mağaza</span>
+</div>
+<span class="font-body-md text-body-md font-medium text-on-background">Teknosa</span>
+</div>
+<div class="p-4 flex flex-col gap-2">
+<div class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-size: 20px;">description</span>
+<span class="font-body-md text-body-md">Açıklama</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-background pl-8">Salonda kullanılıyor.</p>
+</div>
+</section>
+<!-- Invoice Section -->
+<section class="space-y-3">
+<h3 class="font-headline-sm text-headline-sm font-semibold text-on-background px-1">Fatura</h3>
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-variant p-4 flex items-center justify-between hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="font-size: 24px;">receipt_long</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-medium text-on-background">Fatura_12042023.jpg</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">1.2 MB</span>
+</div>
+</div>
+<button aria-label="İndir" class="p-2 rounded-full text-primary hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 24px;">download</span>
+</button>
+</div>
+</section>
+<!-- Action Buttons -->
+<section class="flex gap-4 pt-stack-sm pb-section-gap">
+<button class="flex-1 py-3 px-4 rounded-full bg-surface-container text-primary font-body-lg text-body-lg font-semibold hover:bg-primary-fixed transition-colors flex justify-center items-center">
+                Düzenle
+            </button>
+<button class="flex-1 py-3 px-4 rounded-full bg-error-container/30 text-error font-body-lg text-body-lg font-semibold hover:bg-error-container/50 transition-colors flex justify-center items-center">
+                Sil
+            </button>
+</section>
+</main>
+<!-- Bottom Nav Suppressed intentionally as this is a task-focused "Detail" screen with a back button, 
+         as per the 'Task-Focused' rule in the prompt. -->
+</body></html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html><html lang="tr"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Safe - Bildirimler</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-tint": "#494bd6",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-container": "#626566",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#6063ee",
+                        "tertiary-container": "#00885d",
+                        "primary-fixed": "#e1e0ff",
+                        "on-primary-container": "#fffbff",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "on-secondary-fixed-variant": "#454748",
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#f8f9ff",
+                        "on-primary-fixed": "#07006c",
+                        "background": "#f8f9ff",
+                        "tertiary": "#006c49",
+                        "on-error-container": "#93000a",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "surface-container-high": "#dee9fc",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "secondary-container": "#e1e3e4",
+                        "on-background": "#121c2a",
+                        "surface-container-highest": "#d9e3f6",
+                        "on-secondary-fixed": "#191c1d",
+                        "on-tertiary-container": "#000703",
+                        "on-tertiary-fixed": "#002113",
+                        "surface-variant": "#d9e3f6",
+                        "outline": "#767586",
+                        "outline-variant": "#c7c4d7",
+                        "secondary-fixed": "#e1e3e4",
+                        "secondary-fixed-dim": "#c5c7c8",
+                        "inverse-surface": "#27313f",
+                        "primary": "#4648d4",
+                        "inverse-primary": "#c0c1ff",
+                        "surface-container": "#e6eeff",
+                        "on-surface-variant": "#464554",
+                        "surface-dim": "#d0dbed",
+                        "on-tertiary": "#ffffff",
+                        "on-surface": "#121c2a",
+                        "surface": "#f8f9ff",
+                        "secondary": "#5c5f60",
+                        "surface-container-low": "#eff4ff",
+                        "inverse-on-surface": "#eaf1ff",
+                        "tertiary-fixed": "#6ffbbe"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "1.5rem",
+                        "stack-sm": "0.5rem",
+                        "section-gap": "2rem",
+                        "container-margin": "1rem",
+                        "stack-md": "1rem",
+                        "gutter": "1rem"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["22px", { "lineHeight": "30px", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background font-body-md text-on-background antialiased selection:bg-primary-container selection:text-on-primary-container">
+<div class="max-w-md mx-auto min-h-screen bg-background relative overflow-hidden flex flex-col shadow-2xl">
+<!-- Header Section -->
+<header class="px-container-margin pt-6 pb-4 shrink-0 bg-background z-10 sticky top-0">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-background mb-4">Bildirimler</h1>
+<!-- Tabs -->
+<div class="bg-surface-container-low rounded-full p-1 flex justify-between items-center shadow-inner">
+<button class="flex-1 py-1.5 px-4 rounded-full bg-surface-container-lowest text-primary font-label-md text-label-md shadow-sm transition-all duration-200">
+                    Tümü
+                </button>
+<button class="flex-1 py-1.5 px-4 rounded-full text-secondary font-label-md text-label-md hover:bg-surface-container-highest transition-colors duration-200">
+                    Okunmadı
+                </button>
+<button class="flex-1 py-1.5 px-4 rounded-full text-secondary font-label-md text-label-md hover:bg-surface-container-highest transition-colors duration-200">
+                    Okundu
+                </button>
+</div>
+</header>
+<!-- Notification List -->
+<main class="flex-1 overflow-y-auto px-container-margin pb-24 flex flex-col gap-3">
+<!-- Notification Item 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-4 flex gap-4 items-start shadow-sm border border-surface-variant hover:bg-surface-bright transition-colors cursor-pointer">
+<div class="w-10 h-10 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">notifications</span>
+</div>
+<div class="flex-1">
+<h3 class="font-body-lg text-body-lg text-on-background">Samsung QLED TV</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">Garantinin bitmesine 30 gün kaldı.</p>
+<span class="font-body-sm text-body-sm text-secondary block mt-1">12.03.2025 10:30</span>
+</div>
+</div>
+<!-- Notification Item 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-4 flex gap-4 items-start shadow-sm border border-surface-variant hover:bg-surface-bright transition-colors cursor-pointer">
+<div class="w-10 h-10 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">notifications_active</span>
+</div>
+<div class="flex-1">
+<h3 class="font-body-lg text-body-lg text-on-background">iPhone 16 Pro</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">Garantinin bitmesine 7 gün kaldı.</p>
+<span class="font-body-sm text-body-sm text-secondary block mt-1">05.03.2025 09:15</span>
+</div>
+</div>
+<!-- Notification Item 3 (Error/Expired) -->
+<div class="bg-surface-container-lowest rounded-xl p-4 flex gap-4 items-start shadow-sm border border-surface-variant hover:bg-surface-bright transition-colors cursor-pointer">
+<div class="w-10 h-10 rounded-full bg-error-container text-on-error-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">error</span>
+</div>
+<div class="flex-1">
+<h3 class="font-body-lg text-body-lg text-on-background">Bosch Buzdolabı</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">Garanti bitti.</p>
+<span class="font-body-sm text-body-sm text-secondary block mt-1">01.03.2025 08:45</span>
+</div>
+</div>
+<!-- Notification Item 4 (Success/Info) -->
+<div class="bg-surface-container-lowest rounded-xl p-4 flex gap-4 items-start shadow-sm border border-surface-variant hover:bg-surface-bright transition-colors cursor-pointer">
+<div class="w-10 h-10 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">notifications</span>
+</div>
+<div class="flex-1">
+<h3 class="font-body-lg text-body-lg text-on-background">Dyson V15</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">Garantinin bitmesine 1 gün kaldı.</p>
+<span class="font-body-sm text-body-sm text-secondary block mt-1">28.02.2025 18:20</span>
+</div>
+</div>
+<!-- Notification Item 5 (Gray/Archive) -->
+<div class="bg-surface-container-lowest rounded-xl p-4 flex gap-4 items-start shadow-sm border border-surface-variant hover:bg-surface-bright transition-colors cursor-pointer">
+<div class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">inbox</span>
+</div>
+<div class="flex-1">
+<h3 class="font-body-lg text-body-lg text-on-background">AirPods Pro</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">Garantinin bitmesine 30 gün kaldı.</p>
+<span class="font-body-sm text-body-sm text-secondary block mt-1">20.02.2025 11:00</span>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl border-t border-outline-variant shadow-md fixed bottom-0 left-0 right-0 flex justify-around items-center h-16 bg-surface-container-lowest px-4 pb-safe max-w-md mx-auto">
+<a class="flex flex-col items-center justify-center text-secondary hover:bg-surface-container-low transition-colors w-full h-full rounded-lg group transition-all" href="#">
+<span class="material-symbols-outlined group-hover:opacity-80 transition-opacity">home</span>
+<span class="font-label-md text-label-md mt-1">Ana Sayfa</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary hover:bg-surface-container-low transition-colors w-full h-full rounded-lg group transition-all" href="#">
+<span class="material-symbols-outlined group-hover:opacity-80 transition-opacity">inventory_2</span>
+<span class="font-label-md text-label-md mt-1">Ürünler</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary hover:bg-surface-container-low transition-colors w-full h-full rounded-lg group relative transition-all" href="#">
+<div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-on-primary shadow-sm absolute -top-4 border-4 border-background">
+<span class="material-symbols-outlined group-hover:opacity-80 transition-opacity">add</span>
+</div>
+<span class="font-label-md text-label-md mt-8">Ekle</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary font-semibold bg-surface-container-low transition-all duration-200 w-full h-full rounded-xl group scale-100" href="#">
+<div class="flex flex-col items-center justify-center relative">
+<span class="material-symbols-outlined transition-transform duration-200 group-hover:scale-110" style="font-variation-settings: 'FILL' 1;">notifications</span>
+<span class="font-label-md text-label-md mt-1">Bildirimler</span>
+<div class="absolute -bottom-1 w-1 h-1 bg-primary rounded-full"></div>
+</div>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary hover:bg-surface-container-low transition-colors w-full h-full rounded-lg group transition-all" href="#">
+<span class="material-symbols-outlined group-hover:opacity-80 transition-opacity">person</span>
+<span class="font-label-md text-label-md mt-1">Profil</span>
+</a>
+</nav>
+</div>
+
+
+</body></html>

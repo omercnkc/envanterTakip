@@ -1,0 +1,88 @@
+import { StyleSheet } from 'react-native';
+import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../../constants';
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.surfaceBright,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.containerMargin,
+    paddingVertical: SPACING.sectionGap,
+  },
+  backgroundDecorator: {
+    position: 'absolute',
+    top: -50,
+    left: -50,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: COLORS.surfaceContainerLow,
+    opacity: 0.6,
+  },
+  backgroundDecoratorBottom: {
+    position: 'absolute',
+    bottom: -80,
+    right: -80,
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    backgroundColor: COLORS.surfaceContainer,
+    opacity: 0.5,
+  },
+  contentCenter: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  logoContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: RADIUS.xl,
+    backgroundColor: COLORS.surfaceContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: SPACING.stackLg,
+    borderWidth: 1,
+    borderColor: COLORS.outlineVariant + '40',
+    ...SHADOWS.md,
+  },
+  title: {
+    ...TYPOGRAPHY.headlineLgMobile,
+    color: COLORS.onSurface,
+    textAlign: 'center',
+    marginBottom: SPACING.xs,
+  },
+  subtitle: {
+    ...TYPOGRAPHY.labelMd,
+    color: COLORS.onSurfaceVariant,
+    textAlign: 'center',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
+  bottomSection: {
+    width: '100%',
+    alignItems: 'center',
+    paddingBottom: SPACING.stackLg,
+    zIndex: 10,
+  },
+  dotsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginBottom: SPACING.stackSm,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: COLORS.primary,
+  },
+  statusText: {
+    ...TYPOGRAPHY.bodySm,
+    color: COLORS.onSurfaceVariant,
+    textAlign: 'center',
+  },
+});

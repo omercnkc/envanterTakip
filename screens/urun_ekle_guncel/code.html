@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+
+<html lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ürün Ekle</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-tint": "#494bd6",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-container": "#626566",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#6063ee",
+                        "tertiary-container": "#00885d",
+                        "primary-fixed": "#e1e0ff",
+                        "on-primary-container": "#fffbff",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "on-secondary-fixed-variant": "#454748",
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#f8f9ff",
+                        "on-primary-fixed": "#07006c",
+                        "background": "#f8f9ff",
+                        "tertiary": "#006c49",
+                        "on-error-container": "#93000a",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "surface-container-high": "#dee9fc",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "secondary-container": "#e1e3e4",
+                        "on-background": "#121c2a",
+                        "surface-container-highest": "#d9e3f6",
+                        "on-secondary-fixed": "#191c1d",
+                        "on-tertiary-container": "#000703",
+                        "on-tertiary-fixed": "#002113",
+                        "surface-variant": "#d9e3f6",
+                        "outline": "#767586",
+                        "outline-variant": "#c7c4d7",
+                        "secondary-fixed": "#e1e3e4",
+                        "secondary-fixed-dim": "#c5c7c8",
+                        "inverse-surface": "#27313f",
+                        "primary": "#4648d4",
+                        "inverse-primary": "#c0c1ff",
+                        "surface-container": "#e6eeff",
+                        "on-surface-variant": "#464554",
+                        "surface-dim": "#d0dbed",
+                        "on-tertiary": "#ffffff",
+                        "on-surface": "#121c2a",
+                        "surface": "#f8f9ff",
+                        "secondary": "#5c5f60",
+                        "surface-container-low": "#eff4ff",
+                        "inverse-on-surface": "#eaf1ff",
+                        "tertiary-fixed": "#6ffbbe"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "1.5rem",
+                        "stack-sm": "0.5rem",
+                        "section-gap": "2rem",
+                        "container-margin": "1rem",
+                        "stack-md": "1rem",
+                        "gutter": "1rem"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["22px", { "lineHeight": "30px", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Focus styles for inputs to match the brand */
+        .brand-input:focus-within {
+            border-color: theme('colors.primary');
+            box-shadow: 0 0 0 1px theme('colors.primary');
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased pb-28">
+<!-- Top App Bar (Contextual for Sub-page: Title & Back action) -->
+<header class="sticky top-0 bg-background/95 backdrop-blur-sm z-30 flex justify-between items-center w-full px-container-margin py-stack-md">
+<button aria-label="Geri Dön" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-container-low transition-colors text-on-background">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold flex-1 text-center pr-10">Ürün Ekle</h1>
+</header>
+<main class="px-container-margin flex flex-col gap-section-gap pt-2">
+<!-- Ürün Fotoğrafı Section -->
+<section class="flex flex-col gap-stack-sm">
+<h2 class="font-label-md text-label-md text-on-surface-variant">Ürün Fotoğrafı</h2>
+<div class="grid grid-cols-2 gap-stack-md">
+<button class="flex flex-col items-center justify-center gap-2 p-8 bg-surface-container-lowest border border-outline-variant rounded-xl text-primary hover:bg-surface-container-low hover:border-primary transition-all duration-200">
+<span class="material-symbols-outlined text-3xl" data-icon="photo_camera">photo_camera</span>
+<span class="font-label-md text-label-md text-on-surface">Kamera</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-2 p-8 bg-surface-container-lowest border border-outline-variant rounded-xl text-primary hover:bg-surface-container-low hover:border-primary transition-all duration-200">
+<span class="material-symbols-outlined text-3xl" data-icon="image">image</span>
+<span class="font-label-md text-label-md text-on-surface">Galeriden Seç</span>
+</button>
+</div>
+</section>
+<!-- Temel Bilgiler Section -->
+<section class="flex flex-col gap-stack-md">
+<h2 class="font-body-lg text-body-lg font-semibold text-on-background border-b border-surface-container-highest pb-2">Temel Bilgiler</h2>
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface-variant flex gap-1">
+                    Ürün Adı <span class="text-error">*</span>
+</label>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden transition-all duration-200 brand-input">
+<input class="w-full px-4 py-3 bg-transparent border-none outline-none font-body-md text-on-surface placeholder:text-outline-variant" placeholder="Örn. Samsung QLED TV" type="text"/>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-stack-md">
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface-variant flex gap-1">
+                        Marka <span class="text-error">*</span>
+</label>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden transition-all duration-200 brand-input">
+<input class="w-full px-4 py-3 bg-transparent border-none outline-none font-body-md text-on-surface placeholder:text-outline-variant" placeholder="Örn. Samsung" type="text"/>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface-variant">Model</label>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden transition-all duration-200 brand-input">
+<input class="w-full px-4 py-3 bg-transparent border-none outline-none font-body-md text-on-surface placeholder:text-outline-variant" placeholder="Örn. Q60B" type="text"/>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface-variant flex gap-1">
+                    Kategori <span class="text-error">*</span>
+</label>
+<div class="relative bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden transition-all duration-200 brand-input">
+<select class="w-full pl-4 pr-10 py-3 bg-transparent border-none outline-none font-body-md text-on-surface appearance-none cursor-pointer">
+<option class="text-outline-variant" disabled="" selected="" value="">Kategori seçin</option>
+<option value="televizyon">Televizyon</option>
+<option value="telefon">Telefon</option>
+<option value="beyaz-esya">Beyaz Eşya</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface-variant">Seri Numarası</label>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden transition-all duration-200 brand-input">
+<input class="w-full px-4 py-3 bg-transparent border-none outline-none font-body-md text-on-surface placeholder:text-outline-variant" placeholder="Seri numarasını girin" type="text"/>
+</div>
+</div>
+</section>
+<!-- Satın Alma & Garanti Section -->
+<section class="flex flex-col gap-stack-md">
+<h2 class="font-body-lg text-body-lg font-semibold text-on-background border-b border-surface-container-highest pb-2">Satın Alma &amp; Garanti Bilgileri</h2>
+<div class="grid grid-cols-2 gap-stack-md">
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface-variant">Satın Alma Tarihi</label>
+<div class="relative bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden transition-all duration-200 brand-input">
+<input class="w-full pl-4 pr-10 py-3 bg-transparent border-none outline-none font-body-md text-on-surface placeholder:text-outline-variant" placeholder="GG.AA.YYYY" type="date"/>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface-variant">Satın Alma Fiyatı</label>
+<div class="relative bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden transition-all duration-200 brand-input">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 text-outline font-body-md">₺</span>
+<input class="w-full pl-8 pr-4 py-3 bg-transparent border-none outline-none font-body-md text-on-surface placeholder:text-outline-variant" placeholder="0,00" type="text"/>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface-variant">Satın Alınan Mağaza</label>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden transition-all duration-200 brand-input">
+<input class="w-full px-4 py-3 bg-transparent border-none outline-none font-body-md text-on-surface placeholder:text-outline-variant" placeholder="Örn. Vatan Bilgisayar" type="text"/>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-stack-md">
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface-variant">Garanti Süresi</label>
+<div class="relative bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden transition-all duration-200 brand-input">
+<select class="w-full pl-4 pr-10 py-3 bg-transparent border-none outline-none font-body-md text-on-surface appearance-none cursor-pointer">
+<option class="text-outline-variant" disabled="" selected="" value="">Seçiniz</option>
+<option value="1">1 Yıl</option>
+<option value="2">2 Yıl</option>
+<option value="3">3 Yıl</option>
+<option value="4">4 Yıl</option>
+<option value="5">5 Yıl</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface-variant">Garanti Bitiş Tarihi</label>
+<div class="relative bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden transition-all duration-200 brand-input">
+<input class="w-full pl-4 pr-10 py-3 bg-transparent border-none outline-none font-body-md text-on-surface placeholder:text-outline-variant" placeholder="GG.AA.YYYY" type="date"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Ek Bilgiler Section -->
+<section class="flex flex-col gap-stack-md">
+<h2 class="font-body-lg text-body-lg font-semibold text-on-background border-b border-surface-container-highest pb-2">Ek Bilgiler</h2>
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface-variant">Açıklama</label>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden transition-all duration-200 brand-input">
+<textarea class="w-full px-4 py-3 bg-transparent border-none outline-none font-body-md text-on-surface placeholder:text-outline-variant resize-none" placeholder="Eklemek istediğiniz notlar..." rows="3"></textarea>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface-variant">Fatura Fotoğrafı</label>
+<button class="flex flex-col items-center justify-center gap-2 p-6 bg-surface-container-lowest border border-dashed border-outline-variant rounded-xl text-outline hover:bg-surface-container-low hover:border-primary transition-all duration-200 w-full">
+<span class="material-symbols-outlined text-3xl" data-icon="upload_file">upload_file</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Fatura veya fiş fotoğrafı yükle</span>
+</button>
+</div>
+</section>
+</main>
+<!-- Fixed Action Button (Contextual Replacement for Navigation Shell on Task Screens) -->
+<div class="fixed bottom-0 left-0 right-0 p-container-margin bg-background/95 backdrop-blur-sm border-t border-outline-variant/30 z-40 pb-safe">
+<button class="w-full bg-primary text-on-primary py-4 rounded-xl font-label-md text-label-md shadow-md hover:bg-primary-container hover:text-on-primary-container hover:-translate-y-0.5 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2">
+            Kaydet
+        </button>
+</div>
+</body></html>
