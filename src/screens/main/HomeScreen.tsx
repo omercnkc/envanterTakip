@@ -1,32 +1,52 @@
-import React, { useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  RefreshControl,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { Package, ShieldCheck, Clock, AlertTriangle, Bell } from 'lucide-react-native';
-
 import { useNavigation } from '@react-navigation/native';
-import { MainTabParamList, Product } from '../../types';
+import {
+  Shield,
+  Clock,
+  CalendarX,
+  Receipt,
+  Bell,
+  ChevronRight,
+  TrendingUp,
+  ShieldCheck,
+} from 'lucide-react-native';
+
+import { Product } from '../../types';
 import { COLORS } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
 import { useInventory } from '../../context/InventoryContext';
 import { ProductCard } from '../../components/ProductCard';
+import { CircularProgress } from '../../components/CircularProgress';
+import { EmptyState } from '../../components/EmptyState';
 import { styles } from './HomeScreen.styles';
 
 export const HomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { profile, user } = useAuth();
-  const { products, stats, setFilterOptions } = useInventory();
+  const { products, stats, refreshProducts, isRefreshing } = useInventory();
 
-  const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Kullanıcı';
+  const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Ömer';
+  const userInitials = (displayName[0] || 'U').toUpperCase();
 
-  // Son eklenen 3 ürün
-  const recentProducts = products.slice(0, 3);
+  // Aktif garanti yüzdesi
+  const activePercentage = useMemo(() => {
+    if (stats.total === 0) return 0;
+    return Math.round((stats.active / stats.total) * 100);
+  }, [stats.active, stats.total]);
+
+  // Yaklaşan garantili ve son eklenen ürünler
+  const recentProducts = useMemo(() => products.slice(0, 5), [products]);
 
   const handleStatCardPress = (statusFilter?: string) => {
-    if (statusFilter) {
-      setFilterOptions((prev) => ({ ...prev, warrantyStatus: statusFilter as any }));
-    }
-    navigation.navigate('ProductsTab');
+    navigation.navigate('ProductsTab', { filterStatus: statusFilter });
   };
 
   const handleProductPress = useCallback(
@@ -44,113 +64,204 @@ export const HomeScreen: React.FC = () => {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={refreshProducts}
+            colors={[COLORS.primary]}
+          />
+        }
       >
-        {/* Üst Karşılama ve Bildirim İkonu */}
+        {/* Top App Bar Header */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greetingText}>Merhaba,</Text>
-            <Text style={styles.userNameText}>{displayName}</Text>
+          <View style={styles.headerLeft}>
+            <Text style={styles.greetingText}>Merhaba, {displayName} 👋</Text>
+            <Text style={styles.subtitleText}>
+              Envanterin güvende, garantilerini takip et.
+            </Text>
           </View>
-          <TouchableOpacity
-            style={styles.bellButton}
-            activeOpacity={0.7}
-          >
-            <Bell size={20} color={COLORS.onSurface} />
-          </TouchableOpacity>
+
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => navigation.navigate('Notifications')}
+              activeOpacity={0.7}
+            >
+              <Bell size={19} color={COLORS.primary} />
+              {stats.expiringSoon > 0 && <View style={styles.badgeDot} />}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.avatar}
+              onPress={() => navigation.navigate('ProfileTab')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.avatarText}>{userInitials}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Bento Summary Card */}
+        <View style={styles.bentoCard}>
+          <View style={styles.bentoBlob} />
+
+          <View style={styles.bentoLeft}>
+            <Text style={styles.bentoTitle}>Toplam Ürün</Text>
+            <View style={styles.bentoNumberRow}>
+              <Text style={styles.bentoBigNumber}>{stats.total}</Text>
+              <Text style={styles.bentoNumberLabel}>ürün</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.bentoButton}
+              onPress={() => navigation.navigate('ProductsTab')}
+              activeOpacity={0.8}
+            >
+              <TrendingUp size={14} color={COLORS.primary} />
+              <Text style={styles.bentoButtonText}>Genel Durumu Gör</Text>
+              <ChevronRight size={14} color={COLORS.primary} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Dairesel Garanti Göstergesi */}
+          <View style={styles.bentoChartWrapper}>
+            <CircularProgress
+              size={94}
+              strokeWidth={7}
+              percentage={activePercentage}
+              color={COLORS.primary}
+              backgroundColor={COLORS.surfaceContainer}
+              centerText={`%${activePercentage}`}
+              centerSubtext="Garantiler aktif"
+              textStyle={{ fontSize: 16, fontWeight: '700' }}
+            />
+            <View style={styles.bentoShieldBadge}>
+              <ShieldCheck size={13} color={COLORS.tertiary} />
+            </View>
+          </View>
         </View>
 
         {/* 4'lü İstatistik Izgarası */}
         <View style={styles.statsGrid}>
-          {/* Toplam Ürün */}
-          <TouchableOpacity
-            style={styles.statCard}
-            onPress={() => handleStatCardPress('all')}
-            activeOpacity={0.7}
-          >
-            <View style={styles.statHeader}>
-              <Package size={20} color={COLORS.primary} />
-            </View>
-            <Text style={styles.statCount}>{stats.total}</Text>
-            <Text style={styles.statLabel}>Toplam Varlık</Text>
-          </TouchableOpacity>
-
-          {/* Devam Eden */}
+          {/* Stat 1: Aktif Garanti */}
           <TouchableOpacity
             style={styles.statCard}
             onPress={() => handleStatCardPress('active')}
             activeOpacity={0.7}
           >
-            <View style={styles.statHeader}>
-              <ShieldCheck size={20} color={COLORS.tertiary} />
+            <View
+              style={[
+                styles.statIconBox,
+                { backgroundColor: COLORS.tertiaryContainer + '18' },
+              ]}
+            >
+              <Shield size={16} color={COLORS.tertiary} />
             </View>
-            <Text style={[styles.statCount, { color: COLORS.tertiary }]}>{stats.active}</Text>
-            <Text style={styles.statLabel}>Garanti Devam Eden</Text>
+            <Text style={[styles.statCount, { color: COLORS.tertiary }]}>
+              {stats.active}
+            </Text>
+            <Text style={styles.statLabel} numberOfLines={2}>
+              Aktif Garanti
+            </Text>
           </TouchableOpacity>
 
-          {/* Yakında Bitecek */}
+          {/* Stat 2: Yakında Bitecek */}
           <TouchableOpacity
             style={styles.statCard}
             onPress={() => handleStatCardPress('expiring_soon')}
             activeOpacity={0.7}
           >
-            <View style={styles.statHeader}>
-              <Clock size={20} color={COLORS.warning} />
+            <View
+              style={[
+                styles.statIconBox,
+                { backgroundColor: COLORS.warningContainer },
+              ]}
+            >
+              <Clock size={16} color={COLORS.warning} />
             </View>
-            <Text style={[styles.statCount, { color: COLORS.warning }]}>{stats.expiringSoon}</Text>
-            <Text style={styles.statLabel}>Yakında Bitiyor</Text>
+            <Text style={[styles.statCount, { color: COLORS.warning }]}>
+              {stats.expiringSoon}
+            </Text>
+            <Text style={styles.statLabel} numberOfLines={2}>
+              Yakında Bitecek
+            </Text>
           </TouchableOpacity>
 
-          {/* Garanti Bitti */}
+          {/* Stat 3: Süresi Dolmuş */}
           <TouchableOpacity
             style={styles.statCard}
             onPress={() => handleStatCardPress('expired')}
             activeOpacity={0.7}
           >
-            <View style={styles.statHeader}>
-              <AlertTriangle size={20} color={COLORS.error} />
+            <View
+              style={[
+                styles.statIconBox,
+                { backgroundColor: COLORS.errorContainer },
+              ]}
+            >
+              <CalendarX size={16} color={COLORS.error} />
             </View>
-            <Text style={[styles.statCount, { color: COLORS.error }]}>{stats.expired}</Text>
-            <Text style={styles.statLabel}>Garanti Bitti</Text>
+            <Text style={[styles.statCount, { color: COLORS.error }]}>
+              {stats.expired}
+            </Text>
+            <Text style={styles.statLabel} numberOfLines={2}>
+              Süresi Dolmuş
+            </Text>
+          </TouchableOpacity>
+
+          {/* Stat 4: Tüm Ürünler */}
+          <TouchableOpacity
+            style={styles.statCard}
+            onPress={() => handleStatCardPress('all')}
+            activeOpacity={0.7}
+          >
+            <View
+              style={[
+                styles.statIconBox,
+                { backgroundColor: COLORS.surfaceContainerLow },
+              ]}
+            >
+              <Receipt size={16} color={COLORS.primary} />
+            </View>
+            <Text style={[styles.statCount, { color: COLORS.primary }]}>
+              {stats.total}
+            </Text>
+            <Text style={styles.statLabel} numberOfLines={2}>
+              Tüm Ürünler
+            </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Son Eklenenler Başlığı */}
-        <View style={styles.sectionTitleRow}>
-          <Text style={styles.sectionTitle}>Son Eklenenler</Text>
+        {/* Yaklaşan / Son Ürünler Bölümü */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Yaklaşan Garantiler</Text>
           <TouchableOpacity
+            style={styles.seeAllButton}
             onPress={() => navigation.navigate('ProductsTab')}
             activeOpacity={0.7}
           >
-            <Text style={styles.seeAllLink}>Tümünü Gör</Text>
+            <Text style={styles.seeAllText}>Tümünü Gör</Text>
+            <ChevronRight size={16} color={COLORS.primary} />
           </TouchableOpacity>
         </View>
 
-        {/* Son Eklenen Ürünler Listesi veya Boş Durum */}
         {recentProducts.length > 0 ? (
-          <View>
+          <View style={styles.productsList}>
             {recentProducts.map((p) => (
               <ProductCard
                 key={p.id}
                 product={p}
+                showPercentageGauge={true}
                 onPress={() => handleProductPress(p)}
               />
             ))}
           </View>
         ) : (
-          <View style={styles.emptyCard}>
-            <Package size={48} color={COLORS.outline} />
-            <Text style={styles.emptyTitle}>Henüz Kayıtlı Ürününüz Yok</Text>
-            <Text style={styles.emptySubtitle}>
-              Elektronik aletlerinizi ve ev eşyalarınızı ekleyerek garanti sürelerini takip etmeye başlayın.
-            </Text>
-            <TouchableOpacity
-              style={styles.addPromptButton}
-              onPress={() => navigation.navigate('AddProductTab')}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.addPromptButtonText}>+ İlk Ürününü Ekle</Text>
-            </TouchableOpacity>
-          </View>
+          <EmptyState
+            title="Henüz ürün eklenmemiş"
+            description="Envanterinizi oluşturmak ve garantilerinizi takip etmek için ilk ürününüzü ekleyin."
+            actionText="İlk Ürünü Ekle"
+            onActionPress={() => navigation.navigate('AddTab')}
+          />
         )}
       </ScrollView>
     </SafeAreaView>

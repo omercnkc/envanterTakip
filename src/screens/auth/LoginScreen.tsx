@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ShieldCheck, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
+import { Package, Mail, Lock, Eye, EyeOff, Sparkles } from 'lucide-react-native';
 
 import { AuthStackParamList, LoginFormData, loginSchema } from '../../types';
 import { COLORS } from '../../constants';
@@ -55,8 +55,15 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const handleDemoLogin = () => {
+    onSubmit({ email: 'demo@evgaranti.com', password: 'password123' });
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.bgBlobTop} />
+      <View style={styles.bgBlobBottom} />
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -69,7 +76,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
           {/* Üst Başlık ve Logo */}
           <View style={styles.header}>
             <View style={styles.logoBox}>
-              <ShieldCheck size={36} color={COLORS.primary} />
+              <Package size={34} color={COLORS.primary} strokeWidth={2.2} />
             </View>
             <Text style={styles.title}>Hoş Geldiniz</Text>
             <Text style={styles.subtitle}>Lütfen hesabınıza giriş yapın.</Text>
@@ -97,13 +104,13 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                     ]}
                   >
                     <Mail
-                      size={20}
+                      size={18}
                       color={errors.email ? COLORS.error : COLORS.onSurfaceVariant}
                       style={styles.inputIcon}
                     />
                     <TextInput
                       style={styles.textInput}
-                      placeholder="ornek@domain.com"
+                      placeholder="ornek@sirket.com"
                       placeholderTextColor={COLORS.outline}
                       keyboardType="email-address"
                       autoCapitalize="none"
@@ -142,7 +149,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                     ]}
                   >
                     <Lock
-                      size={20}
+                      size={18}
                       color={errors.password ? COLORS.error : COLORS.onSurfaceVariant}
                       style={styles.inputIcon}
                     />
@@ -162,9 +169,9 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                       activeOpacity={0.7}
                     >
                       {showPassword ? (
-                        <EyeOff size={20} color={COLORS.onSurfaceVariant} />
+                        <EyeOff size={18} color={COLORS.onSurfaceVariant} />
                       ) : (
-                        <Eye size={20} color={COLORS.onSurfaceVariant} />
+                        <Eye size={18} color={COLORS.onSurfaceVariant} />
                       )}
                     </TouchableOpacity>
                   </View>
@@ -199,13 +206,13 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               <View style={styles.dividerLine} />
             </View>
 
-            {/* Demo / Hızlı Giriş Butonu */}
+            {/* Demo Hesabı Butonu */}
             <TouchableOpacity
               style={styles.socialButton}
-              onPress={() => onSubmit({ email: 'demo@evgaranti.com', password: 'password123' })}
+              onPress={handleDemoLogin}
               activeOpacity={0.7}
             >
-              <ShieldCheck size={18} color={COLORS.primary} />
+              <Sparkles size={18} color={COLORS.primary} />
               <Text style={styles.socialButtonText}>Demo Hesabı ile Hızlı Giriş</Text>
             </TouchableOpacity>
           </View>

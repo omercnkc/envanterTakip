@@ -11,20 +11,27 @@ import {
   Utensils,
   Gamepad2,
   Package,
+  Calendar,
+  ChevronRight,
 } from 'lucide-react-native';
 
 import { Product } from '../types';
 import { COLORS } from '../constants';
-import { formatDateTurkish } from '../utils/warrantyCalculator';
-import { WarrantyBadge } from './WarrantyBadge';
+import {
+  formatDateTurkish,
+  calculateWarrantyStatus,
+  calculateWarrantyPercentage,
+} from '../utils/warrantyCalculator';
+import { CircularProgress } from './CircularProgress';
 import { styles } from './ProductCard.styles';
 
 interface ProductCardProps {
   product: Product;
   onPress: () => void;
+  showPercentageGauge?: boolean;
 }
 
-const getCategoryIcon = (iconName?: string | null, size = 28) => {
+const getCategoryIcon = (iconName?: string | null, size = 26) => {
   const color = COLORS.primary;
   switch (iconName) {
     case 'tv':
@@ -50,39 +57,76 @@ const getCategoryIcon = (iconName?: string | null, size = 28) => {
   }
 };
 
-export const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, onPress }) => {
-  const categoryName = product.category?.name || 'Genel';
-  const brandName = product.brand ? ` • ${product.brand}` : '';
+export const ProductCard: React.FC<ProductCardProps> = React.memo(
+  ({ product, onPress, showPercentageGauge = false }) => {
+    const categoryName = product.category?.name || 'Genel';
+    const brandName = product.brand ? ` • ${product.brand}` : '';
+    const statusInfo = calculateWarrantyStatus(product.warranty_end_date);
+    const percentage = calculateWarrantyPercentage(
+      product.purchase_date,
+      product.warranty_end_date
+    );
 
-  return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
-      {/* Görsel / İkon Konteynırı */}
-      <View style={styles.imageContainer}>
-        {product.image_path ? (
-          <Image source={{ uri: product.image_path }} style={styles.image} />
-        ) : (
-          getCategoryIcon(product.category?.icon)
-        )}
-      </View>
+    return (
+      <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
+        {/* Görsel / İkon Konteynırı */}
+        <View style={styles.imageContainer}>
+          {product.image_path ? (
+            <Image
+              source={{ uri: product.image_path }}
+              style={styles.image}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.iconPlaceholder}>
+              {getCategoryIcon(product.category?.icon)}
+            </View>
+          )}
+        </View>
 
-      {/* Ürün Metinleri */}
-      <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={1}>
-          {product.name}
-        </Text>
-        <Text style={styles.categoryBrand} numberOfLines={1}>
-          {categoryName}
-          {brandName}
-        </Text>
-        <Text style={styles.warrantyDate}>
-          Garanti bitişi: {formatDateTurkish(product.warranty_end_date)}
-        </Text>
-      </View>
+        {/* Ürün Metinleri */}
+        <View style={styles.content}>
+          <Text style={styles.title} numberOfLines={1}>
+            {product.name}
+          </Text>
+          <Text style={styles.categoryBrand} numberOfLines={1}>
+            {categoryName}
+            {brandName}
+          </Text>
+          <View style={styles.dateRow}>
+            <Calendar size={13} color={COLORS.outline} style={styles.dateIcon} />
+            <Text style={styles.warrantyDate} numberOfLines={1}>
+              {showPercentageGauge
+                ? `${formatDateTurkish(product.warranty_end_date)}'e kadar`
+                : `Garanti bitişi: ${formatDateTurkish(product.warranty_end_date)}`}
+            </Text>
+          </View>
+        </View>
 
-      {/* Garanti Durum Rozeti */}
-      <View style={styles.rightSection}>
-        <WarrantyBadge warrantyEndDate={product.warranty_end_date} />
-      </View>
-    </TouchableOpacity>
-  );
-});
+        {/* Sağ Bölüm: Yüzde Çemberi veya Durum Rozeti */}
+        <View style={styles.rightSection}>
+          {showPercentageGauge ? (
+            <View style={styles.gaugeContainer}>
+              <CircularProgress
+                size={40}
+                strokeWidth={3}
+                percentage={percentage}
+                color={statusInfo.color}
+                backgroundColor={COLORS.surfaceContainer}
+                centerText={`%${percentage}`}
+                textStyle={{ fontSize: 10, fontWeight: '700' }}
+              />
+              <ChevronRight size={16} color={COLORS.outline} style={styles.chevron} />
+            </View>
+          ) : (
+            <View style={styles.statusBadgeWrapper}>
+              <Text style={[styles.statusText, { color: statusInfo.color }]}>
+                {statusInfo.label}
+              </Text>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  }
+);

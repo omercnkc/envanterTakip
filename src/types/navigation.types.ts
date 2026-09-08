@@ -6,7 +6,6 @@ import { NavigatorScreenParams } from '@react-navigation/native';
 import { Product } from './database.types';
 
 export type AuthStackParamList = {
-  Splash: undefined;
   Login: undefined;
   Register: undefined;
   ForgotPassword: { email?: string } | undefined;
@@ -15,15 +14,19 @@ export type AuthStackParamList = {
 export type MainTabParamList = {
   HomeTab: undefined;
   ProductsTab: { categoryId?: number; filterStatus?: string } | undefined;
-  AddProductTab: undefined;
+  AddTab: undefined;
+  NotificationsTab: undefined;
   ProfileTab: undefined;
 };
 
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
+  AddProduct: { categoryId?: number } | undefined;
   ProductDetail: { productId: string; initialProduct?: Product };
   EditProduct: { productId: string; product?: Product };
+  Notifications: undefined;
+  Settings: undefined;
   Search: undefined;
   Filter: undefined;
 };

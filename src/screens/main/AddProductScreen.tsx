@@ -19,9 +19,8 @@ import {
   Camera,
   Image as ImageIcon,
   ChevronDown,
-  UploadCloud,
+  Upload,
   X,
-  ArrowLeft,
 } from 'lucide-react-native';
 
 import { ProductFormData, productFormSchema, Category } from '../../types';
@@ -35,6 +34,7 @@ const DURATION_OPTIONS = [
   { label: '1 Yıl', months: 12 },
   { label: '2 Yıl', months: 24 },
   { label: '3 Yıl', months: 36 },
+  { label: '4 Yıl', months: 48 },
   { label: '5 Yıl', months: 60 },
 ];
 
@@ -46,6 +46,7 @@ export const AddProductScreen: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedDuration, setSelectedDuration] = useState<number>(24);
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [invoiceUri, setInvoiceUri] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Varsayılan bugünün tarihi
@@ -57,6 +58,7 @@ export const AddProductScreen: React.FC = () => {
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
@@ -95,8 +97,8 @@ export const AddProductScreen: React.FC = () => {
     setValue('category_id', cat.id);
   };
 
-  // Mock Görsel Seçimi (3. Hafta Expo ImagePicker ile tam bağlanacak)
-  const handlePickMockImage = () => {
+  // Örnek Görsel Seçimi (Demo)
+  const handlePickMockImage = (type: 'camera' | 'gallery') => {
     const sampleImages = [
       'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=500&auto=format&fit=crop&q=80',
       'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=500&auto=format&fit=crop&q=80',
@@ -106,6 +108,11 @@ export const AddProductScreen: React.FC = () => {
     const randomImg = sampleImages[Math.floor(Math.random() * sampleImages.length)];
     setImageUri(randomImg);
     setValue('image_path', randomImg);
+  };
+
+  const handlePickMockInvoice = () => {
+    setInvoiceUri('fatura_ornek.pdf');
+    setValue('invoice_path', 'https://example.com/fatura_ornek.pdf');
   };
 
   const onSubmit = async (data: ProductFormData) => {
@@ -121,6 +128,10 @@ export const AddProductScreen: React.FC = () => {
         {
           text: 'Tamam',
           onPress: () => {
+            reset();
+            setImageUri(null);
+            setInvoiceUri(null);
+            setSelectedCategory(null);
             navigation.navigate('ProductsTab');
           },
         },
@@ -134,72 +145,66 @@ export const AddProductScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* Üst Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Yeni Ürün Ekle</Text>
+      </View>
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
-        {/* Üst Bar */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-            activeOpacity={0.7}
-          >
-            <ArrowLeft size={24} color={COLORS.onSurface} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Ürün Ekle</Text>
-          <View style={styles.headerRight} />
-        </View>
-
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* 1. Ürün Fotoğrafı Bölümü */}
+          {/* Bölüm 1: Ürün Fotoğrafı */}
           <View style={styles.section}>
-            <Text style={styles.label}>Ürün Fotoğrafı</Text>
+            <Text style={styles.sectionLabel}>Ürün Fotoğrafı</Text>
             {imageUri ? (
-              <View style={styles.previewContainer}>
-                <Image source={{ uri: imageUri }} style={styles.previewImage} />
+              <View style={styles.imagePreviewContainer}>
+                <Image source={{ uri: imageUri }} style={styles.imagePreview} />
                 <TouchableOpacity
                   style={styles.removeImageButton}
                   onPress={() => {
                     setImageUri(null);
                     setValue('image_path', null);
                   }}
+                  activeOpacity={0.7}
                 >
-                  <X size={18} color="#fff" />
+                  <X size={16} color={COLORS.onError} />
                 </TouchableOpacity>
               </View>
             ) : (
-              <View style={styles.photoGrid}>
+              <View style={styles.photoActionRow}>
                 <TouchableOpacity
-                  style={styles.photoButton}
-                  onPress={handlePickMockImage}
+                  style={styles.photoActionButton}
+                  onPress={() => handlePickMockImage('camera')}
                   activeOpacity={0.7}
                 >
-                  <Camera size={28} color={COLORS.primary} />
-                  <Text style={styles.photoButtonText}>Kamera</Text>
+                  <Camera size={26} color={COLORS.primary} />
+                  <Text style={styles.photoActionText}>Kamera</Text>
                 </TouchableOpacity>
+
                 <TouchableOpacity
-                  style={styles.photoButton}
-                  onPress={handlePickMockImage}
+                  style={styles.photoActionButton}
+                  onPress={() => handlePickMockImage('gallery')}
                   activeOpacity={0.7}
                 >
-                  <ImageIcon size={28} color={COLORS.primary} />
-                  <Text style={styles.photoButtonText}>Galeriden Seç</Text>
+                  <ImageIcon size={26} color={COLORS.primary} />
+                  <Text style={styles.photoActionText}>Galeriden Seç</Text>
                 </TouchableOpacity>
               </View>
             )}
           </View>
 
-          {/* 2. Temel Bilgiler */}
+          {/* Bölüm 2: Temel Bilgiler */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Temel Bilgiler</Text>
 
             {/* Ürün Adı */}
-            <View style={styles.formGroup}>
+            <View style={styles.inputGroup}>
               <Text style={styles.label}>
                 Ürün Adı <Text style={styles.requiredStar}>*</Text>
               </Text>
@@ -207,22 +212,31 @@ export const AddProductScreen: React.FC = () => {
                 control={control}
                 name="name"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={[styles.input, errors.name && styles.inputError]}
-                    placeholder="Örn. Samsung QLED 4K TV"
-                    placeholderTextColor={COLORS.outline}
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                  />
+                  <View
+                    style={[
+                      styles.inputBox,
+                      errors.name && styles.inputBoxError,
+                    ]}
+                  >
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="Örn: Samsung QLED TV"
+                      placeholderTextColor={COLORS.outline}
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                    />
+                  </View>
                 )}
               />
-              {errors.name && <Text style={styles.errorText}>{errors.name.message}</Text>}
+              {errors.name && (
+                <Text style={styles.errorText}>{errors.name.message}</Text>
+              )}
             </View>
 
-            {/* Marka & Model (2 Sütun) */}
-            <View style={styles.twoColumnRow}>
-              <View style={[styles.formGroup, styles.twoColumnItem]}>
+            {/* Marka & Model */}
+            <View style={styles.row}>
+              <View style={[styles.inputGroup, styles.flex1]}>
                 <Text style={styles.label}>
                   Marka <Text style={styles.requiredStar}>*</Text>
                 </Text>
@@ -230,127 +244,141 @@ export const AddProductScreen: React.FC = () => {
                   control={control}
                   name="brand"
                   render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      style={[styles.input, errors.brand && styles.inputError]}
-                      placeholder="Örn. Samsung"
-                      placeholderTextColor={COLORS.outline}
-                      value={value ?? ''}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                    />
+                    <View
+                      style={[
+                        styles.inputBox,
+                        errors.brand && styles.inputBoxError,
+                      ]}
+                    >
+                      <TextInput
+                        style={styles.textInput}
+                        placeholder="Örn: Samsung"
+                        placeholderTextColor={COLORS.outline}
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                      />
+                    </View>
                   )}
                 />
-                {errors.brand && <Text style={styles.errorText}>{errors.brand.message}</Text>}
               </View>
 
-              <View style={[styles.formGroup, styles.twoColumnItem]}>
+              <View style={[styles.inputGroup, styles.flex1]}>
                 <Text style={styles.label}>Model</Text>
                 <Controller
                   control={control}
                   name="model"
                   render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Örn. Q60B 55 Inch"
-                      placeholderTextColor={COLORS.outline}
-                      value={value ?? ''}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                    />
+                    <View style={styles.inputBox}>
+                      <TextInput
+                        style={styles.textInput}
+                        placeholder="Örn: Q60B"
+                        placeholderTextColor={COLORS.outline}
+                        value={value || ''}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                      />
+                    </View>
                   )}
                 />
               </View>
             </View>
 
-            {/* Kategori Seçimi */}
-            <View style={styles.formGroup}>
+            {/* Kategori */}
+            <View style={styles.inputGroup}>
               <Text style={styles.label}>
                 Kategori <Text style={styles.requiredStar}>*</Text>
               </Text>
               <TouchableOpacity
-                style={[styles.pickerButton, errors.category_id && styles.inputError]}
+                style={styles.pickerBox}
                 onPress={() => setCategoryModalVisible(true)}
                 activeOpacity={0.7}
               >
                 <Text
-                  style={
-                    selectedCategory ? styles.pickerButtonText : styles.pickerPlaceholderText
-                  }
+                  style={[
+                    styles.pickerText,
+                    !selectedCategory && styles.placeholderText,
+                  ]}
                 >
-                  {selectedCategory?.name || 'Kategori seçin'}
+                  {selectedCategory ? selectedCategory.name : 'Kategori seçin'}
                 </Text>
-                <ChevronDown size={20} color={COLORS.outline} />
+                <ChevronDown size={18} color={COLORS.outline} />
               </TouchableOpacity>
-              {errors.category_id && (
-                <Text style={styles.errorText}>{errors.category_id.message}</Text>
-              )}
             </View>
 
             {/* Seri Numarası */}
-            <View style={styles.formGroup}>
+            <View style={styles.inputGroup}>
               <Text style={styles.label}>Seri Numarası</Text>
               <Controller
                 control={control}
                 name="serial_number"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Örn. SN-98214300"
-                    placeholderTextColor={COLORS.outline}
-                    value={value ?? ''}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                  />
+                  <View style={styles.inputBox}>
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="Seri numarasını girin"
+                      placeholderTextColor={COLORS.outline}
+                      value={value || ''}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                    />
+                  </View>
                 )}
               />
             </View>
           </View>
 
-          {/* 3. Satın Alma & Garanti Bilgileri */}
+          {/* Bölüm 3: Satın Alma & Garanti Bilgileri */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Satın Alma & Garanti Bilgileri</Text>
 
-            {/* Satın Alma Tarihi & Fiyatı (2 Sütun) */}
-            <View style={styles.twoColumnRow}>
-              <View style={[styles.formGroup, styles.twoColumnItem]}>
+            <View style={styles.row}>
+              {/* Satın Alma Tarihi */}
+              <View style={[styles.inputGroup, styles.flex1]}>
                 <Text style={styles.label}>Satın Alma Tarihi</Text>
                 <Controller
                   control={control}
                   name="purchase_date"
                   render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      style={styles.input}
-                      placeholder="YYYY-AA-GG"
-                      placeholderTextColor={COLORS.outline}
-                      value={value ?? ''}
-                      onChangeText={(val) => {
-                        onChange(val);
-                        if (val && val.length === 10) {
-                          const calculated = calculateWarrantyEndDate(val, selectedDuration);
-                          setValue('warranty_end_date', calculated);
-                        }
-                      }}
-                      onBlur={onBlur}
-                    />
+                    <View style={styles.inputBox}>
+                      <TextInput
+                        style={styles.textInput}
+                        placeholder="YYYY-AA-GG"
+                        placeholderTextColor={COLORS.outline}
+                        value={value || ''}
+                        onChangeText={(text) => {
+                          onChange(text);
+                          const calculated = calculateWarrantyEndDate(
+                            text,
+                            selectedDuration
+                          );
+                          if (calculated) setValue('warranty_end_date', calculated);
+                        }}
+                        onBlur={onBlur}
+                      />
+                    </View>
                   )}
                 />
               </View>
 
-              <View style={[styles.formGroup, styles.twoColumnItem]}>
+              {/* Satın Alma Fiyatı */}
+              <View style={[styles.inputGroup, styles.flex1]}>
                 <Text style={styles.label}>Satın Alma Fiyatı</Text>
                 <Controller
                   control={control}
                   name="purchase_price"
                   render={({ field: { onChange, onBlur, value } }) => (
-                    <View style={styles.priceInputWrapper}>
-                      <Text style={styles.currencyPrefix}>₺</Text>
+                    <View style={[styles.inputBox, styles.priceInputBox]}>
+                      <Text style={styles.currencySymbol}>₺</Text>
                       <TextInput
-                        style={styles.priceTextInput}
+                        style={styles.textInput}
                         placeholder="0,00"
                         placeholderTextColor={COLORS.outline}
                         keyboardType="numeric"
-                        value={value !== undefined && value !== null ? String(value) : ''}
-                        onChangeText={(val) => onChange(val ? parseFloat(val) : undefined)}
+                        value={value !== undefined ? String(value) : ''}
+                        onChangeText={(t) =>
+                          onChange(t ? parseFloat(t.replace(',', '.')) : undefined)
+                        }
                         onBlur={onBlur}
                       />
                     </View>
@@ -360,140 +388,163 @@ export const AddProductScreen: React.FC = () => {
             </View>
 
             {/* Satın Alınan Mağaza */}
-            <View style={styles.formGroup}>
+            <View style={styles.inputGroup}>
               <Text style={styles.label}>Satın Alınan Mağaza</Text>
               <Controller
                 control={control}
                 name="store_name"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Örn. Vatan Bilgisayar, MediaMarkt"
-                    placeholderTextColor={COLORS.outline}
-                    value={value ?? ''}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                  />
+                  <View style={styles.inputBox}>
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="Örn: Vatan Bilgisayar"
+                      placeholderTextColor={COLORS.outline}
+                      value={value || ''}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                    />
+                  </View>
                 )}
               />
             </View>
 
-            {/* Garanti Süresi Hızlı Seçici */}
-            <View style={styles.formGroup}>
+            {/* Garanti Süresi Seçimi */}
+            <View style={styles.inputGroup}>
               <Text style={styles.label}>Garanti Süresi</Text>
-              <View style={styles.durationSelector}>
-                {DURATION_OPTIONS.map((opt) => {
-                  const isSelected = selectedDuration === opt.months;
-                  return (
-                    <TouchableOpacity
-                      key={opt.months}
-                      style={[styles.durationChip, isSelected && styles.durationChipSelected]}
-                      onPress={() => handleSelectDuration(opt.months)}
-                      activeOpacity={0.7}
+              <View style={styles.durationPillsRow}>
+                {DURATION_OPTIONS.map((opt) => (
+                  <TouchableOpacity
+                    key={opt.months}
+                    style={[
+                      styles.durationPill,
+                      selectedDuration === opt.months && styles.durationPillActive,
+                    ]}
+                    onPress={() => handleSelectDuration(opt.months)}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.durationPillText,
+                        selectedDuration === opt.months &&
+                          styles.durationPillTextActive,
+                      ]}
                     >
-                      <Text
-                        style={[
-                          styles.durationChipText,
-                          isSelected && styles.durationChipTextSelected,
-                        ]}
-                      >
-                        {opt.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
             </View>
 
             {/* Garanti Bitiş Tarihi */}
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>
-                Garanti Bitiş Tarihi <Text style={styles.requiredStar}>*</Text>
-              </Text>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Garanti Bitiş Tarihi</Text>
               <Controller
                 control={control}
                 name="warranty_end_date"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={[styles.input, errors.warranty_end_date && styles.inputError]}
-                    placeholder="YYYY-AA-GG"
-                    placeholderTextColor={COLORS.outline}
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                  />
+                  <View style={styles.inputBox}>
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="YYYY-AA-GG"
+                      placeholderTextColor={COLORS.outline}
+                      value={value || ''}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                    />
+                  </View>
                 )}
               />
-              {errors.warranty_end_date && (
-                <Text style={styles.errorText}>{errors.warranty_end_date.message}</Text>
-              )}
             </View>
           </View>
 
-          {/* 4. Ek Bilgiler */}
+          {/* Bölüm 4: Ek Bilgiler */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Ek Bilgiler</Text>
 
             {/* Açıklama */}
-            <View style={styles.formGroup}>
+            <View style={styles.inputGroup}>
               <Text style={styles.label}>Açıklama</Text>
               <Controller
                 control={control}
                 name="description"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={styles.textArea}
-                    placeholder="Eklemek istediğiniz notlar veya garanti koşulları..."
-                    placeholderTextColor={COLORS.outline}
-                    multiline
-                    value={value ?? ''}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                  />
+                  <View style={[styles.inputBox, styles.textAreaBox]}>
+                    <TextInput
+                      style={[styles.textInput, styles.textArea]}
+                      placeholder="Eklemek istediğiniz notlar..."
+                      placeholderTextColor={COLORS.outline}
+                      multiline
+                      numberOfLines={3}
+                      textAlignVertical="top"
+                      value={value || ''}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                    />
+                  </View>
                 )}
               />
             </View>
 
-            {/* Fatura Fotoğrafı Yükleme */}
-            <View style={styles.formGroup}>
+            {/* Fatura Fotoğrafı */}
+            <View style={styles.inputGroup}>
               <Text style={styles.label}>Fatura Fotoğrafı</Text>
-              <TouchableOpacity
-                style={styles.invoiceDashedCard}
-                onPress={() => Alert.alert('Fatura', 'Fatura yükleme 3. hafta kapsamında aktifleştirilecektir.')}
-                activeOpacity={0.7}
-              >
-                <UploadCloud size={32} color={COLORS.primary} />
-                <Text style={styles.invoiceDashedText}>Fatura veya fiş görseli seçin</Text>
-              </TouchableOpacity>
+              {invoiceUri ? (
+                <View style={styles.invoiceUploadedBox}>
+                  <Text style={styles.invoiceUploadedText}>{invoiceUri}</Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setInvoiceUri(null);
+                      setValue('invoice_path', null);
+                    }}
+                  >
+                    <X size={16} color={COLORS.error} />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={styles.uploadDashedBox}
+                  onPress={handlePickMockInvoice}
+                  activeOpacity={0.7}
+                >
+                  <Upload size={24} color={COLORS.outline} />
+                  <Text style={styles.uploadDashedText}>
+                    Fatura veya fiş fotoğrafı yükle
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
+
+          {/* Kaydet Butonu */}
+          <View style={styles.submitSection}>
+            <TouchableOpacity
+              style={[
+                styles.submitButton,
+                isSubmitting && styles.submitButtonDisabled,
+              ]}
+              onPress={handleSubmit(onSubmit)}
+              disabled={isSubmitting}
+              activeOpacity={0.85}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator color={COLORS.onPrimary} />
+              ) : (
+                <Text style={styles.submitButtonText}>Ürünü Kaydet</Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </ScrollView>
-
-        {/* Alt Sabit Kaydet Butonu */}
-        <View style={styles.fixedBottomBar}>
-          <TouchableOpacity
-            style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
-            onPress={handleSubmit(onSubmit)}
-            disabled={isSubmitting}
-            activeOpacity={0.8}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator color={COLORS.onPrimary} />
-            ) : (
-              <Text style={styles.submitButtonText}>Kaydet</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Kategori Seçim Modalı */}
-        <CategoryPickerModal
-          visible={categoryModalVisible}
-          categories={categories}
-          selectedCategoryId={selectedCategory?.id}
-          onSelect={handleSelectCategory}
-          onClose={() => setCategoryModalVisible(false)}
-        />
       </KeyboardAvoidingView>
+
+      {/* Kategori Seçim Modalı */}
+      <CategoryPickerModal
+        visible={categoryModalVisible}
+        onClose={() => setCategoryModalVisible(false)}
+        categories={categories}
+        selectedCategoryId={selectedCategory?.id}
+        onSelect={handleSelectCategory}
+      />
     </SafeAreaView>
   );
 };

@@ -23,11 +23,15 @@ interface InventoryContextType {
   categories: Category[];
   stats: InventoryStats;
   loading: boolean;
+  isLoading: boolean;
   refreshing: boolean;
+  isRefreshing: boolean;
   filterOptions: ProductFilterOptions;
   setFilterOptions: React.Dispatch<React.SetStateAction<ProductFilterOptions>>;
+  resetFilters: () => void;
   fetchProducts: () => Promise<void>;
   refresh: () => Promise<void>;
+  refreshProducts: () => Promise<void>;
   addProduct: (data: ProductFormData) => Promise<{ success: boolean; data?: Product; error?: string }>;
   updateProduct: (
     productId: string,
@@ -37,6 +41,14 @@ interface InventoryContextType {
   getProduct: (productId: string) => Promise<Product | null>;
 }
 
+const defaultFilterOptions: ProductFilterOptions = {
+  searchQuery: '',
+  categoryId: undefined,
+  warrantyStatus: 'all',
+  sortBy: 'created_at',
+  sortOrder: 'desc',
+};
+
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
 
 export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -45,15 +57,13 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [filterOptions, setFilterOptions] = useState<ProductFilterOptions>({
-    searchQuery: '',
-    categoryId: undefined,
-    warrantyStatus: 'all',
-    sortBy: 'created_at',
-    sortOrder: 'desc',
-  });
+  const [filterOptions, setFilterOptions] = useState<ProductFilterOptions>(defaultFilterOptions);
 
   const userId = user?.id || 'demo-user-id';
+
+  const resetFilters = useCallback(() => {
+    setFilterOptions(defaultFilterOptions);
+  }, []);
 
   // Kategorileri yükle
   useEffect(() => {
@@ -123,7 +133,6 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     if (res.error || !res.data) {
       return { success: false, error: res.error || 'Ürün kaydedilemedi.' };
     }
-    // Listeyi güncelle
     await fetchProducts();
     return { success: true, data: res.data };
   };
@@ -163,11 +172,15 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
       categories,
       stats,
       loading,
+      isLoading: loading,
       refreshing,
+      isRefreshing: refreshing,
       filterOptions,
       setFilterOptions,
+      resetFilters,
       fetchProducts,
       refresh,
+      refreshProducts: refresh,
       addProduct,
       updateProduct,
       deleteProduct,
@@ -180,6 +193,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
       loading,
       refreshing,
       filterOptions,
+      resetFilters,
       fetchProducts,
       refresh,
     ]

@@ -22,3 +22,6 @@ export const CATEGORIES: CategoryItem[] = [
   { id: 9, name: 'Oyun / Konsol', icon: 'gamepad-2', description: 'PlayStation, Xbox, Nintendo, VR' },
   { id: 10, name: 'Diğer', icon: 'package', description: 'Kategori dışı diğer ev varlıkları' },
 ];
+
+export const DEFAULT_CATEGORIES = CATEGORIES;
+

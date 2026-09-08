@@ -14,16 +14,21 @@
   - `src/api/productService.ts` (Full CRUD + Arama + Filtreleme)
   - `src/context/InventoryContext.tsx` (Reaktif liste, istatistikler ve işlemler)
   - `src/utils/warrantyCalculator.ts` (Kalan gün ve garanti durumu rozet motoru)
-- [x] **Yeniden Kullanılabilir UI Bileşenleri**:
+- [x] **Yeniden Kullanılabilir UI Bileşenleri (Stitch Design System)**:
   - `WarrantyBadge` + `WarrantyBadge.styles.ts`
   - `ProductCard` + `ProductCard.styles.ts`
   - `CategoryPickerModal` + `CategoryPickerModal.styles.ts`
-- [x] **2. Hafta Ekranları & Ayrı Stiller**:
-  - `AddProductScreen` + `AddProductScreen.styles.ts` (React Hook Form + Zod, otomatik garanti tarihi hesaplayıcı)
-  - `EditProductScreen` + `EditProductScreen.styles.ts` (Önceden doldurulmuş form ve güncelleme)
-  - `ProductDetailScreen` + `ProductDetailScreen.styles.ts` (Detaylı meta veriler, onaylı silme, düzenleme)
-  - `ProductsScreen` + `ProductsScreen.styles.ts` (Canlı arama, garanti filtre çipleri, FlatList)
-  - `HomeScreen` + `HomeScreen.styles.ts` (Canlı 4'lü sayaç ve son eklenenler)
+  - `EmptyState` + `EmptyState.styles.ts` (Yeni eklendi)
+  - `FilterModal` + `FilterModal.styles.ts` (Yeni eklendi)
+- [x] **Stitch UI Ekranları & Ayrı Stiller**:
+  - `HomeScreen` + `HomeScreen.styles.ts` (Bento özet kartı, dairesel garanti doluluk göstergesi, 4'lü sayaç)
+  - `ProductsScreen` + `ProductsScreen.styles.ts` (Arama, hızlı filtre çipleri, FilterModal ve EmptyState)
+  - `ProductDetailScreen` + `ProductDetailScreen.styles.ts` (Hero görsel, durum rozeti, ikonlu detay tablosu, fatura alanı)
+  - `AddProductScreen` & `EditProductScreen` + `.styles.ts` (Fotoğraf butonları, 2 sütunlu marka/model gridi, garanti süresi çipleri)
+  - `NotificationsScreen` + `NotificationsScreen.styles.ts` (Segment tablar, dinamik garanti bildirimleri)
+  - `ProfileScreen` + `ProfileScreen.styles.ts` (Kullanıcı kartı, tercihler, bildirim/karanlık mod switch'leri, veri dışa aktarma)
+  - `LoginScreen`, `RegisterScreen`, `ForgotPasswordScreen`, `SplashScreen` + `.styles.ts`
+- [x] **Navigasyon**: `MainTabNavigator` (4 Tab: Ana Sayfa, Ürünler, Bildirimler, Profil), `RootNavigator`
 - [x] **Dokümantasyon & Kurallar**: `README.md`, `AGENT.md`, `cleanCode.md`, `errorHandling.md`
 - [x] **TypeScript Doğrulaması**: `npx tsc --noEmit` -> 0 hata.
 

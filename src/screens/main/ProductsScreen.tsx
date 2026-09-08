@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,15 +11,17 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { Search, X, Package, SlidersHorizontal } from 'lucide-react-native';
+import { Search, X, SlidersHorizontal } from 'lucide-react-native';
 
 import { Product } from '../../types';
 import { COLORS } from '../../constants';
 import { useInventory } from '../../context/InventoryContext';
 import { ProductCard } from '../../components/ProductCard';
+import { EmptyState } from '../../components/EmptyState';
+import { FilterModal } from '../../components/FilterModal';
 import { styles } from './ProductsScreen.styles';
 
-const FILTER_TABS = [
+const QUICK_FILTER_TABS = [
   { id: 'all', label: 'Tümü' },
   { id: 'active', label: 'Devam Eden' },
   { id: 'expiring_soon', label: 'Yakında Bitecek' },
@@ -28,9 +30,18 @@ const FILTER_TABS = [
 
 export const ProductsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-  const { products, loading, refreshing, refresh, filterOptions, setFilterOptions } = useInventory();
+  const {
+    products,
+    isLoading,
+    isRefreshing,
+    refreshProducts,
+    filterOptions,
+    setFilterOptions,
+    resetFilters,
+  } = useInventory();
 
   const [searchText, setSearchText] = useState('');
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
 
   // Arama metni değiştiğinde filtre seçeneklerini güncelle
   const handleSearchChange = (text: string) => {
@@ -48,22 +59,29 @@ export const ProductsScreen: React.FC = () => {
 
   const handleProductPress = useCallback(
     (product: Product) => {
-      navigation.navigate('ProductDetail', { productId: product.id, initialProduct: product });
+      navigation.navigate('ProductDetail', {
+        productId: product.id,
+        initialProduct: product,
+      });
     },
     [navigation]
   );
+
+  const hasActiveFilters =
+    filterOptions.categoryId !== undefined ||
+    (filterOptions.warrantyStatus && filterOptions.warrantyStatus !== 'all');
 
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Üst Başlık */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Varlıklarım</Text>
+        <Text style={styles.headerTitle}>Ürünler</Text>
       </View>
 
       <View style={styles.container}>
         {/* Arama Çubuğu */}
         <View style={styles.searchContainer}>
-          <Search size={20} color={COLORS.outline} />
+          <Search size={18} color={COLORS.outline} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Ara (ürün, marka, model, seri no)"
@@ -76,48 +94,70 @@ export const ProductsScreen: React.FC = () => {
             <TouchableOpacity
               style={styles.clearSearchButton}
               onPress={() => handleSearchChange('')}
+              activeOpacity={0.7}
             >
-              <X size={18} color={COLORS.outline} />
+              <X size={16} color={COLORS.outline} />
             </TouchableOpacity>
           )}
         </View>
 
-        {/* Yatay Filtre Çipleri */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterScroll}
-        >
-          {FILTER_TABS.map((tab) => {
-            const isSelected = (filterOptions.warrantyStatus || 'all') === tab.id;
-            return (
-              <TouchableOpacity
-                key={tab.id}
-                style={[styles.filterChip, isSelected && styles.filterChipSelected]}
-                onPress={() => handleSelectStatus(tab.id)}
-                activeOpacity={0.7}
-              >
-                <Text
+        {/* Yatay Filtre Çipleri ve Filtre Butonu */}
+        <View style={styles.filterRow}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterScroll}
+          >
+            {QUICK_FILTER_TABS.map((tab) => {
+              const isSelected =
+                (filterOptions.warrantyStatus || 'all') === tab.id;
+              return (
+                <TouchableOpacity
+                  key={tab.id}
                   style={[
-                    styles.filterChipText,
-                    isSelected && styles.filterChipTextSelected,
+                    styles.filterChip,
+                    isSelected && styles.filterChipSelected,
                   ]}
+                  onPress={() => handleSelectStatus(tab.id)}
+                  activeOpacity={0.7}
                 >
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      isSelected && styles.filterChipTextSelected,
+                    ]}
+                  >
+                    {tab.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          {/* Gelişmiş Filtreleme Modalı Açma Butonu */}
+          <TouchableOpacity
+            style={[
+              styles.tuneButton,
+              hasActiveFilters && styles.tuneButtonActive,
+            ]}
+            onPress={() => setFilterModalVisible(true)}
+            activeOpacity={0.7}
+          >
+            <SlidersHorizontal
+              size={17}
+              color={hasActiveFilters ? COLORS.primary : COLORS.outline}
+            />
+          </TouchableOpacity>
+        </View>
 
         {/* Ürün Sayacı Başlığı */}
         <View style={styles.listHeaderRow}>
           <Text style={styles.productCountText}>{products.length} ürün</Text>
         </View>
 
-        {/* Ürün Listesi (FlatList) */}
-        {loading && !refreshing ? (
-          <View style={[styles.emptyContainer, { flex: 1 }]}>
+        {/* Ürün Listesi */}
+        {isLoading && !isRefreshing ? (
+          <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={COLORS.primary} />
           </View>
         ) : (
@@ -128,28 +168,67 @@ export const ProductsScreen: React.FC = () => {
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
-                refreshing={refreshing}
-                onRefresh={refresh}
+                refreshing={isRefreshing}
+                onRefresh={refreshProducts}
                 tintColor={COLORS.primary}
+                colors={[COLORS.primary]}
               />
             }
             renderItem={({ item }) => (
-              <ProductCard product={item} onPress={() => handleProductPress(item)} />
+              <ProductCard
+                product={item}
+                showPercentageGauge={false}
+                onPress={() => handleProductPress(item)}
+              />
             )}
             ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <Package size={56} color={COLORS.outline} />
-                <Text style={styles.emptyTitle}>Kayıtlı Ürün Bulunamadı</Text>
-                <Text style={styles.emptySubtitle}>
-                  {searchText
-                    ? `"${searchText}" aramasına uygun ürün bulunamadı.`
-                    : 'Henüz bir ürün eklemediniz. "+ Ekle" sekmesinden yeni ürün ekleyebilirsiniz.'}
-                </Text>
-              </View>
+              <EmptyState
+                title={
+                  searchText || hasActiveFilters
+                    ? 'Eşleşen Ürün Bulunamadı'
+                    : 'Henüz ürün eklenmemiş'
+                }
+                description={
+                  searchText || hasActiveFilters
+                    ? 'Arama kriterlerinizi veya filtrelerinizi değiştirerek tekrar deneyebilirsiniz.'
+                    : 'Envanterinizi oluşturmak ve garantilerinizi takip etmek için ilk ürününüzü ekleyin.'
+                }
+                actionText={
+                  searchText || hasActiveFilters
+                    ? 'Filtreleri Temizle'
+                    : 'İlk Ürünü Ekle'
+                }
+                onActionPress={() => {
+                  if (searchText || hasActiveFilters) {
+                    setSearchText('');
+                    resetFilters();
+                  } else {
+                    navigation.navigate('AddTab');
+                  }
+                }}
+              />
             }
           />
         )}
       </View>
+
+      {/* Gelişmiş Filtreleme Modalı */}
+      <FilterModal
+        visible={filterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        selectedCategoryId={filterOptions.categoryId}
+        onSelectCategory={(id) =>
+          setFilterOptions((prev) => ({ ...prev, categoryId: id }))
+        }
+        selectedStatus={filterOptions.warrantyStatus || 'all'}
+        onSelectStatus={(status) =>
+          setFilterOptions((prev) => ({ ...prev, warrantyStatus: status }))
+        }
+        onReset={() => {
+          resetFilters();
+          setSearchText('');
+        }}
+      />
     </SafeAreaView>
   );
 };

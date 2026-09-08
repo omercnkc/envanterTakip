@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -29,8 +29,11 @@ import {
 import { Product } from '../../types';
 import { COLORS } from '../../constants';
 import { useInventory } from '../../context/InventoryContext';
-import { formatDateTurkish, formatCurrency } from '../../utils/warrantyCalculator';
-import { WarrantyBadge } from '../../components/WarrantyBadge';
+import {
+  formatDateTurkish,
+  formatCurrency,
+  calculateWarrantyStatus,
+} from '../../utils/warrantyCalculator';
 import { styles } from './ProductDetailScreen.styles';
 
 export const ProductDetailScreen: React.FC = () => {
@@ -95,6 +98,7 @@ export const ProductDetailScreen: React.FC = () => {
 
   const categoryName = product.category?.name || 'Genel';
   const brandText = product.brand ? ` · ${product.brand}` : '';
+  const statusInfo = calculateWarrantyStatus(product.warranty_end_date);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -106,12 +110,12 @@ export const ProductDetailScreen: React.FC = () => {
             onPress={() => navigation.goBack()}
             activeOpacity={0.7}
           >
-            <ArrowLeft size={24} color={COLORS.onBackground} />
+            <ArrowLeft size={22} color={COLORS.onBackground} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Ürün Detayı</Text>
         </View>
         <TouchableOpacity style={styles.editIconButton} onPress={handleEdit} activeOpacity={0.7}>
-          <Edit2 size={20} color={COLORS.primary} />
+          <Edit2 size={19} color={COLORS.onSurfaceVariant} />
         </TouchableOpacity>
       </View>
 
@@ -122,17 +126,25 @@ export const ProductDetailScreen: React.FC = () => {
         {/* Görsel Hero Bölümü */}
         <View style={styles.heroImageContainer}>
           {product.image_path ? (
-            <Image source={{ uri: product.image_path }} style={styles.heroImage} />
+            <Image source={{ uri: product.image_path }} style={styles.heroImage} resizeMode="cover" />
           ) : (
-            <Package size={80} color={COLORS.outline} />
+            <View style={styles.heroPlaceholder}>
+              <Package size={64} color={COLORS.outline} />
+            </View>
           )}
         </View>
 
         {/* Ürün Adı & Garanti Durumu */}
         <View style={styles.titleSection}>
           <View style={styles.titleRow}>
-            <Text style={styles.productName}>{product.name}</Text>
-            <WarrantyBadge warrantyEndDate={product.warranty_end_date} />
+            <Text style={styles.productName} numberOfLines={2}>
+              {product.name}
+            </Text>
+            <View style={[styles.statusPill, { backgroundColor: statusInfo.bgColor }]}>
+              <Text style={[styles.statusPillText, { color: statusInfo.color }]}>
+                {statusInfo.label}
+              </Text>
+            </View>
           </View>
           <Text style={styles.categoryBrandText}>
             {categoryName}
@@ -140,13 +152,13 @@ export const ProductDetailScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* Detaylar Kartı */}
+        {/* Detaylar Kartı (Divided List) */}
         <View style={styles.detailsCard}>
           {/* Model */}
           {product.model && (
             <View style={styles.detailRow}>
               <View style={styles.detailLabelGroup}>
-                <Cpu size={18} color={COLORS.onSurfaceVariant} />
+                <Cpu size={17} color={COLORS.onSurfaceVariant} />
                 <Text style={styles.detailLabel}>Model</Text>
               </View>
               <Text style={styles.detailValue}>{product.model}</Text>
@@ -157,7 +169,7 @@ export const ProductDetailScreen: React.FC = () => {
           {product.serial_number && (
             <View style={styles.detailRow}>
               <View style={styles.detailLabelGroup}>
-                <QrCode size={18} color={COLORS.onSurfaceVariant} />
+                <QrCode size={17} color={COLORS.onSurfaceVariant} />
                 <Text style={styles.detailLabel}>Seri Numarası</Text>
               </View>
               <Text style={styles.detailValue}>{product.serial_number}</Text>
@@ -167,7 +179,7 @@ export const ProductDetailScreen: React.FC = () => {
           {/* Kategori */}
           <View style={styles.detailRow}>
             <View style={styles.detailLabelGroup}>
-              <Layers size={18} color={COLORS.onSurfaceVariant} />
+              <Layers size={17} color={COLORS.onSurfaceVariant} />
               <Text style={styles.detailLabel}>Kategori</Text>
             </View>
             <Text style={styles.detailValue}>{categoryName}</Text>
@@ -177,7 +189,7 @@ export const ProductDetailScreen: React.FC = () => {
           {product.purchase_date && (
             <View style={styles.detailRow}>
               <View style={styles.detailLabelGroup}>
-                <Calendar size={18} color={COLORS.onSurfaceVariant} />
+                <Calendar size={17} color={COLORS.onSurfaceVariant} />
                 <Text style={styles.detailLabel}>Satın Alma Tarihi</Text>
               </View>
               <Text style={styles.detailValue}>{formatDateTurkish(product.purchase_date)}</Text>
@@ -188,7 +200,7 @@ export const ProductDetailScreen: React.FC = () => {
           {product.purchase_price !== null && product.purchase_price !== undefined && (
             <View style={styles.detailRow}>
               <View style={styles.detailLabelGroup}>
-                <CreditCard size={18} color={COLORS.onSurfaceVariant} />
+                <CreditCard size={17} color={COLORS.onSurfaceVariant} />
                 <Text style={styles.detailLabel}>Satın Alınan Fiyatı</Text>
               </View>
               <Text style={styles.detailValue}>{formatCurrency(product.purchase_price)}</Text>
@@ -198,7 +210,7 @@ export const ProductDetailScreen: React.FC = () => {
           {/* Garanti Bitiş Tarihi */}
           <View style={styles.detailRow}>
             <View style={styles.detailLabelGroup}>
-              <ShieldCheck size={18} color={COLORS.onSurfaceVariant} />
+              <ShieldCheck size={17} color={COLORS.onSurfaceVariant} />
               <Text style={styles.detailLabel}>Garanti Bitiş Tarihi</Text>
             </View>
             <Text style={styles.detailValue}>{formatDateTurkish(product.warranty_end_date)}</Text>
@@ -208,7 +220,7 @@ export const ProductDetailScreen: React.FC = () => {
           {product.store_name && (
             <View style={styles.detailRow}>
               <View style={styles.detailLabelGroup}>
-                <Store size={18} color={COLORS.onSurfaceVariant} />
+                <Store size={17} color={COLORS.onSurfaceVariant} />
                 <Text style={styles.detailLabel}>Satın Alınan Mağaza</Text>
               </View>
               <Text style={styles.detailValue}>{product.store_name}</Text>
@@ -219,7 +231,7 @@ export const ProductDetailScreen: React.FC = () => {
           {product.description && (
             <View style={styles.descriptionRow}>
               <View style={styles.detailLabelGroup}>
-                <FileText size={18} color={COLORS.onSurfaceVariant} />
+                <FileText size={17} color={COLORS.onSurfaceVariant} />
                 <Text style={styles.detailLabel}>Açıklama</Text>
               </View>
               <Text style={styles.descriptionText}>{product.description}</Text>
@@ -229,24 +241,24 @@ export const ProductDetailScreen: React.FC = () => {
 
         {/* Fatura Bölümü */}
         <View style={styles.invoiceSection}>
-          <Text style={styles.sectionTitle}>Fatura & Belgeler</Text>
+          <Text style={styles.sectionTitle}>Fatura</Text>
           <View style={styles.invoiceCard}>
             <View style={styles.invoiceLeft}>
               <View style={styles.invoiceIconBox}>
-                <Receipt size={24} color={COLORS.primary} />
+                <Receipt size={22} color={COLORS.primary} />
               </View>
               <View>
                 <Text style={styles.invoiceFileName}>
-                  {product.invoice_path ? 'Fatura Belgesi' : 'Kayıtlı Fatura Bulunmuyor'}
+                  {product.invoice_path ? 'Fatura_Belgesi.jpg' : 'Fatura Eklenmedi'}
                 </Text>
                 <Text style={styles.invoiceFileSize}>
-                  {product.invoice_path ? 'Görüntülemek için dokunun' : 'Fatura eklenmedi'}
+                  {product.invoice_path ? '1.2 MB' : 'Kayıtlı dosya yok'}
                 </Text>
               </View>
             </View>
             {product.invoice_path && (
-              <TouchableOpacity activeOpacity={0.7}>
-                <Download size={20} color={COLORS.primary} />
+              <TouchableOpacity style={styles.downloadButton} activeOpacity={0.7}>
+                <Download size={18} color={COLORS.primary} />
               </TouchableOpacity>
             )}
           </View>
