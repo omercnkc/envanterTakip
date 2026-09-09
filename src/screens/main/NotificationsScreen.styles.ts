@@ -11,11 +11,32 @@ export const styles = StyleSheet.create({
     paddingTop: SPACING.xs,
     paddingBottom: SPACING.sm,
   },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.md,
+  },
   headerTitle: {
     ...TYPOGRAPHY.headlineLgMobile,
     color: COLORS.onBackground,
     fontWeight: '700',
-    marginBottom: SPACING.md,
+  },
+  testButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primaryContainer + '40',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: RADIUS.full,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: COLORS.primary + '30',
+  },
+  testButtonText: {
+    ...TYPOGRAPHY.labelSm,
+    color: COLORS.primary,
+    fontWeight: '600',
   },
   tabContainer: {
     flexDirection: 'row',

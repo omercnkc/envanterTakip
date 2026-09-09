@@ -17,6 +17,11 @@ import { productService } from '../api/productService';
 import { categoryService } from '../api/categoryService';
 import { isSupabaseConfigured } from '../api/supabase';
 import { calculateWarrantyStatus } from '../utils/warrantyCalculator';
+import {
+  scheduleWarrantyNotifications,
+  cancelWarrantyNotifications,
+  syncAllWarrantyNotifications,
+} from '../utils/notificationHelper';
 import { useAuth } from './AuthContext';
 
 interface InventoryContextType {
@@ -95,7 +100,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     try {
       setLoading(true);
       const res = await productService.getProducts(currentUserId, filterOptions);
-      setProducts(res.data || []);
+      const items = res.data || [];
+      setProducts(items);
+      syncAllWarrantyNotifications(items);
     } catch {
       // Hata sessizce yakalanır
     } finally {
@@ -113,7 +120,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     setRefreshing(true);
     try {
       const res = await productService.getProducts(currentUserId, filterOptions);
-      setProducts(res.data || []);
+      const items = res.data || [];
+      setProducts(items);
+      syncAllWarrantyNotifications(items);
     } finally {
       setRefreshing(false);
     }
@@ -150,6 +159,8 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     if (res.error || !res.data) {
       return { success: false, error: res.error || 'Ürün kaydedilemedi.' };
     }
+    // Yeni ürün için bildirimleri planla
+    scheduleWarrantyNotifications(res.data);
     await fetchProducts();
     return { success: true, data: res.data };
   };
@@ -160,6 +171,8 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     if (res.error || !res.data) {
       return { success: false, error: res.error || 'Ürün güncellenemedi.' };
     }
+    // Güncellenen ürünün bildirimlerini yeniden planla
+    scheduleWarrantyNotifications(res.data);
     await fetchProducts();
     return { success: true, data: res.data };
   };
@@ -170,6 +183,8 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     if (!res.success) {
       return { success: false, error: res.error || 'Ürün silinemedi.' };
     }
+    // Planlanmış bildirimleri iptal et
+    cancelWarrantyNotifications(productId);
     setProducts((prev) => prev.filter((p) => p.id !== productId));
     return { success: true };
   };

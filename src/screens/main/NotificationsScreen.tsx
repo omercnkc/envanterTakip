@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   FlatList,
   RefreshControl,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -13,11 +15,13 @@ import {
   BellRing,
   AlertCircle,
   CheckCircle2,
+  Sparkles,
 } from 'lucide-react-native';
 
 import { COLORS } from '../../constants';
 import { useInventory } from '../../context/InventoryContext';
 import { calculateWarrantyStatus, formatDateTurkish } from '../../utils/warrantyCalculator';
+import { sendTestNotification } from '../../utils/notificationHelper';
 import { EmptyState } from '../../components/EmptyState';
 import { styles } from './NotificationsScreen.styles';
 
@@ -38,6 +42,27 @@ export const NotificationsScreen: React.FC = () => {
   const { products, isRefreshing, refreshProducts } = useInventory();
   const [activeTab, setActiveTab] = useState<NotificationFilterTab>('all');
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
+  const [isSendingTest, setIsSendingTest] = useState(false);
+
+  const handleSendTestNotification = async () => {
+    if (isSendingTest) return;
+    try {
+      setIsSendingTest(true);
+      await sendTestNotification();
+      Alert.alert(
+        '🔔 Bildirim Planlandı',
+        'Test bildirimi başarıyla oluşturuldu. 2 saniye içinde telefonunuzun bildirim çubuğunda görünecektir.',
+        [{ text: 'Harika' }]
+      );
+    } catch {
+      Alert.alert(
+        'Bildirim Gönderilemedi',
+        'Lütfen telefon ayarlarından uygulama bildirim izinlerini etkinleştirdiğinizden emin olun.'
+      );
+    } finally {
+      setIsSendingTest(false);
+    }
+  };
 
   // Ürünlerin garanti durumlarına göre dinamik bildirimler oluşturma
   const notifications: NotificationItem[] = useMemo(() => {
@@ -129,7 +154,24 @@ export const NotificationsScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Bildirimler</Text>
+        <View style={styles.headerTop}>
+          <Text style={styles.headerTitle}>Bildirimler</Text>
+          <TouchableOpacity
+            style={styles.testButton}
+            onPress={handleSendTestNotification}
+            disabled={isSendingTest}
+            activeOpacity={0.7}
+          >
+            {isSendingTest ? (
+              <ActivityIndicator size="small" color={COLORS.primary} />
+            ) : (
+              <Sparkles size={14} color={COLORS.primary} />
+            )}
+            <Text style={styles.testButtonText}>
+              {isSendingTest ? 'Gönderiliyor...' : 'Test Bildirimi'}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Segmented Capsule Tabs */}
         <View style={styles.tabContainer}>
