@@ -9,18 +9,23 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronDown, ArrowLeft } from 'lucide-react-native';
+import { ChevronDown, ArrowLeft, Camera, Image as ImageIcon, Upload, X } from 'lucide-react-native';
 
 import { ProductFormData, productFormSchema, Category } from '../../types';
 import { COLORS } from '../../constants';
+import { useAuth } from '../../context/AuthContext';
 import { useInventory } from '../../context/InventoryContext';
 import { calculateWarrantyEndDate } from '../../utils/warrantyCalculator';
+import { mediaHelper } from '../../utils/mediaHelper';
+import { storageService } from '../../api/storageService';
 import { CategoryPickerModal } from '../../components/CategoryPickerModal';
+import { MediaPickerModal } from '../../components/MediaPickerModal';
 import { styles } from './EditProductScreen.styles';
 
 const DURATION_OPTIONS = [
@@ -36,11 +41,18 @@ export const EditProductScreen: React.FC = () => {
   const route = useRoute<any>();
   const { productId, product: initialProduct } = route.params || {};
 
+  const { user } = useAuth();
   const { updateProduct, getProduct, categories } = useInventory();
 
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
+  const [photoPickerVisible, setPhotoPickerVisible] = useState(false);
+  const [invoicePickerVisible, setInvoicePickerVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedDuration, setSelectedDuration] = useState<number>(24);
+  const [imageUri, setImageUri] = useState<string | null>(initialProduct?.image_path || null);
+  const [invoiceName, setInvoiceName] = useState<string | null>(initialProduct?.invoice_path ? 'Mevcut_Fatura_Belgesi' : null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isUploadingInvoice, setIsUploadingInvoice] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingInitial, setLoadingInitial] = useState(!initialProduct);
 
@@ -82,6 +94,8 @@ export const EditProductScreen: React.FC = () => {
       if (initialProduct.warranty_duration_months) {
         setSelectedDuration(initialProduct.warranty_duration_months);
       }
+      setImageUri(initialProduct.image_path || null);
+      setInvoiceName(initialProduct.invoice_path ? 'Mevcut_Fatura_Belgesi' : null);
       return;
     }
 
@@ -110,6 +124,8 @@ export const EditProductScreen: React.FC = () => {
           if (prod.warranty_duration_months) {
             setSelectedDuration(prod.warranty_duration_months);
           }
+          setImageUri(prod.image_path || null);
+          setInvoiceName(prod.invoice_path ? 'Mevcut_Fatura_Belgesi' : null);
         }
         setLoadingInitial(false);
       };
@@ -129,6 +145,92 @@ export const EditProductScreen: React.FC = () => {
   const handleSelectCategory = (cat: Category) => {
     setSelectedCategory(cat);
     setValue('category_id', cat.id);
+  };
+
+  // Fotoğraf Yükleme İşlemi (Kamera veya Galeri)
+  const handlePickProductImage = async (source: 'camera' | 'gallery') => {
+    try {
+      const result =
+        source === 'camera'
+          ? await mediaHelper.pickFromCamera()
+          : await mediaHelper.pickFromGallery();
+
+      if (result.canceled || !result.uri) return;
+
+      setImageUri(result.uri);
+      setIsUploadingImage(true);
+
+      const userId = user?.id || '00000000-0000-0000-0000-000000000000';
+      const uploadRes = await storageService.uploadFile(
+        result.uri,
+        'product-images',
+        userId,
+        {
+          fileName: result.name,
+          mimeType: result.mimeType,
+        }
+      );
+
+      if (uploadRes.error) {
+        Alert.alert('Yükleme Hatası', uploadRes.error);
+        setImageUri(null);
+        setValue('image_path', null);
+      } else if (uploadRes.publicUrl) {
+        setImageUri(uploadRes.publicUrl);
+        setValue('image_path', uploadRes.publicUrl);
+      }
+    } catch {
+      Alert.alert('Hata', 'Fotoğraf yüklenirken beklenmeyen bir hata oluştu.');
+      setImageUri(null);
+      setValue('image_path', null);
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  // Fatura Yükleme İşlemi (Kamera, Galeri veya Belge)
+  const handlePickInvoice = async (source: 'camera' | 'gallery' | 'document') => {
+    try {
+      let result;
+      if (source === 'camera') {
+        result = await mediaHelper.pickFromCamera();
+      } else if (source === 'gallery') {
+        result = await mediaHelper.pickFromGallery();
+      } else {
+        result = await mediaHelper.pickDocument();
+      }
+
+      if (result.canceled || !result.uri) return;
+
+      const fileName = result.name || 'fatura_belgesi.pdf';
+      setInvoiceName(fileName);
+      setIsUploadingInvoice(true);
+
+      const userId = user?.id || '00000000-0000-0000-0000-000000000000';
+      const uploadRes = await storageService.uploadFile(
+        result.uri,
+        'invoices',
+        userId,
+        {
+          fileName: fileName,
+          mimeType: result.mimeType,
+        }
+      );
+
+      if (uploadRes.error) {
+        Alert.alert('Yükleme Hatası', uploadRes.error);
+        setInvoiceName(null);
+        setValue('invoice_path', null);
+      } else if (uploadRes.publicUrl) {
+        setValue('invoice_path', uploadRes.publicUrl);
+      }
+    } catch {
+      Alert.alert('Hata', 'Fatura yüklenirken beklenmeyen bir hata oluştu.');
+      setInvoiceName(null);
+      setValue('invoice_path', null);
+    } finally {
+      setIsUploadingInvoice(false);
+    }
   };
 
   const onSubmit = async (data: ProductFormData) => {
@@ -187,7 +289,52 @@ export const EditProductScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Bölüm 1: Temel Bilgiler */}
+          {/* Bölüm 1: Ürün Fotoğrafı */}
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Ürün Fotoğrafı</Text>
+            {isUploadingImage ? (
+              <View style={[styles.imagePreviewContainer, { justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.surfaceContainerLow }]}>
+                <ActivityIndicator size="large" color={COLORS.primary} />
+                <Text style={[styles.photoActionText, { marginTop: 8, color: COLORS.primary }]}>Görsel Yükleniyor...</Text>
+              </View>
+            ) : imageUri ? (
+              <View style={styles.imagePreviewContainer}>
+                <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+                <TouchableOpacity
+                  style={styles.removeImageButton}
+                  onPress={() => {
+                    setImageUri(null);
+                    setValue('image_path', null);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <X size={16} color={COLORS.onError} />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.photoActionRow}>
+                <TouchableOpacity
+                  style={styles.photoActionButton}
+                  onPress={() => handlePickProductImage('camera')}
+                  activeOpacity={0.7}
+                >
+                  <Camera size={26} color={COLORS.primary} />
+                  <Text style={styles.photoActionText}>Kamera</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.photoActionButton}
+                  onPress={() => handlePickProductImage('gallery')}
+                  activeOpacity={0.7}
+                >
+                  <ImageIcon size={26} color={COLORS.primary} />
+                  <Text style={styles.photoActionText}>Galeriden Seç</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+
+          {/* Bölüm 2: Temel Bilgiler */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Temel Bilgiler</Text>
 
@@ -471,6 +618,43 @@ export const EditProductScreen: React.FC = () => {
                 )}
               />
             </View>
+
+            {/* Fatura Fotoğrafı */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Fatura Belgesi / Fotoğrafı</Text>
+              {isUploadingInvoice ? (
+                <View style={[styles.invoiceUploadedBox, { justifyContent: 'center' }]}>
+                  <ActivityIndicator size="small" color={COLORS.primary} style={{ marginRight: 8 }} />
+                  <Text style={styles.invoiceUploadedText}>Fatura Yükleniyor...</Text>
+                </View>
+              ) : invoiceName ? (
+                <View style={styles.invoiceUploadedBox}>
+                  <Text style={styles.invoiceUploadedText} numberOfLines={1}>
+                    {invoiceName}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setInvoiceName(null);
+                      setValue('invoice_path', null);
+                    }}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <X size={16} color={COLORS.error} />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={styles.uploadDashedBox}
+                  onPress={() => setInvoicePickerVisible(true)}
+                  activeOpacity={0.7}
+                >
+                  <Upload size={24} color={COLORS.outline} />
+                  <Text style={styles.uploadDashedText}>
+                    Fatura, fiş fotoğrafı veya PDF yükle
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -483,7 +667,7 @@ export const EditProductScreen: React.FC = () => {
             isSubmitting && styles.submitButtonDisabled,
           ]}
           onPress={handleSubmit(onSubmit)}
-          disabled={isSubmitting}
+          disabled={isSubmitting || isUploadingImage || isUploadingInvoice}
           activeOpacity={0.85}
         >
           {isSubmitting ? (
@@ -501,6 +685,28 @@ export const EditProductScreen: React.FC = () => {
         categories={categories}
         selectedCategoryId={selectedCategory?.id}
         onSelect={handleSelectCategory}
+      />
+
+      {/* Fotoğraf Seçim Modalı */}
+      <MediaPickerModal
+        visible={photoPickerVisible}
+        onClose={() => setPhotoPickerVisible(false)}
+        onSelectCamera={() => handlePickProductImage('camera')}
+        onSelectGallery={() => handlePickProductImage('gallery')}
+        title="Ürün Fotoğrafı Değiştir"
+        subtitle="Kamera ile çekin veya galerinizden seçin"
+      />
+
+      {/* Fatura Seçim Modalı */}
+      <MediaPickerModal
+        visible={invoicePickerVisible}
+        onClose={() => setInvoicePickerVisible(false)}
+        onSelectCamera={() => handlePickInvoice('camera')}
+        onSelectGallery={() => handlePickInvoice('gallery')}
+        onSelectDocument={() => handlePickInvoice('document')}
+        includeDocumentOption={true}
+        title="Fatura / Belge Yükle"
+        subtitle="Fotoğraf çekin, galeriden veya PDF seçin"
       />
     </SafeAreaView>
   );

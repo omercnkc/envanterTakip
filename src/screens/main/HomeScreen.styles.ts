@@ -8,15 +8,16 @@ export const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SPACING.containerMargin,
-    paddingTop: SPACING.stackSm,
-    paddingBottom: 110,
+    paddingTop: SPACING.md + 4,
+    paddingBottom: 135,
     gap: SPACING.stackLg,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: SPACING.xs,
+    paddingTop: SPACING.xs,
+    paddingBottom: SPACING.xs,
   },
   headerLeft: {
     flex: 1,

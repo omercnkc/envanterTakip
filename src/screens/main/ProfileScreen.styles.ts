@@ -9,7 +9,7 @@ export const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: SPACING.containerMargin,
     paddingTop: SPACING.xs,
-    paddingBottom: SPACING.xxl + 20,
+    paddingBottom: 135,
     gap: SPACING.stackLg,
   },
   headerTitle: {

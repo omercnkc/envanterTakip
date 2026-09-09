@@ -108,7 +108,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   listContent: {
-    paddingBottom: SPACING.xxl + 20,
+    paddingBottom: 135,
     gap: SPACING.sm + 2,
   },
 });

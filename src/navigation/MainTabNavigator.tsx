@@ -211,7 +211,7 @@ const FloatingBeadTabBar: React.FC<BottomTabBarProps> = ({
     }
   };
 
-  const bottomOffset = Platform.OS === 'ios' ? Math.max(insets.bottom, 16) : 16;
+  const bottomOffset = Math.max(insets.bottom, 12) + (Platform.OS === 'android' ? 12 : 6);
 
   return (
     <View style={[styles.tabBarWrapper, { bottom: bottomOffset }]}>
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
   tabBarContainer: {
     position: 'relative',
     width: TAB_BAR_WIDTH,
-    height: 90,
+    height: 84,
     justifyContent: 'flex-end',
   },
   pillBackground: {
@@ -305,9 +305,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 72,
+    height: 66,
     backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: 36,
+    borderRadius: 33,
     borderWidth: 1,
     borderColor: COLORS.surfaceContainerHigh,
     // iOS Shadow
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
   },
   beadGlow: {
     position: 'absolute',
-    bottom: 36,
+    bottom: 30,
     left: 0,
     width: BEAD_SIZE,
     height: BEAD_SIZE,
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
   },
   beadCircle: {
     position: 'absolute',
-    bottom: 36,
+    bottom: 30,
     left: 0,
     width: BEAD_SIZE,
     height: BEAD_SIZE,
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 72,
+    height: 66,
     flexDirection: 'row',
     zIndex: 20,
   },
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     position: 'absolute',
-    bottom: 16,
+    bottom: 13,
     width: 40,
     height: 40,
     alignItems: 'center',
@@ -374,12 +374,12 @@ const styles = StyleSheet.create({
   },
   labelContainer: {
     position: 'absolute',
-    bottom: 14,
+    bottom: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   labelText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: COLORS.onSurface,
     textAlign: 'center',

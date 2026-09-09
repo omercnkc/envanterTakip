@@ -35,12 +35,12 @@
 ## 3. Yapılacaklar Listesi (What's Left to Build)
 
 ### 3. Hafta: Fotoğraf, Fatura & Garanti Bildirimleri
-- [ ] Expo ImagePicker / Camera ile gerçek kamera ve galeri görsel yükleme
-- [ ] Supabase Storage (`product-images`, `invoices`) yükleme ve silme entegrasyonu
+- [x] Expo ImagePicker / Camera ile gerçek kamera ve galeri görsel yükleme
+- [x] Supabase Storage (`product-images`, `invoices`) yükleme ve silme entegrasyonu (`storageService.ts`, `mediaHelper.ts`, `MediaPickerModal.tsx`)
 - [ ] Expo Notifications ile 30 gün, 7 gün ve 1 gün öncesi yerel bildirimlerin zamanlanması
 - [ ] Barkod / QR Kod tarayıcı (Expo Camera) ile seri no okuma
 
 ### 4. Hafta: Tamamlama, İyileştirme & Teslimat
-- [ ] Profil & Ayarlar (Dark Mode, bildirim tercihleri)
+- [ ] Profil & Ayarlar (Dark Mode, bildirim tercihleri, CSV/PDF Export)
 - [ ] Empty State ve Loading animasyonları polish
 - [ ] Android APK derleme ve sunum hazırlığı

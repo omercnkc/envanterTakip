@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,17 +9,22 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  Animated,
+  Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, Sparkles } from 'lucide-react-native';
 
 import { AuthStackParamList, LoginFormData, loginSchema } from '../../types';
 import { COLORS } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
 import { GoogleIcon } from '../../components/GoogleIcon';
+import { AnimatedLock, LockAnimState, LockStatusType } from '../../components/AnimatedLock';
+import { getSavedCredentials, clearSavedCredentials, saveCredentials } from '../../utils/credentialHelper';
 import { styles } from './LoginScreen.styles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
@@ -30,10 +35,15 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+  const [hasSavedCredential, setHasSavedCredential] = useState(false);
+  const [animState, setAnimState] = useState<LockAnimState>('idle');
+  const [statusType, setStatusType] = useState<LockStatusType>('idle');
 
   const {
     control,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -44,6 +54,97 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     },
   });
 
+  const passwordWatch = watch('password') || '';
+  const showLock = passwordWatch.length > 0 || animState === 'unlock';
+
+  // Kilit için İpeksi / Çok Yumuşak (Ultra Soft) Giriş & Çıkış Animasyonu
+  const lockOpacity = useRef(new Animated.Value(0)).current;
+  const lockScale = useRef(new Animated.Value(0.92)).current;
+  const lockTranslateY = useRef(new Animated.Value(-10)).current;
+  const [isLockVisible, setIsLockVisible] = useState(false);
+
+  useEffect(() => {
+    if (showLock) {
+      setIsLockVisible(true);
+      Animated.parallel([
+        Animated.timing(lockOpacity, {
+          toValue: 1,
+          duration: 450,
+          easing: Easing.bezier(0.16, 1, 0.3, 1),
+          useNativeDriver: true,
+        }),
+        Animated.timing(lockScale, {
+          toValue: 1,
+          duration: 450,
+          easing: Easing.bezier(0.16, 1, 0.3, 1),
+          useNativeDriver: true,
+        }),
+        Animated.timing(lockTranslateY, {
+          toValue: 0,
+          duration: 450,
+          easing: Easing.bezier(0.16, 1, 0.3, 1),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(lockOpacity, {
+          toValue: 0,
+          duration: 280,
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+          useNativeDriver: true,
+        }),
+        Animated.timing(lockScale, {
+          toValue: 0.92,
+          duration: 280,
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+          useNativeDriver: true,
+        }),
+        Animated.timing(lockTranslateY, {
+          toValue: -10,
+          duration: 280,
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setIsLockVisible(false);
+      });
+    }
+  }, [showLock, lockOpacity, lockScale, lockTranslateY]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      let isMounted = true;
+      const loadSaved = async () => {
+        const saved = await getSavedCredentials();
+        if (isMounted && saved && saved.email && saved.password) {
+          setValue('email', saved.email, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+          setValue('password', saved.password, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+          setHasSavedCredential(true);
+        }
+      };
+      loadSaved();
+      return () => {
+        isMounted = false;
+      };
+    }, [setValue])
+  );
+
+  const handleClearSavedCredentials = async () => {
+    await clearSavedCredentials();
+    setHasSavedCredential(false);
+    setValue('email', '');
+    setValue('password', '');
+    setStatusType('idle');
+    setAnimState('idle');
+  };
+
+  const onInvalid = () => {
+    setStatusType('error');
+    setAnimState('shake');
+    setTimeout(() => setAnimState('idle'), 600);
+  };
+
   const onSubmit = async (data: LoginFormData) => {
     try {
       setServerError(null);
@@ -51,9 +152,20 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       const result = await signIn(data);
       if (!result.success && result.error) {
         setServerError(result.error);
+        setStatusType('error');
+        setAnimState('shake');
+        setTimeout(() => setAnimState('idle'), 600);
+      } else {
+        setStatusType('success');
+        setAnimState('unlock');
+        // Giriş başarılı olunca bilgileri yerel hafızada güncel tut
+        await saveCredentials(data.email, data.password, false);
       }
     } catch {
       setServerError('Giriş yapılırken beklenmedik bir hata oluştu.');
+      setStatusType('error');
+      setAnimState('shake');
+      setTimeout(() => setAnimState('idle'), 600);
     } finally {
       setIsSubmitting(false);
     }
@@ -66,9 +178,18 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       const result = await signInWithGoogle();
       if (!result.success && result.error) {
         setServerError(result.error);
+        setStatusType('error');
+        setAnimState('shake');
+        setTimeout(() => setAnimState('idle'), 600);
+      } else {
+        setStatusType('success');
+        setAnimState('unlock');
       }
     } catch {
       setServerError('Google ile giriş yapılırken bir hata oluştu.');
+      setStatusType('error');
+      setAnimState('shake');
+      setTimeout(() => setAnimState('idle'), 600);
     } finally {
       setIsGoogleSubmitting(false);
     }
@@ -103,9 +224,42 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Form Kartı */}
           <View style={styles.card}>
+            {/* Animasyonlu Kilit (Soft animasyon ile açılır/kapanır) */}
+            {isLockVisible && (
+              <Animated.View
+                style={{
+                  opacity: lockOpacity,
+                  transform: [
+                    { scale: lockScale },
+                    { translateY: lockTranslateY },
+                  ],
+                }}
+              >
+                <AnimatedLock animState={animState} statusType={statusType} />
+              </Animated.View>
+            )}
+
             {serverError && (
               <View style={styles.serverErrorBox}>
                 <Text style={styles.serverErrorText}>{serverError}</Text>
+              </View>
+            )}
+
+            {hasSavedCredential && (
+              <View style={styles.autoFillBanner}>
+                <View style={styles.autoFillInfo}>
+                  <Sparkles size={14} color={COLORS.primary} />
+                  <Text style={styles.autoFillText}>
+                    Kayıtlı hesap bilgileri otomatik dolduruldu
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={handleClearSavedCredentials}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.autoFillClearText}>Temizle</Text>
+                </TouchableOpacity>
               </View>
             )}
 
@@ -137,7 +291,15 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                       autoCapitalize="none"
                       autoCorrect={false}
                       value={value}
-                      onChangeText={onChange}
+                      onChangeText={(text) => {
+                        const clean = text.replace(/\s+/g, '');
+                        onChange(clean);
+                        if (animState === 'unlock' || statusType !== 'idle') {
+                          setAnimState('idle');
+                          setStatusType('idle');
+                          setServerError(null);
+                        }
+                      }}
                       onBlur={onBlur}
                     />
                   </View>
@@ -182,9 +344,15 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                       placeholderTextColor={COLORS.outline}
                       secureTextEntry={!showPassword}
                       autoCapitalize="none"
-                      maxLength={12}
                       value={value}
-                      onChangeText={onChange}
+                      onChangeText={(text) => {
+                        onChange(text);
+                        if (animState === 'unlock' || statusType !== 'idle') {
+                          setAnimState('idle');
+                          setStatusType('idle');
+                          setServerError(null);
+                        }
+                      }}
                       onBlur={onBlur}
                     />
                     <TouchableOpacity
@@ -211,15 +379,18 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               style={[
                 styles.submitButton,
                 isSubmitting && styles.submitButtonDisabled,
+                statusType === 'success' && { backgroundColor: COLORS.tertiary },
               ]}
-              onPress={handleSubmit(onSubmit)}
+              onPress={handleSubmit(onSubmit, onInvalid)}
               disabled={isSubmitting}
               activeOpacity={0.8}
             >
               {isSubmitting ? (
                 <ActivityIndicator color={COLORS.onPrimary} />
               ) : (
-                <Text style={styles.submitButtonText}>Giriş Yap</Text>
+                <Text style={styles.submitButtonText}>
+                  {statusType === 'success' ? 'Sisteme Giriliyor...' : 'Giriş Yap'}
+                </Text>
               )}
             </TouchableOpacity>
 

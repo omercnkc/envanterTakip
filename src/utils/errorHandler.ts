@@ -40,9 +40,25 @@ export const formatAppError = (error: unknown): FormattedError => {
 
   // 1. Kimlik Doğrulama Hataları
   if (
+    rawString.includes('email not confirmed') ||
+    rawString.includes('email_not_confirmed') ||
+    rawString.includes('email address not confirmed')
+  ) {
+    return {
+      message: 'E-posta adresiniz henüz doğrulanmamış.',
+      suggestion: 'Lütfen gelen kutunuzdaki (veya spam klasöründeki) doğrulama bağlantısına tıklayarak hesabınızı aktif edin.',
+      fullMessage:
+        'E-posta adresiniz henüz doğrulanmamış. Lütfen gelen kutunuzdaki (veya spam klasöründeki) doğrulama bağlantısına tıklayarak hesabınızı aktif edin.',
+    };
+  }
+
+  if (
     rawString.includes('invalid login credentials') ||
     rawString.includes('invalid_grant') ||
-    rawString.includes('invalid credentials')
+    rawString.includes('invalid credentials') ||
+    rawString.includes('invalid username or password') ||
+    rawString.includes('invalid email or password') ||
+    rawString.includes('bad credentials')
   ) {
     return {
       message: 'E-posta adresi veya şifreniz eşleşmiyor.',
@@ -53,8 +69,21 @@ export const formatAppError = (error: unknown): FormattedError => {
   }
 
   if (
+    rawString.includes('user not found') ||
+    rawString.includes('user_not_found')
+  ) {
+    return {
+      message: 'Bu e-posta adresi ile kayıtlı bir hesap bulunamadı.',
+      suggestion: 'Lütfen e-posta adresinizi kontrol edin veya yeni bir hesap oluşturun.',
+      fullMessage:
+        'Bu e-posta adresi ile kayıtlı bir hesap bulunamadı. Lütfen e-posta adresinizi kontrol edin veya yeni bir hesap oluşturun.',
+    };
+  }
+
+  if (
     rawString.includes('user already registered') ||
     rawString.includes('already registered') ||
+    rawString.includes('user_already_exists') ||
     rawString.includes('unique_email')
   ) {
     return {
@@ -65,15 +94,35 @@ export const formatAppError = (error: unknown): FormattedError => {
     };
   }
 
-  if (rawString.includes('password should be at least')) {
+  if (
+    rawString.includes('signups not allowed') ||
+    rawString.includes('signup is disabled')
+  ) {
     return {
-      message: 'Belirlediğiniz şifre güvenlik kriterlerine uymuyor.',
-      suggestion: 'Lütfen en az 6 karakterden oluşan bir şifre belirleyin.',
-      fullMessage: 'Belirlediğiniz şifre güvenlik kriterlerine uymuyor. Lütfen en az 6 karakter kullanın.',
+      message: 'Yeni kullanıcı kaydı şu anda kapalıdır.',
+      suggestion: 'Lütfen sistem yöneticisi ile iletişime geçin.',
+      fullMessage: 'Yeni kullanıcı kaydı şu anda kapalıdır. Lütfen sistem yöneticisi ile iletişime geçin.',
     };
   }
 
-  if (rawString.includes('rate limit') || rawString.includes('too many requests')) {
+  if (
+    rawString.includes('password should be at least') ||
+    rawString.includes('weak password') ||
+    rawString.includes('password is too short')
+  ) {
+    return {
+      message: 'Belirlediğiniz şifre güvenlik kriterlerine uymuyor.',
+      suggestion: 'Lütfen en az 4 karakterden oluşan bir şifre belirleyin.',
+      fullMessage: 'Belirlediğiniz şifre güvenlik kriterlerine uymuyor. Lütfen en az 4 karakter kullanın.',
+    };
+  }
+
+  if (
+    rawString.includes('rate limit') ||
+    rawString.includes('too many requests') ||
+    rawString.includes('over_email_send_rate_limit') ||
+    rawString.includes('over_request_rate_limit')
+  ) {
     return {
       message: 'Çok fazla deneme yapıldı.',
       suggestion: 'Güvenliğiniz için lütfen birkaç dakika bekleyip tekrar deneyin.',
@@ -110,6 +159,31 @@ export const formatAppError = (error: unknown): FormattedError => {
   }
 
   // 4. Depolama (Storage) ve Görsel Hataları
+  if (
+    rawString.includes('bucket not found') ||
+    rawString.includes('the resource was not found') ||
+    rawString.includes('bucket_not_found')
+  ) {
+    return {
+      message: 'Depolama alanı (bucket) bulunamadı.',
+      suggestion: 'Supabase yönetim panelinden storage bucket kurulumunu kontrol edebilirsiniz.',
+      fullMessage:
+        'Depolama alanı (bucket) bulunamadı. Lütfen Supabase Storage ayarlarını kontrol edin.',
+    };
+  }
+
+  if (
+    rawString.includes('row-level security policy for table "objects"') ||
+    rawString.includes('violates row-level security policy')
+  ) {
+    return {
+      message: 'Dosya yükleme erişim izni reddedildi.',
+      suggestion: 'Supabase Storage RLS politikalarının oluşturulduğundan emin olun.',
+      fullMessage:
+        'Dosya yükleme erişim izni reddedildi. Supabase Storage RLS politikalarını kontrol edin.',
+    };
+  }
+
   if (rawString.includes('payload too large') || rawString.includes('413')) {
     return {
       message: 'Yüklemeye çalıştığınız dosya boyutu çok büyük.',

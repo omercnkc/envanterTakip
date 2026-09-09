@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   Platform,
   Alert,
   Image,
+  Animated,
+  Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -22,10 +24,9 @@ import {
   Eye,
   EyeOff,
   Check,
+  X,
   ArrowRight,
   Sparkles,
-  CheckCircle2,
-  Circle,
 } from 'lucide-react-native';
 
 import { AuthStackParamList, RegisterFormData, registerSchema } from '../../types';
@@ -33,6 +34,7 @@ import { COLORS } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
 import { GoogleIcon } from '../../components/GoogleIcon';
 import { checkPasswordStrength, generateStrongPassword } from '../../utils/passwordHelper';
+import { saveCredentials } from '../../utils/credentialHelper';
 import { styles } from './RegisterScreen.styles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
@@ -44,6 +46,23 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+  const [saveOnRegister, setSaveOnRegister] = useState(false);
+  const [isCredentialSaved, setIsCredentialSaved] = useState(false);
+
+  // Sarsıntı (Shake) Animasyonu
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+
+  const triggerShake = () => {
+    shakeAnim.setValue(0);
+    Animated.sequence([
+      Animated.timing(shakeAnim, { toValue: -8, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 8, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -6, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 6, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -3, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: 60, useNativeDriver: true }),
+    ]).start();
+  };
 
   const {
     control,
@@ -66,6 +85,62 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const termsWatch = watch('terms');
   const passwordWatch = watch('password') || '';
   const passwordStrength = checkPasswordStrength(passwordWatch);
+  const showPasswordRules = passwordWatch.length > 0;
+
+  // Şifre Kuralları Kartı için İpeksi / Çok Yumuşak (Ultra Soft) Giriş & Çıkış Animasyonu
+  const rulesOpacity = useRef(new Animated.Value(0)).current;
+  const rulesTranslateY = useRef(new Animated.Value(-10)).current;
+  const rulesScale = useRef(new Animated.Value(0.96)).current;
+  const [isRulesVisible, setIsRulesVisible] = useState(false);
+
+  useEffect(() => {
+    if (showPasswordRules) {
+      setIsRulesVisible(true);
+      Animated.parallel([
+        Animated.timing(rulesOpacity, {
+          toValue: 1,
+          duration: 450,
+          easing: Easing.bezier(0.16, 1, 0.3, 1),
+          useNativeDriver: true,
+        }),
+        Animated.timing(rulesTranslateY, {
+          toValue: 0,
+          duration: 450,
+          easing: Easing.bezier(0.16, 1, 0.3, 1),
+          useNativeDriver: true,
+        }),
+        Animated.timing(rulesScale, {
+          toValue: 1,
+          duration: 450,
+          easing: Easing.bezier(0.16, 1, 0.3, 1),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(rulesOpacity, {
+          toValue: 0,
+          duration: 280,
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+          useNativeDriver: true,
+        }),
+        Animated.timing(rulesTranslateY, {
+          toValue: -10,
+          duration: 280,
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+          useNativeDriver: true,
+        }),
+        Animated.timing(rulesScale, {
+          toValue: 0.96,
+          duration: 280,
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setIsRulesVisible(false);
+      });
+    }
+  }, [showPasswordRules, rulesOpacity, rulesTranslateY, rulesScale]);
 
   const handleSuggestPassword = () => {
     const generated = generateStrongPassword(12);
@@ -73,6 +148,32 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
     setValue('passwordConfirm', generated, { shouldValidate: true });
     setShowPassword(true);
     setShowConfirmPassword(true);
+
+    Alert.alert(
+      'Şifre Kaydedilsin mi?',
+      'Önerilen güçlü şifre bu cihaza kaydedilsin mi? Bir sonraki girişinizde e-posta ve şifreniz otomatik doldurulacaktır.',
+      [
+        {
+          text: 'Hayır',
+          style: 'cancel',
+        },
+        {
+          text: 'Evet, Kaydet',
+          onPress: async () => {
+            setSaveOnRegister(true);
+            setIsCredentialSaved(true);
+            const currentEmail = watch('email');
+            if (currentEmail && currentEmail.trim().length > 0) {
+              await saveCredentials(currentEmail, generated, true);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const onInvalid = () => {
+    triggerShake();
   };
 
   const onSubmit = async (data: RegisterFormData) => {
@@ -81,6 +182,9 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       setIsSubmitting(true);
       const result = await signUp(data);
       if (result.success) {
+        if (saveOnRegister || isCredentialSaved) {
+          await saveCredentials(data.email, data.password, true);
+        }
         Alert.alert(
           'Kayıt Başarılı',
           'Hesabınız oluşturuldu. Lütfen e-postanızı kontrol ederek hesabınızı doğrulayın veya doğrudan giriş yapın.',
@@ -93,9 +197,11 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
         );
       } else if (result.error) {
         setServerError(result.error);
+        triggerShake();
       }
     } catch {
       setServerError('Kayıt oluşturulurken bir hata oluştu.');
+      triggerShake();
     } finally {
       setIsSubmitting(false);
     }
@@ -143,7 +249,12 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           </View>
 
           {/* Form Kartı */}
-          <View style={styles.card}>
+          <Animated.View
+            style={[
+              styles.card,
+              { transform: [{ translateX: shakeAnim }] },
+            ]}
+          >
             {serverError && (
               <View style={styles.serverErrorBox}>
                 <Text style={styles.serverErrorText}>{serverError}</Text>
@@ -214,7 +325,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                       autoCapitalize="none"
                       autoCorrect={false}
                       value={value}
-                      onChangeText={onChange}
+                      onChangeText={(text) => onChange(text.replace(/\s+/g, ''))}
                       onBlur={onBlur}
                     />
                   </View>
@@ -240,6 +351,15 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                   <Text style={styles.suggestPasswordText}>Güçlü Şifre Öner</Text>
                 </TouchableOpacity>
               </View>
+
+              {isCredentialSaved && (
+                <View style={styles.savedBadge}>
+                  <Check size={12} color={COLORS.tertiary} />
+                  <Text style={styles.savedBadgeText}>
+                    Şifre cihaza kaydedilecek (Girişte otomatik doldurulur)
+                  </Text>
+                </View>
+              )}
               <Controller
                 control={control}
                 name="password"
@@ -281,46 +401,80 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 )}
               />
 
-              {/* Canlı Şifre Güç Çubuğu */}
-              {passwordWatch.length > 0 && (
-                <View style={styles.strengthContainer}>
-                  <View style={styles.strengthBarBackground}>
-                    <View
-                      style={[
-                        styles.strengthBarFill,
-                        {
-                          width: `${passwordStrength.percentage}%`,
-                          backgroundColor: passwordStrength.color,
-                        },
-                      ]}
-                    />
-                  </View>
-                  <Text style={[styles.strengthLabel, { color: passwordStrength.color }]}>
-                    Şifre Gücü: {passwordStrength.label}
-                  </Text>
-                </View>
-              )}
+              {/* Kullanıcı şifre girmeye başladığında yumuşak animasyonla açılan kurallar ve güç barı */}
+              {isRulesVisible && (
+                <Animated.View
+                  style={{
+                    opacity: rulesOpacity,
+                    transform: [
+                      { translateY: rulesTranslateY },
+                      { scale: rulesScale },
+                    ],
+                  }}
+                >
+                  {/* Canlı Şifre Güç Çubuğu */}
+                  {passwordWatch.length > 0 && (
+                    <View style={styles.strengthContainer}>
+                      <View style={styles.strengthBarBackground}>
+                        <View
+                          style={[
+                            styles.strengthBarFill,
+                            {
+                              width: `${passwordStrength.percentage}%`,
+                              backgroundColor: passwordStrength.color,
+                            },
+                          ]}
+                        />
+                      </View>
+                      <Text style={[styles.strengthLabel, { color: passwordStrength.color }]}>
+                        Şifre Gücü: {passwordStrength.label}
+                      </Text>
+                    </View>
+                  )}
 
-              {/* Şifre Kuralları Kontrol Listesi */}
-              <View style={styles.checklistContainer}>
-                {passwordStrength.checks.map((rule) => (
-                  <View key={rule.id} style={styles.checklistItem}>
-                    {rule.isValid ? (
-                      <CheckCircle2 size={13} color={COLORS.tertiary} />
-                    ) : (
-                      <Circle size={13} color={COLORS.outline} />
-                    )}
-                    <Text
-                      style={[
-                        styles.checklistText,
-                        rule.isValid && styles.checklistTextValid,
-                      ]}
-                    >
-                      {rule.label}
-                    </Text>
+                  {/* Şifre Kuralları Kontrol Listesi */}
+                  <View style={styles.checklistContainer}>
+                    {passwordStrength.checks.map((rule) => {
+                      const isFailed = !!errors.password && !rule.isValid;
+                      return (
+                        <View key={rule.id} style={styles.checklistItem}>
+                          <View
+                            style={[
+                              styles.checklistIconBox,
+                              rule.isValid && styles.checklistIconBoxValid,
+                              isFailed && styles.checklistIconBoxError,
+                            ]}
+                          >
+                            {rule.isValid ? (
+                              <Check size={11} color={COLORS.tertiary} strokeWidth={3} />
+                            ) : isFailed ? (
+                              <X size={11} color={COLORS.error} strokeWidth={3} />
+                            ) : (
+                              <View
+                                style={{
+                                  width: 4,
+                                  height: 4,
+                                  borderRadius: 2,
+                                  backgroundColor: COLORS.outline,
+                                }}
+                              />
+                            )}
+                          </View>
+                          <Text
+                            style={[
+                              styles.checklistText,
+                              rule.isValid && styles.checklistTextValid,
+                              isFailed && styles.checklistTextError,
+                            ]}
+                          >
+                            {rule.label}
+                          </Text>
+                        </View>
+                      );
+                    })}
                   </View>
-                ))}
-              </View>
+                </Animated.View>
+              )}
 
               {errors.password && (
                 <Text style={styles.errorText}>{errors.password.message}</Text>
@@ -401,7 +555,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 styles.submitButton,
                 isSubmitting && styles.submitButtonDisabled,
               ]}
-              onPress={handleSubmit(onSubmit)}
+              onPress={handleSubmit(onSubmit, onInvalid)}
               disabled={isSubmitting}
               activeOpacity={0.8}
             >
@@ -438,7 +592,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 </>
               )}
             </TouchableOpacity>
-          </View>
+          </Animated.View>
 
           {/* Alt Giriş Yap Linki */}
           <View style={styles.footer}>

@@ -47,7 +47,7 @@ export const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: SPACING.containerMargin,
     paddingTop: SPACING.xs,
-    paddingBottom: SPACING.xxl + 20,
+    paddingBottom: 135,
     gap: SPACING.sm + 2,
   },
   notificationCard: {

@@ -135,7 +135,7 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation, route }) => 
                       keyboardType="email-address"
                       autoCapitalize="none"
                       value={value}
-                      onChangeText={onChange}
+                      onChangeText={(text) => onChange(text.replace(/\s+/g, ''))}
                       onBlur={onBlur}
                     />
                   </View>

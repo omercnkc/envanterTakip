@@ -15,9 +15,7 @@ export const loginSchema = z.object({
     .regex(EMAIL_REGEX, 'Geçerli bir e-posta adresi giriniz (örn: ad@ornek.com)'),
   password: z
     .string()
-    .min(1, 'Şifre alanı zorunludur')
-    .min(4, 'Şifre en az 4 karakter olmalıdır')
-    .max(12, 'Şifre en fazla 12 karakter olabilir'),
+    .min(1, 'Şifre alanı zorunludur'),
 });
 
 export type LoginFormData = z.infer<typeof loginSchema>;

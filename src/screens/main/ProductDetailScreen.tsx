@@ -7,7 +7,9 @@ import {
   Image,
   Alert,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import {
@@ -23,6 +25,7 @@ import {
   FileText,
   Receipt,
   Download,
+  ExternalLink,
   Package,
 } from 'lucide-react-native';
 
@@ -86,6 +89,19 @@ export const ProductDetailScreen: React.FC = () => {
   const handleEdit = () => {
     if (!product) return;
     navigation.navigate('EditProduct', { productId: product.id, product });
+  };
+
+  const handleOpenInvoice = async () => {
+    if (!product?.invoice_path) return;
+    try {
+      if (product.invoice_path.startsWith('http')) {
+        await WebBrowser.openBrowserAsync(product.invoice_path);
+      } else {
+        await Linking.openURL(product.invoice_path);
+      }
+    } catch {
+      Alert.alert('Fatura Belgesi', `Dosya adresi: ${product.invoice_path}`);
+    }
   };
 
   if (loading || !product) {
@@ -242,26 +258,30 @@ export const ProductDetailScreen: React.FC = () => {
         {/* Fatura Bölümü */}
         <View style={styles.invoiceSection}>
           <Text style={styles.sectionTitle}>Fatura</Text>
-          <View style={styles.invoiceCard}>
+          <TouchableOpacity
+            style={styles.invoiceCard}
+            onPress={product.invoice_path ? handleOpenInvoice : undefined}
+            activeOpacity={product.invoice_path ? 0.7 : 1}
+          >
             <View style={styles.invoiceLeft}>
               <View style={styles.invoiceIconBox}>
                 <Receipt size={22} color={COLORS.primary} />
               </View>
               <View>
                 <Text style={styles.invoiceFileName}>
-                  {product.invoice_path ? 'Fatura_Belgesi.jpg' : 'Fatura Eklenmedi'}
+                  {product.invoice_path ? 'Fatura Belgesi' : 'Fatura Eklenmedi'}
                 </Text>
                 <Text style={styles.invoiceFileSize}>
-                  {product.invoice_path ? '1.2 MB' : 'Kayıtlı dosya yok'}
+                  {product.invoice_path ? 'Görüntülemek için dokunun' : 'Kayıtlı dosya yok'}
                 </Text>
               </View>
             </View>
             {product.invoice_path && (
-              <TouchableOpacity style={styles.downloadButton} activeOpacity={0.7}>
-                <Download size={18} color={COLORS.primary} />
-              </TouchableOpacity>
+              <View style={styles.downloadButton}>
+                <ExternalLink size={18} color={COLORS.primary} />
+              </View>
             )}
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Aksiyon Butonları (Düzenle / Sil) */}

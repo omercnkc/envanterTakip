@@ -22,7 +22,7 @@ export const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: SPACING.containerMargin,
     paddingTop: SPACING.sm,
-    paddingBottom: 110, // Space for floating bottom navigation bar
+    paddingBottom: 135, // Space for floating bottom navigation bar
     gap: SPACING.sectionGap - 8,
   },
   section: {

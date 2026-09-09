@@ -24,11 +24,13 @@ export const authService = {
    * E-posta ve şifre ile giriş yapar.
    */
   async signIn({ email, password }: LoginFormData) {
+    const cleanEmail = email.trim().toLowerCase();
+
     if (!isSupabaseConfigured()) {
       // Demo / Mock Giriş Desteği (Supabase henüz kurulmadıysa)
       return {
         data: {
-          user: { id: '00000000-0000-0000-0000-000000000000', email },
+          user: { id: '00000000-0000-0000-0000-000000000000', email: cleanEmail },
           session: { access_token: 'demo-token' },
         },
         error: null,
@@ -37,7 +39,7 @@ export const authService = {
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+        email: cleanEmail,
         password,
       });
 
@@ -55,10 +57,13 @@ export const authService = {
    * Yeni kullanıcı kaydı oluşturur ve profiles tablosuna ekler.
    */
   async signUp({ fullName, email, password }: RegisterFormData) {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanFullName = fullName.trim();
+
     if (!isSupabaseConfigured()) {
       return {
         data: {
-          user: { id: '00000000-0000-0000-0000-000000000000', email },
+          user: { id: '00000000-0000-0000-0000-000000000000', email: cleanEmail },
           session: { access_token: 'demo-token' },
         },
         error: null,
@@ -67,11 +72,11 @@ export const authService = {
 
     try {
       const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
+        email: cleanEmail,
         password,
         options: {
           data: {
-            full_name: fullName.trim(),
+            full_name: cleanFullName,
           },
         },
       });
@@ -85,8 +90,8 @@ export const authService = {
         try {
           await supabase.from('profiles').upsert({
             id: data.user.id,
-            full_name: fullName.trim(),
-            email: email.trim(),
+            full_name: cleanFullName,
+            email: cleanEmail,
           });
         } catch {
           // Trigger zaten profili oluşturduğu için olası hatayı sessizce absorbe et
@@ -219,7 +224,8 @@ export const authService = {
     }
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+      const cleanEmail = email.trim().toLowerCase();
+      const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail);
       if (error) {
         return { error: formatAuthError(error) };
       }

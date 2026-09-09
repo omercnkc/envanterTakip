@@ -113,7 +113,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (response.error) {
       return { success: false, error: response.error };
     }
-    if (response.data?.user) {
+    if (response.data?.session && response.data?.user) {
       setUser(response.data.user as unknown as User);
       setSession(response.data.session as unknown as Session);
       await loadProfile(response.data.user.id);

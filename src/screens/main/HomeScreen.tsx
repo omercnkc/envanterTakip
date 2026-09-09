@@ -34,8 +34,9 @@ export const HomeScreen: React.FC = () => {
   const { profile, user } = useAuth();
   const { products, stats, refreshProducts, isRefreshing } = useInventory();
 
-  const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Ömer';
-  const userInitials = (displayName[0] || 'U').toUpperCase();
+  const rawName = profile?.full_name || user?.email?.split('@')[0] || 'Misafir';
+  const firstName = rawName.trim().split(/\s+/)[0] || rawName;
+  const userInitials = (firstName[0] || 'U').toUpperCase();
 
   // Aktif garanti yüzdesi
   const activePercentage = useMemo(() => {
@@ -77,12 +78,7 @@ export const HomeScreen: React.FC = () => {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <View style={styles.greetingRow}>
-              <Image
-                source={require('../../../assets/icon.png')}
-                style={styles.headerAppLogo}
-                resizeMode="cover"
-              />
-              <Text style={styles.greetingText}>Merhaba, {displayName} 👋</Text>
+              <Text style={styles.greetingText}>Merhaba, {firstName}</Text>
             </View>
             <Text style={styles.subtitleText}>
               Envanterin güvende, garantilerini takip et.
