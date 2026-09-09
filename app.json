@@ -27,7 +27,13 @@
     },
     "plugins": [
       "expo-status-bar",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Ürün barkodu ve seri numarasını kamerayla tarayabilmek için kamera izni gerekiyor."
+        }
+      ]
     ]
   }
 }

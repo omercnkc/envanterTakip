@@ -167,6 +167,26 @@ export const styles = StyleSheet.create({
     marginRight: 6,
     fontWeight: '600',
   },
+  serialInputBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: 6,
+  },
+  scanButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primaryFixed,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.sm,
+    gap: 4,
+  },
+  scanButtonText: {
+    ...TYPOGRAPHY.labelSm,
+    color: COLORS.primary,
+    fontWeight: '700',
+    fontSize: 12,
+  },
   pickerBox: {
     height: 48,
     backgroundColor: COLORS.surfaceContainerLowest,

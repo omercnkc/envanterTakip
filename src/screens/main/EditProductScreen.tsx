@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronDown, ArrowLeft, Camera, Image as ImageIcon, Upload, X } from 'lucide-react-native';
+import { ChevronDown, ArrowLeft, Camera, Image as ImageIcon, Upload, X, ScanBarcode } from 'lucide-react-native';
 
 import { ProductFormData, productFormSchema, Category } from '../../types';
 import { COLORS } from '../../constants';
@@ -26,6 +26,7 @@ import { mediaHelper } from '../../utils/mediaHelper';
 import { storageService } from '../../api/storageService';
 import { CategoryPickerModal } from '../../components/CategoryPickerModal';
 import { MediaPickerModal } from '../../components/MediaPickerModal';
+import { BarcodeScannerModal } from '../../components/BarcodeScannerModal';
 import { styles } from './EditProductScreen.styles';
 
 const DURATION_OPTIONS = [
@@ -47,6 +48,7 @@ export const EditProductScreen: React.FC = () => {
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
   const [photoPickerVisible, setPhotoPickerVisible] = useState(false);
   const [invoicePickerVisible, setInvoicePickerVisible] = useState(false);
+  const [barcodeScannerVisible, setBarcodeScannerVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedDuration, setSelectedDuration] = useState<number>(24);
   const [imageUri, setImageUri] = useState<string | null>(initialProduct?.image_path || null);
@@ -448,15 +450,24 @@ export const EditProductScreen: React.FC = () => {
                 control={control}
                 name="serial_number"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <View style={styles.inputBox}>
+                  <View style={[styles.inputBox, styles.serialInputBox]}>
                     <TextInput
                       style={styles.textInput}
-                      placeholder="Seri numarasını girin"
+                      placeholder="Seri numarasını girin veya okutun"
                       placeholderTextColor={COLORS.outline}
                       value={value || ''}
                       onChangeText={onChange}
                       onBlur={onBlur}
                     />
+                    <TouchableOpacity
+                      style={styles.scanButton}
+                      onPress={() => setBarcodeScannerVisible(true)}
+                      activeOpacity={0.7}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <ScanBarcode size={16} color={COLORS.primary} />
+                      <Text style={styles.scanButtonText}>Tara</Text>
+                    </TouchableOpacity>
                   </View>
                 )}
               />
@@ -707,6 +718,18 @@ export const EditProductScreen: React.FC = () => {
         includeDocumentOption={true}
         title="Fatura / Belge Yükle"
         subtitle="Fotoğraf çekin, galeriden veya PDF seçin"
+      />
+
+      {/* Barkod / QR Kod Tarayıcı Modalı */}
+      <BarcodeScannerModal
+        visible={barcodeScannerVisible}
+        onClose={() => setBarcodeScannerVisible(false)}
+        onScan={(scannedCode) => {
+          setValue('serial_number', scannedCode, {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+        }}
       />
     </SafeAreaView>
   );

@@ -10,7 +10,6 @@ import { Product } from '../types';
 // Bildirimlerin uygulama ön plandayken de sesli ve banner olarak görünmesini sağla
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
     shouldShowBanner: true,
     shouldShowList: true,
     shouldPlaySound: true,

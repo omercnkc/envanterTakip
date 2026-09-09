@@ -7,3 +7,4 @@ export * from './CircularProgress';
 export * from './GoogleIcon';
 export * from './AnimatedLock';
 export * from './MediaPickerModal';
+export * from './BarcodeScannerModal';
