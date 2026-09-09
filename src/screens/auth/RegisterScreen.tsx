@@ -9,13 +9,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Package,
   User,
   Mail,
   Lock,
@@ -23,21 +23,27 @@ import {
   EyeOff,
   Check,
   ArrowRight,
+  Sparkles,
+  CheckCircle2,
+  Circle,
 } from 'lucide-react-native';
 
 import { AuthStackParamList, RegisterFormData, registerSchema } from '../../types';
 import { COLORS } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
+import { GoogleIcon } from '../../components/GoogleIcon';
+import { checkPasswordStrength, generateStrongPassword } from '../../utils/passwordHelper';
 import { styles } from './RegisterScreen.styles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
 export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
-  const { signUp } = useAuth();
+  const { signUp, signInWithGoogle } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
 
   const {
     control,
@@ -47,6 +53,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    mode: 'onChange',
     defaultValues: {
       fullName: '',
       email: '',
@@ -57,6 +64,16 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   });
 
   const termsWatch = watch('terms');
+  const passwordWatch = watch('password') || '';
+  const passwordStrength = checkPasswordStrength(passwordWatch);
+
+  const handleSuggestPassword = () => {
+    const generated = generateStrongPassword(12);
+    setValue('password', generated, { shouldValidate: true });
+    setValue('passwordConfirm', generated, { shouldValidate: true });
+    setShowPassword(true);
+    setShowConfirmPassword(true);
+  };
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
@@ -84,6 +101,21 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      setServerError(null);
+      setIsGoogleSubmitting(true);
+      const result = await signInWithGoogle();
+      if (!result.success && result.error) {
+        setServerError(result.error);
+      }
+    } catch {
+      setServerError('Google ile giriş yapılırken bir hata oluştu.');
+    } finally {
+      setIsGoogleSubmitting(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
@@ -98,7 +130,11 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           {/* Üst Başlık ve Logo */}
           <View style={styles.header}>
             <View style={styles.logoBox}>
-              <Package size={34} color={COLORS.onPrimaryContainer} strokeWidth={2.2} />
+              <Image
+                source={require('../../../assets/icon.png')}
+                style={styles.appLogoImage}
+                resizeMode="cover"
+              />
             </View>
             <Text style={styles.title}>Hesap Oluştur</Text>
             <Text style={styles.subtitle}>
@@ -116,7 +152,9 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
             {/* Ad Soyad */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Ad Soyad</Text>
+              <Text style={styles.label}>
+                Ad Soyad <Text style={styles.requiredStar}>*</Text>
+              </Text>
               <Controller
                 control={control}
                 name="fullName"
@@ -150,7 +188,9 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
             {/* E-posta Adresi */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>E-posta Adresi</Text>
+              <Text style={styles.label}>
+                E-posta Adresi <Text style={styles.requiredStar}>*</Text>
+              </Text>
               <Controller
                 control={control}
                 name="email"
@@ -187,7 +227,19 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
             {/* Şifre */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Şifre</Text>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>
+                  Şifre <Text style={styles.requiredStar}>*</Text>
+                </Text>
+                <TouchableOpacity
+                  style={styles.suggestPasswordButton}
+                  onPress={handleSuggestPassword}
+                  activeOpacity={0.7}
+                >
+                  <Sparkles size={12} color={COLORS.primary} />
+                  <Text style={styles.suggestPasswordText}>Güçlü Şifre Öner</Text>
+                </TouchableOpacity>
+              </View>
               <Controller
                 control={control}
                 name="password"
@@ -209,6 +261,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                       placeholderTextColor={COLORS.outline}
                       secureTextEntry={!showPassword}
                       autoCapitalize="none"
+                      maxLength={12}
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
@@ -227,6 +280,48 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                   </View>
                 )}
               />
+
+              {/* Canlı Şifre Güç Çubuğu */}
+              {passwordWatch.length > 0 && (
+                <View style={styles.strengthContainer}>
+                  <View style={styles.strengthBarBackground}>
+                    <View
+                      style={[
+                        styles.strengthBarFill,
+                        {
+                          width: `${passwordStrength.percentage}%`,
+                          backgroundColor: passwordStrength.color,
+                        },
+                      ]}
+                    />
+                  </View>
+                  <Text style={[styles.strengthLabel, { color: passwordStrength.color }]}>
+                    Şifre Gücü: {passwordStrength.label}
+                  </Text>
+                </View>
+              )}
+
+              {/* Şifre Kuralları Kontrol Listesi */}
+              <View style={styles.checklistContainer}>
+                {passwordStrength.checks.map((rule) => (
+                  <View key={rule.id} style={styles.checklistItem}>
+                    {rule.isValid ? (
+                      <CheckCircle2 size={13} color={COLORS.tertiary} />
+                    ) : (
+                      <Circle size={13} color={COLORS.outline} />
+                    )}
+                    <Text
+                      style={[
+                        styles.checklistText,
+                        rule.isValid && styles.checklistTextValid,
+                      ]}
+                    >
+                      {rule.label}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+
               {errors.password && (
                 <Text style={styles.errorText}>{errors.password.message}</Text>
               )}
@@ -234,7 +329,9 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
             {/* Şifre Tekrar */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Şifre Tekrar</Text>
+              <Text style={styles.label}>
+                Şifre Tekrar <Text style={styles.requiredStar}>*</Text>
+              </Text>
               <Controller
                 control={control}
                 name="passwordConfirm"
@@ -256,6 +353,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                       placeholderTextColor={COLORS.outline}
                       secureTextEntry={!showConfirmPassword}
                       autoCapitalize="none"
+                      maxLength={12}
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
@@ -313,6 +411,30 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 <>
                   <Text style={styles.submitButtonText}>Kayıt Ol</Text>
                   <ArrowRight size={18} color={COLORS.onPrimary} />
+                </>
+              )}
+            </TouchableOpacity>
+
+            {/* Ayırıcı */}
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>veya</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Google ile Kayıt Ol / Giriş Yap Butonu */}
+            <TouchableOpacity
+              style={styles.googleButton}
+              onPress={handleGoogleLogin}
+              disabled={isGoogleSubmitting || isSubmitting}
+              activeOpacity={0.8}
+            >
+              {isGoogleSubmitting ? (
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              ) : (
+                <>
+                  <GoogleIcon size={20} />
+                  <Text style={styles.googleButtonText}>Google ile Devam Et</Text>
                 </>
               )}
             </TouchableOpacity>

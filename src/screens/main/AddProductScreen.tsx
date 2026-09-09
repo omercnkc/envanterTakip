@@ -62,6 +62,7 @@ export const AddProductScreen: React.FC = () => {
     formState: { errors },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
+    mode: 'onChange',
     defaultValues: {
       name: '',
       brand: '',

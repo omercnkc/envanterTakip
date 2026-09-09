@@ -8,25 +8,28 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Package, Mail, Lock, Eye, EyeOff, Sparkles } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 
 import { AuthStackParamList, LoginFormData, loginSchema } from '../../types';
 import { COLORS } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
+import { GoogleIcon } from '../../components/GoogleIcon';
 import { styles } from './LoginScreen.styles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export const LoginScreen: React.FC<Props> = ({ navigation }) => {
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
 
   const {
     control,
@@ -34,6 +37,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    mode: 'onChange',
     defaultValues: {
       email: '',
       password: '',
@@ -55,8 +59,19 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const handleDemoLogin = () => {
-    onSubmit({ email: 'demo@evgaranti.com', password: 'password123' });
+  const handleGoogleLogin = async () => {
+    try {
+      setServerError(null);
+      setIsGoogleSubmitting(true);
+      const result = await signInWithGoogle();
+      if (!result.success && result.error) {
+        setServerError(result.error);
+      }
+    } catch {
+      setServerError('Google ile giriş yapılırken bir hata oluştu.');
+    } finally {
+      setIsGoogleSubmitting(false);
+    }
   };
 
   return (
@@ -76,7 +91,11 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
           {/* Üst Başlık ve Logo */}
           <View style={styles.header}>
             <View style={styles.logoBox}>
-              <Package size={34} color={COLORS.primary} strokeWidth={2.2} />
+              <Image
+                source={require('../../../assets/icon.png')}
+                style={styles.appLogoImage}
+                resizeMode="cover"
+              />
             </View>
             <Text style={styles.title}>Hoş Geldiniz</Text>
             <Text style={styles.subtitle}>Lütfen hesabınıza giriş yapın.</Text>
@@ -92,7 +111,9 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
             {/* E-posta Alanı */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>E-posta</Text>
+              <Text style={styles.label}>
+                E-posta <Text style={styles.requiredStar}>*</Text>
+              </Text>
               <Controller
                 control={control}
                 name="email"
@@ -130,7 +151,9 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
             {/* Şifre Alanı */}
             <View style={styles.inputGroup}>
               <View style={styles.labelRow}>
-                <Text style={styles.label}>Şifre</Text>
+                <Text style={styles.label}>
+                  Şifre <Text style={styles.requiredStar}>*</Text>
+                </Text>
                 <TouchableOpacity
                   onPress={() => navigation.navigate('ForgotPassword')}
                   activeOpacity={0.7}
@@ -159,6 +182,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                       placeholderTextColor={COLORS.outline}
                       secureTextEntry={!showPassword}
                       autoCapitalize="none"
+                      maxLength={12}
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
@@ -206,14 +230,21 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               <View style={styles.dividerLine} />
             </View>
 
-            {/* Demo Hesabı Butonu */}
+            {/* Google ile Giriş Yap Butonu */}
             <TouchableOpacity
-              style={styles.socialButton}
-              onPress={handleDemoLogin}
-              activeOpacity={0.7}
+              style={styles.googleButton}
+              onPress={handleGoogleLogin}
+              disabled={isGoogleSubmitting || isSubmitting}
+              activeOpacity={0.8}
             >
-              <Sparkles size={18} color={COLORS.primary} />
-              <Text style={styles.socialButtonText}>Demo Hesabı ile Hızlı Giriş</Text>
+              {isGoogleSubmitting ? (
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              ) : (
+                <>
+                  <GoogleIcon size={20} />
+                  <Text style={styles.googleButtonText}>Google ile Giriş Yap</Text>
+                </>
+              )}
             </TouchableOpacity>
           </View>
 

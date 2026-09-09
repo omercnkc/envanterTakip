@@ -60,9 +60,15 @@ export const styles = StyleSheet.create({
     backgroundColor: COLORS.surfaceContainer,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: COLORS.outlineVariant + '40',
     ...SHADOWS.md,
+  },
+  appLogoImage: {
+    width: 96,
+    height: 96,
+    borderRadius: RADIUS.xl,
   },
   title: {
     ...TYPOGRAPHY.headlineLg,

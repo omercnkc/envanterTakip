@@ -30,16 +30,22 @@ export const styles = StyleSheet.create({
     marginBottom: SPACING.stackLg,
   },
   logoBox: {
-    width: 64,
-    height: 64,
-    borderRadius: RADIUS.lg,
+    width: 72,
+    height: 72,
+    borderRadius: RADIUS.xl,
     backgroundColor: COLORS.surfaceContainer,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.stackMd,
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: COLORS.outlineVariant + '40',
     ...SHADOWS.sm,
+  },
+  appLogoImage: {
+    width: 72,
+    height: 72,
+    borderRadius: RADIUS.xl,
   },
   title: {
     ...TYPOGRAPHY.headlineLg,
@@ -68,6 +74,10 @@ export const styles = StyleSheet.create({
   label: {
     ...TYPOGRAPHY.labelMd,
     color: COLORS.onSurface,
+  },
+  requiredStar: {
+    color: COLORS.error,
+    fontWeight: '700',
   },
   inputContainer: {
     flexDirection: 'row',

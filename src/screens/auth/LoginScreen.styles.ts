@@ -44,16 +44,22 @@ export const styles = StyleSheet.create({
     marginBottom: SPACING.xl,
   },
   logoBox: {
-    width: 68,
-    height: 68,
+    width: 72,
+    height: 72,
     borderRadius: RADIUS.xl,
     backgroundColor: COLORS.surfaceContainer,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.md,
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: COLORS.outlineVariant + '40',
     ...SHADOWS.sm,
+  },
+  appLogoImage: {
+    width: 72,
+    height: 72,
+    borderRadius: RADIUS.xl,
   },
   title: {
     ...TYPOGRAPHY.headlineLg,
@@ -101,6 +107,10 @@ export const styles = StyleSheet.create({
     color: COLORS.onBackground,
     fontWeight: '600',
     marginBottom: 6,
+  },
+  requiredStar: {
+    color: COLORS.error,
+    fontWeight: '700',
   },
   forgotText: {
     ...TYPOGRAPHY.labelMd,
@@ -174,20 +184,22 @@ export const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
-  socialButton: {
+  googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 46,
-    backgroundColor: COLORS.surfaceContainerLow,
+    height: 48,
+    backgroundColor: COLORS.surfaceContainerLowest,
     borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.outlineVariant + '40',
-    gap: 8,
+    borderWidth: 1.5,
+    borderColor: COLORS.outlineVariant,
+    gap: 10,
+    ...SHADOWS.sm,
   },
-  socialButtonText: {
+  googleButtonText: {
     ...TYPOGRAPHY.labelMd,
-    color: COLORS.primary,
+    fontSize: 14,
+    color: COLORS.onSurface,
     fontWeight: '600',
   },
   footer: {

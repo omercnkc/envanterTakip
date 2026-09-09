@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -152,6 +153,17 @@ export const ProfileScreen: React.FC = () => {
           <LogOut size={18} color={COLORS.error} />
           <Text style={styles.logoutButtonText}>Çıkış Yap</Text>
         </TouchableOpacity>
+
+        {/* Uygulama Marka & Versiyon Alanı */}
+        <View style={styles.appBrandingContainer}>
+          <Image
+            source={require('../../../assets/icon.png')}
+            style={styles.appBrandingLogo}
+            resizeMode="cover"
+          />
+          <Text style={styles.appBrandingTitle}>Safe Envanter</Text>
+          <Text style={styles.appBrandingVersion}>v1.0.0 • Garanti & Varlık Yönetimi</Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

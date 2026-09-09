@@ -3,9 +3,14 @@
  * Kullanıcı dostu yerelleştirilmiş hata mesajları ve güvenli servis katmanı.
  */
 
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { LoginFormData, RegisterFormData, ForgotPasswordFormData, Profile } from '../types';
 import { formatAppError } from '../utils/errorHandler';
+
+// Tarayıcı yönlendirmesini hazırla
+WebBrowser.maybeCompleteAuthSession();
 
 /**
  * Supabase hata mesajlarını Türkçe kullanıcı dostu ve yönlendirici ifadelere dönüştürür.
@@ -23,7 +28,7 @@ export const authService = {
       // Demo / Mock Giriş Desteği (Supabase henüz kurulmadıysa)
       return {
         data: {
-          user: { id: 'demo-user-id', email },
+          user: { id: '00000000-0000-0000-0000-000000000000', email },
           session: { access_token: 'demo-token' },
         },
         error: null,
@@ -53,7 +58,7 @@ export const authService = {
     if (!isSupabaseConfigured()) {
       return {
         data: {
-          user: { id: 'demo-user-id', email },
+          user: { id: '00000000-0000-0000-0000-000000000000', email },
           session: { access_token: 'demo-token' },
         },
         error: null,
@@ -89,6 +94,98 @@ export const authService = {
       }
 
       return { data, error: null };
+    } catch (err) {
+      return { data: null, error: formatAuthError(err) };
+    }
+  },
+
+  /**
+   * Supabase Google OAuth ile giriş yapar.
+   */
+  async signInWithGoogle() {
+    if (!isSupabaseConfigured()) {
+      return {
+        data: {
+          user: { id: '00000000-0000-0000-0000-000000000000', email: 'google.user@example.com' },
+          session: { access_token: 'demo-google-token' },
+        },
+        error: null,
+      };
+    }
+
+    try {
+      const redirectUrl = Linking.createURL('auth/callback', {
+        scheme: 'envantertakip',
+      });
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error) {
+        return { data: null, error: formatAuthError(error) };
+      }
+
+      if (!data?.url) {
+        return { data: null, error: 'Google giriş bağlantısı oluşturulamadı.' };
+      }
+
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+
+      if (result.type === 'success' && result.url) {
+        const url = result.url;
+
+        // 1. PKCE Authorization Code akışı
+        if (url.includes('code=')) {
+          const codeMatch = url.match(/code=([^&]+)/);
+          if (codeMatch && codeMatch[1]) {
+            const { data: sessionData, error: sessionError } = await supabase.auth.exchangeCodeForSession(
+              decodeURIComponent(codeMatch[1])
+            );
+            if (sessionError) {
+              return { data: null, error: formatAuthError(sessionError) };
+            }
+            return { data: sessionData, error: null };
+          }
+        }
+
+        // 2. Implicit / Hash parametre akışı (#access_token=...)
+        const rawParams = url.includes('#') ? url.split('#')[1] : url.split('?')[1];
+        if (rawParams) {
+          const params: Record<string, string> = {};
+          rawParams.split('&').forEach((part) => {
+            const [k, v] = part.split('=');
+            if (k && v) params[decodeURIComponent(k)] = decodeURIComponent(v);
+          });
+
+          if (params.access_token) {
+            const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+              access_token: params.access_token,
+              refresh_token: params.refresh_token || '',
+            });
+            if (sessionError) {
+              return { data: null, error: formatAuthError(sessionError) };
+            }
+            return { data: sessionData, error: null };
+          }
+        }
+
+        // URL döndü ama doğrudan auth state güncellendi mi kontrol et
+        const { data: currentSession } = await supabase.auth.getSession();
+        if (currentSession?.session) {
+          return { data: currentSession, error: null };
+        }
+      }
+
+      if (result.type === 'cancel' || result.type === 'dismiss') {
+        return { data: null, error: 'Google ile giriş işlemi iptal edildi.' };
+      }
+
+      return { data: null, error: 'Giriş işlemi tamamlanamadı.' };
     } catch (err) {
       return { data: null, error: formatAuthError(err) };
     }

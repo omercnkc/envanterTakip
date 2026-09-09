@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -75,7 +76,14 @@ export const HomeScreen: React.FC = () => {
         {/* Top App Bar Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={styles.greetingText}>Merhaba, {displayName} 👋</Text>
+            <View style={styles.greetingRow}>
+              <Image
+                source={require('../../../assets/icon.png')}
+                style={styles.headerAppLogo}
+                resizeMode="cover"
+              />
+              <Text style={styles.greetingText}>Merhaba, {displayName} 👋</Text>
+            </View>
             <Text style={styles.subtitleText}>
               Envanterin güvende, garantilerini takip et.
             </Text>

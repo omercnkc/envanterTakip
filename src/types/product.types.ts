@@ -8,27 +8,31 @@ import { Product } from './database.types';
 export const productFormSchema = z.object({
   name: z
     .string()
+    .trim()
+    .min(1, 'Ürün adı zorunludur')
     .min(2, 'Ürün adı en az 2 karakter olmalıdır')
     .max(100, 'Ürün adı çok uzun'),
   brand: z
     .string()
+    .trim()
     .min(1, 'Marka alanı zorunludur')
     .max(50, 'Marka adı çok uzun'),
-  model: z.string().max(50, 'Model çok uzun').optional().nullable(),
+  model: z.string().trim().max(50, 'Model çok uzun').optional().nullable(),
   category_id: z.number().min(1, 'Lütfen bir kategori seçin'),
-  serial_number: z.string().max(100, 'Seri numarası çok uzun').optional().nullable(),
+  serial_number: z.string().trim().max(100, 'Seri numarası çok uzun').optional().nullable(),
   purchase_date: z.string().optional().nullable(),
   purchase_price: z
     .number()
     .nonnegative('Fiyat negatif olamaz')
     .optional()
     .nullable(),
-  warranty_duration_months: z.number().positive().optional().nullable(),
+  warranty_duration_months: z.number().positive('Garanti süresi pozitif olmalıdır').optional().nullable(),
   warranty_end_date: z
     .string()
-    .min(1, 'Garanti bitiş tarihi zorunludur'),
-  store_name: z.string().max(100, 'Mağaza adı çok uzun').optional().nullable(),
-  description: z.string().max(500, 'Açıklama çok uzun').optional().nullable(),
+    .min(1, 'Garanti bitiş tarihi zorunludur')
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Tarih YYYY-AA-GG formatında olmalıdır'),
+  store_name: z.string().trim().max(100, 'Mağaza adı çok uzun').optional().nullable(),
+  description: z.string().trim().max(500, 'Açıklama çok uzun').optional().nullable(),
   image_path: z.string().optional().nullable(),
   invoice_path: z.string().optional().nullable(),
 });

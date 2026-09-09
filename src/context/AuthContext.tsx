@@ -16,6 +16,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (data: LoginFormData) => Promise<{ success: boolean; error?: string }>;
   signUp: (data: RegisterFormData) => Promise<{ success: boolean; error?: string }>;
+  signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   resetPassword: (data: ForgotPasswordFormData) => Promise<{ success: boolean; error?: string }>;
   refreshProfile: () => Promise<void>;
@@ -120,6 +121,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return { success: true };
   };
 
+  const signInWithGoogle = async () => {
+    const response = await authService.signInWithGoogle();
+    if (response.error) {
+      return { success: false, error: response.error };
+    }
+    if (response.data) {
+      const respData = response.data as any;
+      const currentUser = respData.user || respData.session?.user || null;
+      const currentSession = respData.session || null;
+
+      if (currentUser) {
+        setUser(currentUser as User);
+        setSession(currentSession as Session);
+        await loadProfile(currentUser.id);
+      }
+    }
+    return { success: true };
+  };
+
   const signOut = async () => {
     await authService.signOut();
     setUser(null);
@@ -149,6 +169,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       loading,
       signIn,
       signUp,
+      signInWithGoogle,
       signOut,
       resetPassword,
       refreshProfile,

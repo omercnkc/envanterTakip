@@ -9,10 +9,12 @@ import { formatAppError } from '../utils/errorHandler';
 import { calculateWarrantyStatus } from '../utils/warrantyCalculator';
 
 // Supabase henüz bağlanmadıysa veya demo modunda kullanılacak yerel mock veri deposu
+const MOCK_USER_ID = '00000000-0000-0000-0000-000000000000';
+
 let mockProductsStore: Product[] = [
   {
     id: 'mock-1',
-    user_id: 'demo-user-id',
+    user_id: MOCK_USER_ID,
     category_id: 1,
     name: 'Samsung QLED 4K TV',
     brand: 'Samsung',
@@ -31,7 +33,7 @@ let mockProductsStore: Product[] = [
   },
   {
     id: 'mock-2',
-    user_id: 'demo-user-id',
+    user_id: MOCK_USER_ID,
     category_id: 3,
     name: 'iPhone 16 Pro',
     brand: 'Apple',
@@ -50,7 +52,7 @@ let mockProductsStore: Product[] = [
   },
   {
     id: 'mock-3',
-    user_id: 'demo-user-id',
+    user_id: MOCK_USER_ID,
     category_id: 5,
     name: 'Bosch No-Frost Buzdolabı',
     brand: 'Bosch',
@@ -69,7 +71,7 @@ let mockProductsStore: Product[] = [
   },
   {
     id: 'mock-4',
-    user_id: 'demo-user-id',
+    user_id: MOCK_USER_ID,
     category_id: 6,
     name: 'Dyson V15 Detect Süpürge',
     brand: 'Dyson',
@@ -122,6 +124,11 @@ export const productService = {
       }
 
       return { data: filtered, error: null };
+    }
+
+    // Supabase bağlıysa ve geçerli bir UUID yoksa boş liste dön
+    if (!userId || userId.trim() === '' || !userId.includes('-')) {
+      return { data: [], error: null };
     }
 
     try {

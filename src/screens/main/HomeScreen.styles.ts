@@ -21,6 +21,16 @@ export const styles = StyleSheet.create({
   headerLeft: {
     flex: 1,
   },
+  greetingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs + 2,
+  },
+  headerAppLogo: {
+    width: 28,
+    height: 28,
+    borderRadius: RADIUS.sm,
+  },
   greetingText: {
     ...TYPOGRAPHY.headlineLgMobile,
     color: COLORS.onBackground,

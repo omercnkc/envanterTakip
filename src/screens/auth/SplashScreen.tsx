@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, Animated } from 'react-native';
+import { View, Text, Animated, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Package } from 'lucide-react-native';
 import { COLORS } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
 import { styles } from './SplashScreen.styles';
@@ -143,7 +142,11 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
             ]}
           />
           <View style={styles.logoContainer}>
-            <Package size={48} color={COLORS.primary} strokeWidth={2.2} />
+            <Image
+              source={require('../../../assets/icon.png')}
+              style={styles.appLogoImage}
+              resizeMode="cover"
+            />
           </View>
         </View>
 

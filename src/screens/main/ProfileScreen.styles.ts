@@ -139,4 +139,30 @@ export const styles = StyleSheet.create({
     color: COLORS.error,
     fontWeight: '600',
   },
+
+  // App Branding Footer
+  appBrandingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: SPACING.xl,
+    paddingBottom: SPACING.xl * 2,
+    gap: 4,
+  },
+  appBrandingLogo: {
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.md,
+    marginBottom: 4,
+  },
+  appBrandingTitle: {
+    ...TYPOGRAPHY.labelMd,
+    color: COLORS.onSurface,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  appBrandingVersion: {
+    ...TYPOGRAPHY.bodySm,
+    color: COLORS.onSurfaceVariant,
+    fontSize: 12,
+  },
 });

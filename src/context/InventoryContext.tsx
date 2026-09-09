@@ -15,6 +15,7 @@ import React, {
 import { Product, Category, ProductFormData, ProductFilterOptions, InventoryStats } from '../types';
 import { productService } from '../api/productService';
 import { categoryService } from '../api/categoryService';
+import { isSupabaseConfigured } from '../api/supabase';
 import { calculateWarrantyStatus } from '../utils/warrantyCalculator';
 import { useAuth } from './AuthContext';
 
@@ -59,7 +60,8 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [filterOptions, setFilterOptions] = useState<ProductFilterOptions>(defaultFilterOptions);
 
-  const userId = user?.id || 'demo-user-id';
+  const isConfigured = isSupabaseConfigured();
+  const userId = user?.id || (isConfigured ? '' : '00000000-0000-0000-0000-000000000000');
 
   const resetFilters = useCallback(() => {
     setFilterOptions(defaultFilterOptions);
@@ -82,29 +84,40 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   // Ürünleri çek
   const fetchProducts = useCallback(async () => {
-    if (!user && !userId) return;
+    // Supabase bağlıyken kullanıcı henüz giriş yapmadıysa sorgu atma
+    if (isConfigured && !user?.id) {
+      setProducts([]);
+      setLoading(false);
+      return;
+    }
+
+    const currentUserId = user?.id || '00000000-0000-0000-0000-000000000000';
     try {
       setLoading(true);
-      const res = await productService.getProducts(userId, filterOptions);
+      const res = await productService.getProducts(currentUserId, filterOptions);
       setProducts(res.data || []);
     } catch {
       // Hata sessizce yakalanır
     } finally {
       setLoading(false);
     }
-  }, [userId, user, filterOptions]);
+  }, [user?.id, isConfigured, filterOptions]);
 
   // Sayfa yenileme (Pull to refresh)
   const refresh = useCallback(async () => {
-    if (!user && !userId) return;
+    if (isConfigured && !user?.id) {
+      setProducts([]);
+      return;
+    }
+    const currentUserId = user?.id || '00000000-0000-0000-0000-000000000000';
     setRefreshing(true);
     try {
-      const res = await productService.getProducts(userId, filterOptions);
+      const res = await productService.getProducts(currentUserId, filterOptions);
       setProducts(res.data || []);
     } finally {
       setRefreshing(false);
     }
-  }, [userId, user, filterOptions]);
+  }, [user?.id, isConfigured, filterOptions]);
 
   useEffect(() => {
     fetchProducts();
@@ -129,7 +142,11 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   // Yeni Ürün Ekleme
   const addProduct = async (data: ProductFormData) => {
-    const res = await productService.createProduct(data, userId);
+    if (isConfigured && !user?.id) {
+      return { success: false, error: 'Ürün eklemek için lütfen oturum açın.' };
+    }
+    const currentUserId = user?.id || '00000000-0000-0000-0000-000000000000';
+    const res = await productService.createProduct(data, currentUserId);
     if (res.error || !res.data) {
       return { success: false, error: res.error || 'Ürün kaydedilemedi.' };
     }

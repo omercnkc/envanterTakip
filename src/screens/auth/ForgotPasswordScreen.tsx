@@ -8,12 +8,13 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mail, ArrowLeft, KeyRound } from 'lucide-react-native';
+import { Mail, ArrowLeft } from 'lucide-react-native';
 
 import { AuthStackParamList, ForgotPasswordFormData, forgotPasswordSchema } from '../../types';
 import { COLORS } from '../../constants';
@@ -34,6 +35,7 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation, route }) => 
     formState: { errors },
   } = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
+    mode: 'onChange',
     defaultValues: {
       email: route.params?.email || '',
     },
@@ -80,7 +82,11 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation, route }) => 
           {/* Üst Başlık */}
           <View style={styles.header}>
             <View style={styles.logoBox}>
-              <KeyRound size={32} color={COLORS.primary} />
+              <Image
+                source={require('../../../assets/icon.png')}
+                style={styles.appLogoImage}
+                resizeMode="cover"
+              />
             </View>
             <Text style={styles.title}>Şifremi Unuttum</Text>
             <Text style={styles.subtitle}>
@@ -104,7 +110,9 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation, route }) => 
 
             {/* E-posta */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>E-posta</Text>
+              <Text style={styles.label}>
+                E-posta <Text style={styles.requiredStar}>*</Text>
+              </Text>
               <Controller
                 control={control}
                 name="email"
