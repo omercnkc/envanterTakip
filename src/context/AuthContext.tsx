@@ -19,6 +19,8 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   resetPassword: (data: ForgotPasswordFormData) => Promise<{ success: boolean; error?: string }>;
+  updateProfile: (fullName: string) => Promise<{ success: boolean; error?: string }>;
+  updatePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -155,6 +157,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return { success: true };
   };
 
+  const updateProfile = async (fullName: string) => {
+    if (!user?.id) {
+      return { success: false, error: 'Oturum açmış kullanıcı bulunamadı.' };
+    }
+    const response = await authService.updateProfile(user.id, fullName);
+    if (response.error) {
+      return { success: false, error: response.error };
+    }
+    await loadProfile(user.id);
+    return { success: true };
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    const response = await authService.updatePassword(newPassword);
+    if (response.error) {
+      return { success: false, error: response.error };
+    }
+    return { success: true };
+  };
+
   const refreshProfile = async () => {
     if (user?.id) {
       await loadProfile(user.id);
@@ -172,6 +194,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       signInWithGoogle,
       signOut,
       resetPassword,
+      updateProfile,
+      updatePassword,
       refreshProfile,
     }),
     [user, session, profile, loading]

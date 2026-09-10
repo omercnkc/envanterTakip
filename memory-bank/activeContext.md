@@ -1,23 +1,28 @@
 # Active Context: Ev Envanter & Garanti Takip
 
 ## 1. Mevcut Odak Noktası (Current Work Focus)
-- **1. ve 2. Hafta Başarıyla Tamamlandı**: Tasarım sistemi, Supabase Auth, Envanter State Yönetimi (`InventoryContext`), Ürün CRUD İşlemleri, Form Validasyonları (Zod + React Hook Form), Otomatik Garanti Bitiş Tarihi Hesaplayıcı, Canlı Arama ve Ürün Detayı / Düzenleme akışları tamamlandı.
-- **Sıradaki Odak**: 3. Hafta hedefleri olan Expo ImagePicker ile görsel/fatura seçimi, Supabase Storage (`product-images`, `invoices`) dosya yükleme/silme ve Expo Notifications ile 30, 7, 1 gün öncesi yerel bildirimlerin zamanlanması.
+- **1., 2. ve 3. Hafta Başarıyla Tamamlandı**: Tasarım sistemi, Supabase Auth, Envanter State Yönetimi (`InventoryContext`), Ürün CRUD İşlemleri, Medya/Fatura Yükleme (Supabase Storage), 30/7/1 gün Garantisi Bitenler için Yerel Bildirimler ve Barkod/QR Kod Tarayıcı tamamlandı.
+- **4. Hafta Geliştirmeleri Başladı**:
+  - Profil Bilgilerini Güncelleme (`EditProfileModal.tsx`, `authService.updateProfile`) tamamlandı.
+  - Güvenli Şifre Değiştirme (`ChangePasswordModal.tsx`, `authService.updatePassword`) tamamlandı.
+  - Envanter Verilerini Dışa Aktarma (Excel uyumlu UTF-8 CSV ve JSON + `expo-sharing` ile cihaz paylaşımı: `exportService.ts`, `ExportDataModal.tsx`) tamamlandı.
+- **Sıradaki Odak**: Ayarlar (Dark Mode, bildirim tercihleri saklama), Empty State ve Loading animasyonları cila ve APK derleme hazırlığı.
 
 ## 2. Son Yapılan Değişiklikler (Recent Changes)
-- `src/utils/warrantyCalculator.ts`: Gün farkı hesabı, garanti durum rozetleri (`active`, `expiring_soon`, `expired`), Türkçe tarih formatlama ve otomatik bitiş tarihi hesaplama fonksiyonları yazıldı.
-- `src/api/categoryService.ts` ve `src/api/productService.ts`: Kategori getirme, ürün CRUD, filtreleme ve arama servisleri geliştirildi.
-- `src/context/InventoryContext.tsx`: Ürün listesi, istatistikler ve CRUD durumunu yöneten Context Provider eklendi.
-- `src/components/`: `WarrantyBadge`, `ProductCard`, `CategoryPickerModal` ve ayrıştırılmış `.styles.ts` dosyaları oluşturuldu.
-- `src/screens/main/`: `AddProductScreen`, `EditProductScreen`, `ProductDetailScreen`, `ProductsScreen` ve `HomeScreen` dinamik verilerle güncellendi.
-- `src/navigation/RootNavigator.tsx`: `ProductDetail` ve `EditProduct` ekranları Stack'e kaydedildi.
-- `App.tsx`: `InventoryProvider` hiyerarşiye eklendi.
+- `expo-sharing` kütüphanesi kuruldu.
+- `src/types/auth.types.ts`: `updateProfileSchema` ve `changePasswordSchema` Zod şemaları ve tipleri eklendi.
+- `src/api/authService.ts`: `updateProfile` ve `updatePassword` metodları yazıldı.
+- `src/context/AuthContext.tsx`: `updateProfile` ve `updatePassword` metodları entegre edildi.
+- `src/api/exportService.ts`: Excel uyumlu UTF-8 BOM destekli CSV oluşturucu, JSON oluşturucu ve `expo-sharing` ile cihazda paylaşım motoru geliştirildi.
+- `src/components/`: `EditProfileModal`, `ChangePasswordModal`, `ExportDataModal` ve ayrıştırılmış `.styles.ts` dosyaları oluşturuldu ve export edildi.
+- `src/screens/main/ProfileScreen.tsx` & `.styles.ts`: Profil kartına "Profili Düzenle" butonu, menüye "Verileri Dışa Aktar" butonu ve modallar eklendi.
+- `src/screens/main/SettingsScreen.tsx`: "Hesap ve Profil Ayarları", "Şifre ve Güvenlik" ve "Verileri Dışa Aktar" aksiyonları gerçek modallara bağlandı.
 - `npx tsc --noEmit` çalıştırıldı -> 0 hata.
 
 ## 3. Sıradaki Adımlar (Next Steps)
-1. **3. Hafta – Medya & Bildirimler**:
-   - `expo-image-picker` ile kamera/galeri görsel ve fatura yükleme.
-   - Supabase Storage bucket entegrasyonu (`storageService.ts`).
-   - `expo-notifications` ile 30 gün, 7 gün ve 1 gün öncesi yerel bildirim zamanlama motoru (`notificationService.ts`).
-   - Barkod ve QR kod okuma (`expo-camera`).
-2. **4. Hafta – Tamamlama & Teslimat**.
+1. **4. Hafta – Tamamlama & Cila**:
+   - Karanlık mod (Dark Mode) desteği ve tema entegrasyonu.
+   - Bildirim tercihleri (garanti hatırlatıcıları aç/kapa) durumunun `AsyncStorage`'da saklanması.
+   - Boş durum (EmptyState) ve yükleme animasyonlarının parlatılması.
+   - Android APK derleme ve sunum hazırlığı.
+

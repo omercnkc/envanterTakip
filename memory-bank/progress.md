@@ -37,10 +37,14 @@
 ### 3. Hafta: Fotoğraf, Fatura & Garanti Bildirimleri
 - [x] Expo ImagePicker / Camera ile gerçek kamera ve galeri görsel yükleme
 - [x] Supabase Storage (`product-images`, `invoices`) yükleme ve silme entegrasyonu (`storageService.ts`, `mediaHelper.ts`, `MediaPickerModal.tsx`)
-- [ ] Expo Notifications ile 30 gün, 7 gün ve 1 gün öncesi yerel bildirimlerin zamanlanması
-- [ ] Barkod / QR Kod tarayıcı (Expo Camera) ile seri no okuma
+- [x] Expo Notifications ile 30 gün, 7 gün ve 1 gün öncesi yerel bildirimlerin zamanlanması (`notificationHelper.ts`)
+- [x] Barkod / QR Kod tarayıcı (Expo Camera) ile seri no okuma (`BarcodeScannerModal.tsx`)
 
 ### 4. Hafta: Tamamlama, İyileştirme & Teslimat
-- [ ] Profil & Ayarlar (Dark Mode, bildirim tercihleri, CSV/PDF Export)
+- [x] Profil Bilgilerini Güncelleme (`EditProfileModal.tsx`, `authService.updateProfile`)
+- [x] Güvenli Şifre Değiştirme (`ChangePasswordModal.tsx`, `authService.updatePassword`)
+- [x] Envanteri Excel Uyumlu CSV & JSON Olarak Dışa Aktarma ve Paylaşma (`exportService.ts`, `ExportDataModal.tsx`, `expo-sharing`)
+- [ ] Profil & Ayarlar ek özellikleri (Dark Mode, bildirim tercihi saklama)
 - [ ] Empty State ve Loading animasyonları polish
 - [ ] Android APK derleme ve sunum hazırlığı
+

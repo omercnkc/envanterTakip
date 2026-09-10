@@ -23,11 +23,20 @@ import {
 
 import { COLORS } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
+import {
+  EditProfileModal,
+  ChangePasswordModal,
+  ExportDataModal,
+} from '../../components';
 import { styles } from './SettingsScreen.styles';
 
 export const SettingsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { user, profile } = useAuth();
+
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
 
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [warrantyReminders, setWarrantyReminders] = useState(true);
@@ -35,11 +44,7 @@ export const SettingsScreen: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
 
   const handleExportData = () => {
-    Alert.alert(
-      'Verileri Dışa Aktar',
-      'Tüm envanter ve garanti verileriniz JSON ve PDF formatında indirilmeye hazırlanıyor.',
-      [{ text: 'Tamam' }]
-    );
+    setExportModalOpen(true);
   };
 
   const handleClearCache = () => {
@@ -92,14 +97,7 @@ export const SettingsScreen: React.FC = () => {
           <View style={styles.card}>
             <TouchableOpacity
               style={styles.cardRow}
-              onPress={() =>
-                Alert.alert(
-                  'Hesap Bilgileri',
-                  `Ad: ${profile?.full_name || 'Belirtilmedi'}\nE-posta: ${
-                    profile?.email || user?.email
-                  }`
-                )
-              }
+              onPress={() => setEditProfileOpen(true)}
               activeOpacity={0.7}
             >
               <Text style={styles.rowLabel}>Hesap ve Profil Ayarları</Text>
@@ -114,16 +112,7 @@ export const SettingsScreen: React.FC = () => {
           <View style={styles.card}>
             <TouchableOpacity
               style={styles.cardRow}
-              onPress={() =>
-                Alert.alert(
-                  'Şifre Değiştir',
-                  'Şifre sıfırlama bağlantısı e-posta adresinize gönderilsin mi?',
-                  [
-                    { text: 'İptal', style: 'cancel' },
-                    { text: 'Gönder', onPress: () => {} },
-                  ]
-                )
-              }
+              onPress={() => setChangePasswordOpen(true)}
               activeOpacity={0.7}
             >
               <Text style={styles.rowLabel}>Şifre ve Güvenlik</Text>
@@ -235,6 +224,24 @@ export const SettingsScreen: React.FC = () => {
           </View>
         </View>
       </ScrollView>
+
+      {/* Hesap & Profil Düzenleme Modalı */}
+      <EditProfileModal
+        visible={editProfileOpen}
+        onClose={() => setEditProfileOpen(false)}
+      />
+
+      {/* Şifre Değiştirme Modalı */}
+      <ChangePasswordModal
+        visible={changePasswordOpen}
+        onClose={() => setChangePasswordOpen(false)}
+      />
+
+      {/* Verileri Dışa Aktar Modalı */}
+      <ExportDataModal
+        visible={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+      />
     </SafeAreaView>
   );
 };

@@ -65,8 +65,39 @@ export const forgotPasswordSchema = z.object({
 
 export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 
+export const updateProfileSchema = z.object({
+  fullName: z
+    .string()
+    .trim()
+    .min(1, 'Ad Soyad alanı zorunludur')
+    .min(2, 'Ad Soyad en az 2 karakter olmalıdır')
+    .max(50, 'Ad Soyad 50 karakterden uzun olamaz')
+    .regex(/^[a-zA-ZçÇğĞıİöÖşŞüÜ\s]+$/, 'Ad Soyad sadece harflerden oluşmalıdır'),
+});
+
+export type UpdateProfileFormData = z.infer<typeof updateProfileSchema>;
+
+export const changePasswordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(1, 'Yeni şifre alanı zorunludur')
+      .min(6, 'Yeni şifre en az 6 karakter olmalıdır')
+      .max(20, 'Yeni şifre en fazla 20 karakter olabilir'),
+    passwordConfirm: z
+      .string()
+      .min(1, 'Şifre tekrarı zorunludur'),
+  })
+  .refine((data) => data.password === data.passwordConfirm, {
+    message: 'Girdiğiniz şifreler eşleşmiyor',
+    path: ['passwordConfirm'],
+  });
+
+export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
+
 export interface AuthResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
 }
+

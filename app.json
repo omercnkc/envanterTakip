@@ -33,7 +33,8 @@
         {
           "cameraPermission": "Ürün barkodu ve seri numarasını kamerayla tarayabilmek için kamera izni gerekiyor."
         }
-      ]
+      ],
+      "expo-sharing"
     ]
   }
 }

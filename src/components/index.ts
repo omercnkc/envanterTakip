@@ -8,3 +8,7 @@ export * from './GoogleIcon';
 export * from './AnimatedLock';
 export * from './MediaPickerModal';
 export * from './BarcodeScannerModal';
+export * from './EditProfileModal';
+export * from './ChangePasswordModal';
+export * from './ExportDataModal';
+

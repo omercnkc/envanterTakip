@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -15,11 +15,14 @@ import {
   Info,
   LogOut,
   ChevronRight,
+  Pencil,
+  Download,
 } from 'lucide-react-native';
 
 import { COLORS } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
 import { useInventory } from '../../context/InventoryContext';
+import { EditProfileModal, ExportDataModal } from '../../components';
 import { styles } from './ProfileScreen.styles';
 
 export const ProfileScreen: React.FC = () => {
@@ -27,9 +30,12 @@ export const ProfileScreen: React.FC = () => {
   const { profile, user, signOut } = useAuth();
   const { stats } = useInventory();
 
-  const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Ömer';
-  const email = profile?.email || user?.email || 'omer@example.com';
-  const userInitials = (displayName[0] || 'Ö').toUpperCase();
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+
+  const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Kullanıcı';
+  const email = profile?.email || user?.email || 'kullanici@example.com';
+  const userInitials = (displayName[0] || 'K').toUpperCase();
 
   const handleLogout = () => {
     Alert.alert('Çıkış Yap', 'Hesabınızdan çıkış yapmak istediğinize emin misiniz?', [
@@ -73,6 +79,14 @@ export const ProfileScreen: React.FC = () => {
             <Text style={styles.userName}>{displayName}</Text>
             <Text style={styles.userEmail}>{email}</Text>
           </View>
+          <TouchableOpacity
+            style={styles.editProfileButton}
+            onPress={() => setEditProfileOpen(true)}
+            activeOpacity={0.7}
+          >
+            <Pencil size={13} color={COLORS.primary} />
+            <Text style={styles.editProfileButtonText}>Profili Düzenle</Text>
+          </TouchableOpacity>
         </View>
 
         {/* 3'lü İstatistik Izgarası */}
@@ -104,6 +118,19 @@ export const ProfileScreen: React.FC = () => {
 
         {/* Menü Listesi */}
         <View style={styles.menuCard}>
+          {/* Verileri Dışa Aktar */}
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => setExportModalOpen(true)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.menuItemLeft}>
+              <Download size={20} color={COLORS.primary} />
+              <Text style={styles.menuItemLabel}>Verileri Dışa Aktar (CSV/JSON)</Text>
+            </View>
+            <ChevronRight size={18} color={COLORS.outline} />
+          </TouchableOpacity>
+
           {/* Ayarlar */}
           <TouchableOpacity
             style={styles.menuItem}
@@ -165,6 +192,18 @@ export const ProfileScreen: React.FC = () => {
           <Text style={styles.appBrandingVersion}>v1.0.0 • Garanti & Varlık Yönetimi</Text>
         </View>
       </ScrollView>
+
+      {/* Profili Düzenle Modalı */}
+      <EditProfileModal
+        visible={editProfileOpen}
+        onClose={() => setEditProfileOpen(false)}
+      />
+
+      {/* Verileri Dışa Aktar Modalı */}
+      <ExportDataModal
+        visible={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+      />
     </SafeAreaView>
   );
 };

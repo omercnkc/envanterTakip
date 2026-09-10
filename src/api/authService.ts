@@ -267,4 +267,69 @@ export const authService = {
       return { data: null, error: formatAuthError(err) };
     }
   },
+
+  /**
+   * Kullanıcı profil bilgilerini (Ad Soyad) günceller.
+   */
+  async updateProfile(userId: string, fullName: string): Promise<{ error: string | null }> {
+    const cleanFullName = fullName.trim();
+
+    if (!isSupabaseConfigured()) {
+      return { error: null };
+    }
+
+    try {
+      // 1. profiles tablosunu güncelle
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: cleanFullName,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+
+      if (profileError) {
+        return { error: formatAuthError(profileError) };
+      }
+
+      // 2. auth.users metadata'sını senkronize et
+      try {
+        await supabase.auth.updateUser({
+          data: {
+            full_name: cleanFullName,
+          },
+        });
+      } catch {
+        // Metadata güncellemesi başarısız olsa da ana profil tablosu güncellendi
+      }
+
+      return { error: null };
+    } catch (err) {
+      return { error: formatAuthError(err) };
+    }
+  },
+
+  /**
+   * Kullanıcının şifresini günceller.
+   */
+  async updatePassword(newPassword: string): Promise<{ error: string | null }> {
+    if (!isSupabaseConfigured()) {
+      return { error: null };
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) {
+        return { error: formatAuthError(error) };
+      }
+
+      return { error: null };
+    } catch (err) {
+      return { error: formatAuthError(err) };
+    }
+  },
 };
+
