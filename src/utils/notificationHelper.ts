@@ -250,3 +250,15 @@ export async function getScheduledNotificationsCount(): Promise<number> {
     return 0;
   }
 }
+
+/**
+ * Planlanmış tüm yerel bildirimleri iptal eder (Bildirimler kapatıldığında kullanılır)
+ */
+export async function cancelAllWarrantyNotifications(): Promise<void> {
+  try {
+    await Notifications.cancelAllScheduledNotificationsAsync();
+  } catch (err) {
+    console.warn('Tüm bildirimler iptal edilirken hata oluştu:', err);
+  }
+}
+

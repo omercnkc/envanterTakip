@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -19,16 +19,19 @@ import {
   Download,
 } from 'lucide-react-native';
 
-import { COLORS } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { useInventory } from '../../context/InventoryContext';
 import { EditProfileModal, ExportDataModal } from '../../components';
-import { styles } from './ProfileScreen.styles';
+import { getStyles } from './ProfileScreen.styles';
 
 export const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { profile, user, signOut } = useAuth();
+  const { colors } = useTheme();
   const { stats } = useInventory();
+
+  const styles = useMemo(() => getStyles(colors), [colors]);
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
@@ -84,7 +87,7 @@ export const ProfileScreen: React.FC = () => {
             onPress={() => setEditProfileOpen(true)}
             activeOpacity={0.7}
           >
-            <Pencil size={13} color={COLORS.primary} />
+            <Pencil size={13} color={colors.primary} />
             <Text style={styles.editProfileButtonText}>Profili Düzenle</Text>
           </TouchableOpacity>
         </View>
@@ -94,7 +97,7 @@ export const ProfileScreen: React.FC = () => {
           {/* Stat 1: Toplam Ürün */}
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>Toplam Ürün</Text>
-            <Text style={[styles.statValue, { color: COLORS.primary }]}>
+            <Text style={[styles.statValue, { color: colors.primary }]}>
               {stats.total}
             </Text>
           </View>
@@ -102,7 +105,7 @@ export const ProfileScreen: React.FC = () => {
           {/* Stat 2: Aktif Garanti */}
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>Aktif Garanti</Text>
-            <Text style={[styles.statValue, { color: COLORS.tertiary }]}>
+            <Text style={[styles.statValue, { color: colors.tertiary }]}>
               {stats.active}
             </Text>
           </View>
@@ -110,7 +113,7 @@ export const ProfileScreen: React.FC = () => {
           {/* Stat 3: Yakında Bitecek */}
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>Yakında Bitecek</Text>
-            <Text style={[styles.statValue, { color: COLORS.error }]}>
+            <Text style={[styles.statValue, { color: colors.error }]}>
               {stats.expiringSoon}
             </Text>
           </View>
@@ -125,10 +128,10 @@ export const ProfileScreen: React.FC = () => {
             activeOpacity={0.7}
           >
             <View style={styles.menuItemLeft}>
-              <Download size={20} color={COLORS.primary} />
+              <Download size={20} color={colors.primary} />
               <Text style={styles.menuItemLabel}>Verileri Dışa Aktar (CSV/JSON)</Text>
             </View>
-            <ChevronRight size={18} color={COLORS.outline} />
+            <ChevronRight size={18} color={colors.outline} />
           </TouchableOpacity>
 
           {/* Ayarlar */}
@@ -138,10 +141,10 @@ export const ProfileScreen: React.FC = () => {
             activeOpacity={0.7}
           >
             <View style={styles.menuItemLeft}>
-              <Settings size={20} color={COLORS.outline} />
+              <Settings size={20} color={colors.outline} />
               <Text style={styles.menuItemLabel}>Ayarlar</Text>
             </View>
-            <ChevronRight size={18} color={COLORS.outline} />
+            <ChevronRight size={18} color={colors.outline} />
           </TouchableOpacity>
 
           {/* Yardım & Destek */}
@@ -151,10 +154,10 @@ export const ProfileScreen: React.FC = () => {
             activeOpacity={0.7}
           >
             <View style={styles.menuItemLeft}>
-              <HelpCircle size={20} color={COLORS.outline} />
+              <HelpCircle size={20} color={colors.outline} />
               <Text style={styles.menuItemLabel}>Yardım & Destek</Text>
             </View>
-            <ChevronRight size={18} color={COLORS.outline} />
+            <ChevronRight size={18} color={colors.outline} />
           </TouchableOpacity>
 
           {/* Hakkında */}
@@ -164,10 +167,10 @@ export const ProfileScreen: React.FC = () => {
             activeOpacity={0.7}
           >
             <View style={styles.menuItemLeft}>
-              <Info size={20} color={COLORS.outline} />
+              <Info size={20} color={colors.outline} />
               <Text style={styles.menuItemLabel}>Hakkında</Text>
             </View>
-            <ChevronRight size={18} color={COLORS.outline} />
+            <ChevronRight size={18} color={colors.outline} />
           </TouchableOpacity>
         </View>
 
@@ -177,7 +180,7 @@ export const ProfileScreen: React.FC = () => {
           onPress={handleLogout}
           activeOpacity={0.8}
         >
-          <LogOut size={18} color={COLORS.error} />
+          <LogOut size={18} color={colors.error} />
           <Text style={styles.logoutButtonText}>Çıkış Yap</Text>
         </TouchableOpacity>
 

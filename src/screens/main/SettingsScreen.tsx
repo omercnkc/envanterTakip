@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,30 +9,50 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   ArrowLeft,
   ChevronRight,
   Shield,
   Bell,
   Moon,
+  Sun,
+  Smartphone,
+  Palette,
   Globe,
   Download,
   Trash2,
   AlertTriangle,
 } from 'lucide-react-native';
 
-import { COLORS } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
+import { useInventory } from '../../context/InventoryContext';
+import { cacheHelper } from '../../utils/cacheHelper';
+import {
+  cancelAllWarrantyNotifications,
+  syncAllWarrantyNotifications,
+} from '../../utils/notificationHelper';
 import {
   EditProfileModal,
   ChangePasswordModal,
   ExportDataModal,
 } from '../../components';
-import { styles } from './SettingsScreen.styles';
+import { getStyles } from './SettingsScreen.styles';
+
+const STORAGE_KEYS = {
+  WARRANTY_REMINDERS: '@safe_envanter_warranty_reminders',
+  EMAIL_NOTIFICATIONS: '@safe_envanter_email_notifications',
+  TWO_FACTOR: '@safe_envanter_two_factor',
+};
 
 export const SettingsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-  const { user, profile } = useAuth();
+  const { user, profile, signOut } = useAuth();
+  const { theme, setTheme, colors, systemColorScheme } = useTheme();
+  const { products } = useInventory();
+
+  const styles = useMemo(() => getStyles(colors), [colors]);
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
@@ -41,31 +61,117 @@ export const SettingsScreen: React.FC = () => {
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [warrantyReminders, setWarrantyReminders] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
+
+  // Kayıtlı ayarları yükle
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const [savedReminders, savedEmail, saved2FA] = await Promise.all([
+          AsyncStorage.getItem(STORAGE_KEYS.WARRANTY_REMINDERS),
+          AsyncStorage.getItem(STORAGE_KEYS.EMAIL_NOTIFICATIONS),
+          AsyncStorage.getItem(STORAGE_KEYS.TWO_FACTOR),
+        ]);
+
+        if (savedReminders !== null) {
+          setWarrantyReminders(savedReminders === 'true');
+        }
+        if (savedEmail !== null) {
+          setEmailNotifications(savedEmail === 'true');
+        }
+        if (saved2FA !== null) {
+          setTwoFactorEnabled(saved2FA === 'true');
+        }
+      } catch (err) {
+        console.warn('Ayarlar yüklenirken hata:', err);
+      }
+    };
+
+    loadSettings();
+  }, []);
+
+  const handleToggleWarrantyReminders = async (value: boolean) => {
+    setWarrantyReminders(value);
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.WARRANTY_REMINDERS, String(value));
+      if (!value) {
+        await cancelAllWarrantyNotifications();
+        Alert.alert('Bildirimler Kapatıldı', 'Garanti hatırlatıcı yerel bildirimleri iptal edildi.');
+      } else {
+        await syncAllWarrantyNotifications(products);
+        Alert.alert(
+          'Bildirimler Açıldı',
+          'Garanti süreleri yaklaşan ürünleriniz için hatırlatıcılar başarıyla planlandı.'
+        );
+      }
+    } catch (err) {
+      console.warn('Garanti bildirimi ayarı kaydedilemedi:', err);
+    }
+  };
+
+  const handleToggleEmailNotifications = async (value: boolean) => {
+    setEmailNotifications(value);
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.EMAIL_NOTIFICATIONS, String(value));
+    } catch (err) {
+      console.warn('E-posta bildirimi ayarı kaydedilemedi:', err);
+    }
+  };
+
+  const handleToggleTwoFactor = async (value: boolean) => {
+    setTwoFactorEnabled(value);
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.TWO_FACTOR, String(value));
+    } catch (err) {
+      console.warn('2FA ayarı kaydedilemedi:', err);
+    }
+  };
 
   const handleExportData = () => {
     setExportModalOpen(true);
   };
 
-  const handleClearCache = () => {
+  const handleClearCache = async () => {
+    const { sizeInBytes, fileCount } = await cacheHelper.getCacheSize();
+    const formattedSize = cacheHelper.formatBytes(sizeInBytes);
+
     Alert.alert(
       'Önbelleği Temizle',
-      'Uygulama geçici önbelleği başarıyla temizlendi.',
-      [{ text: 'Tamam' }]
+      `Geçici dosya önbelleği (${fileCount} dosya, ${formattedSize}) silinsin mi?`,
+      [
+        { text: 'Vazgeç', style: 'cancel' },
+        {
+          text: 'Temizle',
+          style: 'destructive',
+          onPress: async () => {
+            const result = await cacheHelper.clearCache();
+            if (result.success) {
+              Alert.alert(
+                'Önbellek Temizlendi',
+                `${result.deletedCount} adet geçici dosya (${cacheHelper.formatBytes(
+                  result.freedBytes
+                )}) başarıyla silindi.`
+              );
+            } else {
+              Alert.alert('Hata', 'Önbellek temizlenirken bir sorun oluştu.');
+            }
+          },
+        },
+      ]
     );
   };
 
   const handleDeleteAccount = () => {
     Alert.alert(
       'Hesabı Sil',
-      'Hesabınızı ve tüm verilerinizi kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
+      'Hesabınızı ve tüm kayıtlı ürün verilerinizi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
       [
         { text: 'Vazgeç', style: 'cancel' },
         {
           text: 'Hesabımı Sil',
           style: 'destructive',
-          onPress: () => {
-            Alert.alert('Bilgi', 'Hesap silme talebiniz işleme alındı.');
+          onPress: async () => {
+            await signOut();
+            Alert.alert('Bilgi', 'Hesabınız başarıyla kapatıldı.');
           },
         },
       ]
@@ -81,7 +187,7 @@ export const SettingsScreen: React.FC = () => {
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
         >
-          <ArrowLeft size={22} color={COLORS.onBackground} />
+          <ArrowLeft size={22} color={colors.onBackground} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Ayarlar</Text>
         <View style={styles.headerRightPlaceholder} />
@@ -101,7 +207,7 @@ export const SettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <Text style={styles.rowLabel}>Hesap ve Profil Ayarları</Text>
-              <ChevronRight size={18} color={COLORS.outline} />
+              <ChevronRight size={18} color={colors.outline} />
             </TouchableOpacity>
           </View>
         </View>
@@ -116,16 +222,16 @@ export const SettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <Text style={styles.rowLabel}>Şifre ve Güvenlik</Text>
-              <ChevronRight size={18} color={COLORS.outline} />
+              <ChevronRight size={18} color={colors.outline} />
             </TouchableOpacity>
 
             <View style={[styles.cardRow, styles.cardRowNoBorder]}>
               <Text style={styles.rowLabel}>İki Adımlı Doğrulama (2FA)</Text>
               <Switch
                 value={twoFactorEnabled}
-                onValueChange={setTwoFactorEnabled}
-                trackColor={{ false: COLORS.outlineVariant, true: COLORS.primaryFixed }}
-                thumbColor={twoFactorEnabled ? COLORS.primary : COLORS.surfaceContainerLowest}
+                onValueChange={handleToggleTwoFactor}
+                trackColor={{ false: colors.outlineVariant, true: colors.primaryFixed }}
+                thumbColor={twoFactorEnabled ? colors.primary : colors.surfaceContainerLowest}
               />
             </View>
           </View>
@@ -139,9 +245,9 @@ export const SettingsScreen: React.FC = () => {
               <Text style={styles.rowLabel}>Garanti Hatırlatıcıları</Text>
               <Switch
                 value={warrantyReminders}
-                onValueChange={setWarrantyReminders}
-                trackColor={{ false: COLORS.outlineVariant, true: COLORS.primaryFixed }}
-                thumbColor={warrantyReminders ? COLORS.primary : COLORS.surfaceContainerLowest}
+                onValueChange={handleToggleWarrantyReminders}
+                trackColor={{ false: colors.outlineVariant, true: colors.primaryFixed }}
+                thumbColor={warrantyReminders ? colors.primary : colors.surfaceContainerLowest}
               />
             </View>
 
@@ -149,9 +255,9 @@ export const SettingsScreen: React.FC = () => {
               <Text style={styles.rowLabel}>E-posta Bildirimleri</Text>
               <Switch
                 value={emailNotifications}
-                onValueChange={setEmailNotifications}
-                trackColor={{ false: COLORS.outlineVariant, true: COLORS.primaryFixed }}
-                thumbColor={emailNotifications ? COLORS.primary : COLORS.surfaceContainerLowest}
+                onValueChange={handleToggleEmailNotifications}
+                trackColor={{ false: colors.outlineVariant, true: colors.primaryFixed }}
+                thumbColor={emailNotifications ? colors.primary : colors.surfaceContainerLowest}
               />
             </View>
           </View>
@@ -161,22 +267,119 @@ export const SettingsScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionHeaderTitle}>Görünüm & Tercihler</Text>
           <View style={styles.card}>
-            <View style={styles.cardRow}>
-              <Text style={styles.rowLabel}>Karanlık Mod (Dark Mode)</Text>
-              <Switch
-                value={darkMode}
-                onValueChange={setDarkMode}
-                trackColor={{ false: COLORS.outlineVariant, true: COLORS.primaryFixed }}
-                thumbColor={darkMode ? COLORS.primary : COLORS.surfaceContainerLowest}
-              />
+            {/* İnteraktif 3'lü Segment Tema Seçici */}
+            <View style={styles.themeSelectorContainer}>
+              <View style={styles.themeHeaderRow}>
+                <View style={styles.rowLeftWithIcon}>
+                  <Palette size={18} color={colors.primary} />
+                  <Text style={styles.rowLabel}>Uygulama Teması</Text>
+                </View>
+                <Text style={styles.themeCurrentLabel}>
+                  {theme === 'system'
+                    ? `Sistem (${systemColorScheme === 'dark' ? 'Koyu' : 'Açık'})`
+                    : theme === 'dark'
+                    ? 'Koyu Mod'
+                    : 'Açık Mod'}
+                </Text>
+              </View>
+
+              <View style={styles.segmentedContainer}>
+                {/* Açık Mod */}
+                <TouchableOpacity
+                  style={[
+                    styles.segmentButton,
+                    theme === 'light' && styles.segmentButtonActive,
+                  ]}
+                  onPress={() => setTheme('light')}
+                  activeOpacity={0.8}
+                >
+                  <Sun
+                    size={16}
+                    color={theme === 'light' ? colors.onPrimary : colors.onSurfaceVariant}
+                  />
+                  <Text
+                    style={[
+                      styles.segmentText,
+                      theme === 'light' && styles.segmentTextActive,
+                    ]}
+                  >
+                    Açık
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Koyu Mod */}
+                <TouchableOpacity
+                  style={[
+                    styles.segmentButton,
+                    theme === 'dark' && styles.segmentButtonActive,
+                  ]}
+                  onPress={() => setTheme('dark')}
+                  activeOpacity={0.8}
+                >
+                  <Moon
+                    size={16}
+                    color={theme === 'dark' ? colors.onPrimary : colors.onSurfaceVariant}
+                  />
+                  <Text
+                    style={[
+                      styles.segmentText,
+                      theme === 'dark' && styles.segmentTextActive,
+                    ]}
+                  >
+                    Koyu
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Sistem Modu */}
+                <TouchableOpacity
+                  style={[
+                    styles.segmentButton,
+                    theme === 'system' && styles.segmentButtonActive,
+                  ]}
+                  onPress={() => setTheme('system')}
+                  activeOpacity={0.8}
+                >
+                  <Smartphone
+                    size={16}
+                    color={theme === 'system' ? colors.onPrimary : colors.onSurfaceVariant}
+                  />
+                  <Text
+                    style={[
+                      styles.segmentText,
+                      theme === 'system' && styles.segmentTextActive,
+                    ]}
+                  >
+                    Sistem
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Sistem Modu Bilgi Rozeti */}
+              {theme === 'system' && (
+                <View style={styles.systemThemeInfoBox}>
+                  <Text style={styles.systemThemeInfoText}>
+                    Cihazınız şu anda{' '}
+                    <Text style={{ fontWeight: '700', color: colors.primary }}>
+                      {systemColorScheme === 'dark' ? 'Koyu Mod' : 'Açık Mod'}
+                    </Text>{' '}
+                    kullanıyor. Uygulama telefonunuzun temasıyla otomatik olarak değişir.
+                  </Text>
+                </View>
+              )}
             </View>
 
+            {/* Uygulama Dili */}
             <TouchableOpacity
               style={[styles.cardRow, styles.cardRowNoBorder]}
-              onPress={() => Alert.alert('Dil Seçimi', 'Şu anda sadece Türkçe dili desteklenmektedir.')}
+              onPress={() =>
+                Alert.alert('Dil Seçimi', 'Şu anda sadece Türkçe dili desteklenmektedir.')
+              }
               activeOpacity={0.7}
             >
-              <Text style={styles.rowLabel}>Uygulama Dili</Text>
+              <View style={styles.rowLeftWithIcon}>
+                <Globe size={18} color={colors.outline} />
+                <Text style={styles.rowLabel}>Uygulama Dili</Text>
+              </View>
               <Text style={styles.rowValue}>Türkçe</Text>
             </TouchableOpacity>
           </View>
@@ -192,10 +395,10 @@ export const SettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.rowLeftWithIcon}>
-                <Download size={18} color={COLORS.primary} />
+                <Download size={18} color={colors.primary} />
                 <Text style={styles.rowLabel}>Verileri Dışa Aktar</Text>
               </View>
-              <ChevronRight size={18} color={COLORS.outline} />
+              <ChevronRight size={18} color={colors.outline} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -204,10 +407,10 @@ export const SettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.rowLeftWithIcon}>
-                <Trash2 size={18} color={COLORS.primary} />
+                <Trash2 size={18} color={colors.primary} />
                 <Text style={styles.rowLabel}>Önbelleği Temizle</Text>
               </View>
-              <ChevronRight size={18} color={COLORS.outline} />
+              <ChevronRight size={18} color={colors.outline} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -216,10 +419,10 @@ export const SettingsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={styles.rowLeftWithIcon}>
-                <AlertTriangle size={18} color={COLORS.error} />
-                <Text style={[styles.rowLabel, { color: COLORS.error }]}>Hesabımı Sil</Text>
+                <AlertTriangle size={18} color={colors.error} />
+                <Text style={[styles.rowLabel, { color: colors.error }]}>Hesabımı Sil</Text>
               </View>
-              <ChevronRight size={18} color={COLORS.error} />
+              <ChevronRight size={18} color={colors.error} />
             </TouchableOpacity>
           </View>
         </View>

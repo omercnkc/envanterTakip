@@ -1,10 +1,11 @@
 import { StyleSheet } from 'react-native';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../../constants';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../../constants';
+import { ThemeColors } from '../../constants/colors';
 
-export const styles = StyleSheet.create({
+export const getStyles = (colors: ThemeColors) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   header: {
     paddingHorizontal: SPACING.containerMargin,
@@ -13,7 +14,7 @@ export const styles = StyleSheet.create({
   },
   headerTitle: {
     ...TYPOGRAPHY.headlineLgMobile,
-    color: COLORS.onBackground,
+    color: colors.onBackground,
     fontWeight: '700',
   },
   keyboardView: {
@@ -30,14 +31,14 @@ export const styles = StyleSheet.create({
   },
   sectionLabel: {
     ...TYPOGRAPHY.labelMd,
-    color: COLORS.onSurfaceVariant,
+    color: colors.onSurfaceVariant,
   },
   sectionTitle: {
     ...TYPOGRAPHY.bodyLg,
-    color: COLORS.onBackground,
+    color: colors.onBackground,
     fontWeight: '600',
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.surfaceContainerHigh,
+    borderBottomColor: colors.surfaceContainerHigh,
     paddingBottom: 8,
   },
   photoActionRow: {
@@ -47,10 +48,10 @@ export const styles = StyleSheet.create({
   photoActionButton: {
     flex: 1,
     height: 96,
-    backgroundColor: COLORS.surfaceContainerLowest,
+    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: RADIUS.lg,
     borderWidth: 1,
-    borderColor: COLORS.outlineVariant + '50',
+    borderColor: colors.outlineVariant + '50',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
@@ -58,7 +59,7 @@ export const styles = StyleSheet.create({
   },
   photoActionText: {
     ...TYPOGRAPHY.labelMd,
-    color: COLORS.onSurface,
+    color: colors.onSurface,
   },
   imagePreviewContainer: {
     width: '100%',
@@ -67,7 +68,7 @@ export const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
     borderWidth: 1,
-    borderColor: COLORS.outlineVariant + '50',
+    borderColor: colors.outlineVariant + '50',
   },
   imagePreview: {
     width: '100%',
@@ -80,7 +81,7 @@ export const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: COLORS.error,
+    backgroundColor: colors.error,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -89,10 +90,10 @@ export const styles = StyleSheet.create({
   },
   label: {
     ...TYPOGRAPHY.labelMd,
-    color: COLORS.onSurfaceVariant,
+    color: colors.onSurfaceVariant,
   },
   requiredStar: {
-    color: COLORS.error,
+    color: colors.error,
   },
   row: {
     flexDirection: 'row',
@@ -103,15 +104,15 @@ export const styles = StyleSheet.create({
   },
   inputBox: {
     height: 48,
-    backgroundColor: COLORS.surfaceContainerLowest,
+    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: RADIUS.default,
     borderWidth: 1,
-    borderColor: COLORS.outlineVariant + '50',
+    borderColor: colors.outlineVariant + '50',
     paddingHorizontal: 14,
     justifyContent: 'center',
   },
   inputBoxError: {
-    borderColor: COLORS.error,
+    borderColor: colors.error,
   },
   priceInputBox: {
     flexDirection: 'row',
@@ -120,7 +121,7 @@ export const styles = StyleSheet.create({
   },
   currencySymbol: {
     ...TYPOGRAPHY.bodyMd,
-    color: COLORS.outline,
+    color: colors.outline,
     marginRight: 6,
     fontWeight: '600',
   },
@@ -132,7 +133,7 @@ export const styles = StyleSheet.create({
   scanButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.primaryFixed,
+    backgroundColor: colors.primaryFixed,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: RADIUS.sm,
@@ -140,16 +141,16 @@ export const styles = StyleSheet.create({
   },
   scanButtonText: {
     ...TYPOGRAPHY.labelSm,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
     fontSize: 12,
   },
   pickerBox: {
     height: 48,
-    backgroundColor: COLORS.surfaceContainerLowest,
+    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: RADIUS.default,
     borderWidth: 1,
-    borderColor: COLORS.outlineVariant + '50',
+    borderColor: colors.outlineVariant + '50',
     paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
@@ -157,15 +158,15 @@ export const styles = StyleSheet.create({
   },
   pickerText: {
     ...TYPOGRAPHY.bodyMd,
-    color: COLORS.onSurface,
+    color: colors.onSurface,
   },
   placeholderText: {
-    color: COLORS.outline,
+    color: colors.outline,
   },
   textInput: {
     flex: 1,
     ...TYPOGRAPHY.bodyMd,
-    color: COLORS.onSurface,
+    color: colors.onSurface,
     height: '100%',
   },
   textAreaBox: {
@@ -178,7 +179,7 @@ export const styles = StyleSheet.create({
   errorText: {
     ...TYPOGRAPHY.bodySm,
     fontSize: 11,
-    color: COLORS.error,
+    color: colors.error,
   },
   durationPillsRow: {
     flexDirection: 'row',
@@ -189,44 +190,44 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: RADIUS.full,
-    backgroundColor: COLORS.surfaceContainerLowest,
+    backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: COLORS.outlineVariant + '40',
+    borderColor: colors.outlineVariant + '40',
   },
   durationPillActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   durationPillText: {
     ...TYPOGRAPHY.labelMd,
-    color: COLORS.onSurfaceVariant,
+    color: colors.onSurfaceVariant,
     fontSize: 12,
   },
   durationPillTextActive: {
-    color: COLORS.onPrimary,
+    color: colors.onPrimary,
     fontWeight: '600',
   },
   uploadDashedBox: {
     height: 90,
     borderWidth: 1.5,
     borderStyle: 'dashed',
-    borderColor: COLORS.outlineVariant + '80',
+    borderColor: colors.outlineVariant + '80',
     borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.surfaceContainerLowest,
+    backgroundColor: colors.surfaceContainerLowest,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
   },
   uploadDashedText: {
     ...TYPOGRAPHY.bodySm,
-    color: COLORS.onSurfaceVariant,
+    color: colors.onSurfaceVariant,
   },
   invoiceUploadedBox: {
     height: 48,
-    backgroundColor: COLORS.surfaceContainerLow,
+    backgroundColor: colors.surfaceContainerLow,
     borderRadius: RADIUS.default,
     borderWidth: 1,
-    borderColor: COLORS.outlineVariant + '50',
+    borderColor: colors.outlineVariant + '50',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -234,7 +235,7 @@ export const styles = StyleSheet.create({
   },
   invoiceUploadedText: {
     ...TYPOGRAPHY.bodySm,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '500',
   },
 
@@ -245,7 +246,7 @@ export const styles = StyleSheet.create({
   },
   submitButton: {
     height: 52,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
@@ -257,7 +258,7 @@ export const styles = StyleSheet.create({
   submitButtonText: {
     ...TYPOGRAPHY.labelMd,
     fontSize: 15,
-    color: COLORS.onPrimary,
+    color: colors.onPrimary,
     fontWeight: '600',
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,12 +14,13 @@ import { useNavigation } from '@react-navigation/native';
 import { Search, X, SlidersHorizontal } from 'lucide-react-native';
 
 import { Product } from '../../types';
-import { COLORS } from '../../constants';
+import { useTheme } from '../../context/ThemeContext';
 import { useInventory } from '../../context/InventoryContext';
 import { ProductCard } from '../../components/ProductCard';
 import { EmptyState } from '../../components/EmptyState';
 import { FilterModal } from '../../components/FilterModal';
-import { styles } from './ProductsScreen.styles';
+import { TechOrbitLoader } from '../../components/TechOrbitLoader';
+import { getStyles } from './ProductsScreen.styles';
 
 const QUICK_FILTER_TABS = [
   { id: 'all', label: 'Tümü' },
@@ -39,6 +40,9 @@ export const ProductsScreen: React.FC = () => {
     setFilterOptions,
     resetFilters,
   } = useInventory();
+
+  const { colors } = useTheme();
+  const styles = useMemo(() => getStyles(colors), [colors]);
 
   const [searchText, setSearchText] = useState('');
   const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -81,11 +85,11 @@ export const ProductsScreen: React.FC = () => {
       <View style={styles.container}>
         {/* Arama Çubuğu */}
         <View style={styles.searchContainer}>
-          <Search size={18} color={COLORS.outline} style={styles.searchIcon} />
+          <Search size={18} color={colors.outline} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Ara (ürün, marka, model, seri no)"
-            placeholderTextColor={COLORS.outline}
+            placeholderTextColor={colors.outline}
             value={searchText}
             onChangeText={handleSearchChange}
             autoCapitalize="none"
@@ -96,7 +100,7 @@ export const ProductsScreen: React.FC = () => {
               onPress={() => handleSearchChange('')}
               activeOpacity={0.7}
             >
-              <X size={16} color={COLORS.outline} />
+              <X size={16} color={colors.outline} />
             </TouchableOpacity>
           )}
         </View>
@@ -145,7 +149,7 @@ export const ProductsScreen: React.FC = () => {
           >
             <SlidersHorizontal
               size={17}
-              color={hasActiveFilters ? COLORS.primary : COLORS.outline}
+              color={hasActiveFilters ? colors.primary : colors.outline}
             />
           </TouchableOpacity>
         </View>
@@ -157,10 +161,13 @@ export const ProductsScreen: React.FC = () => {
 
         {/* Ürün Listesi */}
         {isLoading && !isRefreshing ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={COLORS.primary} />
-          </View>
+          <TechOrbitLoader
+            message="Envanter Yükleniyor..."
+            subMessage="Cihazlarınız ve garantileriniz listeleniyor"
+            fullScreen={false}
+          />
         ) : (
+
           <FlatList
             data={products}
             keyExtractor={(item) => item.id}
@@ -170,8 +177,8 @@ export const ProductsScreen: React.FC = () => {
               <RefreshControl
                 refreshing={isRefreshing}
                 onRefresh={refreshProducts}
-                tintColor={COLORS.primary}
-                colors={[COLORS.primary]}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
               />
             }
             renderItem={({ item }) => (

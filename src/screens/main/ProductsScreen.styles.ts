@@ -1,10 +1,11 @@
 import { StyleSheet } from 'react-native';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../../constants';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../../constants';
+import { ThemeColors } from '../../constants/colors';
 
-export const styles = StyleSheet.create({
+export const getStyles = (colors: ThemeColors) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   header: {
     paddingHorizontal: SPACING.containerMargin,
@@ -13,7 +14,7 @@ export const styles = StyleSheet.create({
   },
   headerTitle: {
     ...TYPOGRAPHY.headlineLgMobile,
-    color: COLORS.onBackground,
+    color: colors.onBackground,
     fontWeight: '700',
   },
   container: {
@@ -23,7 +24,7 @@ export const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surfaceContainerHighest,
+    backgroundColor: colors.surfaceContainerHighest,
     borderRadius: RADIUS.full,
     paddingHorizontal: 16,
     height: 46,
@@ -36,7 +37,7 @@ export const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     ...TYPOGRAPHY.bodyMd,
-    color: COLORS.onSurface,
+    color: colors.onSurface,
     height: '100%',
   },
   clearSearchButton: {
@@ -56,39 +57,39 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 7,
     borderRadius: RADIUS.full,
-    backgroundColor: COLORS.surfaceContainerLowest,
+    backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: COLORS.outlineVariant + '40',
+    borderColor: colors.outlineVariant + '40',
     ...SHADOWS.sm,
   },
   filterChipSelected: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   filterChipText: {
     ...TYPOGRAPHY.labelMd,
     fontSize: 12,
-    color: COLORS.onSurface,
+    color: colors.onSurface,
     fontWeight: '500',
   },
   filterChipTextSelected: {
-    color: COLORS.onPrimary,
+    color: colors.onPrimary,
     fontWeight: '600',
   },
   tuneButton: {
     width: 36,
     height: 36,
     borderRadius: RADIUS.full,
-    backgroundColor: COLORS.surfaceContainerLowest,
+    backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: COLORS.outlineVariant + '40',
+    borderColor: colors.outlineVariant + '40',
     alignItems: 'center',
     justifyContent: 'center',
     ...SHADOWS.sm,
   },
   tuneButtonActive: {
-    borderColor: COLORS.primary,
-    backgroundColor: COLORS.primaryContainer + '15',
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryContainer + '15',
   },
   listHeaderRow: {
     flexDirection: 'row',
@@ -99,7 +100,7 @@ export const styles = StyleSheet.create({
   },
   productCountText: {
     ...TYPOGRAPHY.labelMd,
-    color: COLORS.secondary,
+    color: colors.secondary,
     fontWeight: '500',
   },
   loadingContainer: {

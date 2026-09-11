@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,8 @@ import {
 import { Home, Package, Plus, Bell, User } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { COLORS } from '../constants';
+import { useTheme } from '../context/ThemeContext';
+import { ThemeColors } from '../constants/colors';
 import { MainTabParamList } from '../types';
 import { HomeScreen } from '../screens/main/HomeScreen';
 import { ProductsScreen } from '../screens/main/ProductsScreen';
@@ -30,24 +31,26 @@ const TAB_BAR_WIDTH = Math.min(380, SCREEN_WIDTH - 32);
 const TAB_WIDTH = TAB_BAR_WIDTH / 5;
 const BEAD_SIZE = 48; // Yüzen boncuk boyutu
 
-const TABS_CONFIG = [
-  { name: 'HomeTab', title: 'Ana Sayfa', icon: Home, color: COLORS.primary },
-  { name: 'ProductsTab', title: 'Ürünler', icon: Package, color: COLORS.tertiary },
-  { name: 'AddTab', title: 'Ekle', icon: Plus, color: COLORS.primaryContainer },
-  { name: 'NotificationsTab', title: 'Bildirimler', icon: Bell, color: COLORS.error },
-  { name: 'ProfileTab', title: 'Profil', icon: User, color: COLORS.warning },
+const getTabsConfig = (colors: ThemeColors) => [
+  { name: 'HomeTab', title: 'Ana Sayfa', icon: Home, color: colors.primary },
+  { name: 'ProductsTab', title: 'Ürünler', icon: Package, color: colors.tertiary },
+  { name: 'AddTab', title: 'Ekle', icon: Plus, color: colors.primaryContainer },
+  { name: 'NotificationsTab', title: 'Bildirimler', icon: Bell, color: colors.error },
+  { name: 'ProfileTab', title: 'Profil', icon: User, color: colors.warning },
 ];
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 // Tekil Tab Öğesi
 interface TabItemProps {
-  tab: (typeof TABS_CONFIG)[0];
+  tab: { name: string; title: string; icon: any; color: string };
   isActive: boolean;
   onPress: () => void;
 }
 
 const AnimatedTabItem: React.FC<TabItemProps> = ({ tab, isActive, onPress }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const Icon = tab.icon;
   const animValue = useRef(new Animated.Value(isActive ? 1 : 0)).current;
 
@@ -114,7 +117,7 @@ const AnimatedTabItem: React.FC<TabItemProps> = ({ tab, isActive, onPress }) => 
             },
           ]}
         >
-          <Icon size={22} color={COLORS.secondary} strokeWidth={2.5} />
+          <Icon size={22} color={colors.secondary} strokeWidth={2.5} />
         </Animated.View>
 
         {/* Aktif İkon (Beyaz) */}
@@ -126,7 +129,7 @@ const AnimatedTabItem: React.FC<TabItemProps> = ({ tab, isActive, onPress }) => 
             },
           ]}
         >
-          <Icon size={22} color={COLORS.onPrimary} strokeWidth={2.5} />
+          <Icon size={22} color={colors.onPrimary} strokeWidth={2.5} />
         </Animated.View>
       </Animated.View>
 
@@ -140,7 +143,7 @@ const AnimatedTabItem: React.FC<TabItemProps> = ({ tab, isActive, onPress }) => 
           },
         ]}
       >
-        <Text style={styles.labelText} numberOfLines={1}>
+        <Text style={[styles.labelText, { color: colors.onSurface }]} numberOfLines={1}>
           {tab.title}
         </Text>
       </Animated.View>
@@ -151,11 +154,15 @@ const AnimatedTabItem: React.FC<TabItemProps> = ({ tab, isActive, onPress }) => 
 // Özel Yüzen Boncuklu Tab Bar Komponenti (Damlacık / Jelly Esneme Efektli)
 const FloatingBeadTabBar: React.FC<BottomTabBarProps> = ({
   state,
+  descriptors,
   navigation,
 }) => {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+  const tabsConfig = useMemo(() => getTabsConfig(colors), [colors]);
   const activeIndex = state.index;
-  const activeTabConfig = TABS_CONFIG[activeIndex] || TABS_CONFIG[0];
+  const activeTabConfig = tabsConfig[activeIndex] || tabsConfig[0];
 
   const beadX = useRef(
     new Animated.Value(
@@ -216,8 +223,16 @@ const FloatingBeadTabBar: React.FC<BottomTabBarProps> = ({
   return (
     <View style={[styles.tabBarWrapper, { bottom: bottomOffset }]}>
       <View style={styles.tabBarContainer}>
-        {/* Alt Beyaz Kapsayıcı (Pill) */}
-        <View style={styles.pillBackground} />
+        {/* Alt Kapsayıcı (Pill) */}
+        <View
+          style={[
+            styles.pillBackground,
+            {
+              backgroundColor: colors.surfaceContainerLowest,
+              borderColor: colors.surfaceContainerHigh,
+            },
+          ]}
+        />
 
         {/* Yüzen Renkli Halka (Glow Efekti - Arkadaki Yumuşak Işık) */}
         <Animated.View
@@ -250,7 +265,7 @@ const FloatingBeadTabBar: React.FC<BottomTabBarProps> = ({
 
         {/* Sekmeler (Tıklanabilir İkonlar ve Yazılar) */}
         <View style={styles.tabsRow}>
-          {TABS_CONFIG.map((tab, index) => {
+          {tabsConfig.map((tab, index) => {
             const isActive = state.index === index;
             return (
               <AnimatedTabItem
@@ -285,7 +300,7 @@ export const MainTabNavigator: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ThemeColors) => StyleSheet.create({
   tabBarWrapper: {
     position: 'absolute',
     left: 0,
@@ -306,10 +321,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 66,
-    backgroundColor: COLORS.surfaceContainerLowest,
+    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 33,
     borderWidth: 1,
-    borderColor: COLORS.surfaceContainerHigh,
+    borderColor: colors.surfaceContainerHigh,
     // iOS Shadow
     shadowColor: '#121c2a',
     shadowOffset: { width: 0, height: 12 },
@@ -381,7 +396,7 @@ const styles = StyleSheet.create({
   labelText: {
     fontSize: 10,
     fontWeight: '700',
-    color: COLORS.onSurface,
+    color: colors.onSurface,
     textAlign: 'center',
   },
 });

@@ -44,7 +44,11 @@
 - [x] Profil Bilgilerini Güncelleme (`EditProfileModal.tsx`, `authService.updateProfile`)
 - [x] Güvenli Şifre Değiştirme (`ChangePasswordModal.tsx`, `authService.updatePassword`)
 - [x] Envanteri Excel Uyumlu CSV & JSON Olarak Dışa Aktarma ve Paylaşma (`exportService.ts`, `ExportDataModal.tsx`, `expo-sharing`)
-- [ ] Profil & Ayarlar ek özellikleri (Dark Mode, bildirim tercihi saklama)
-- [ ] Empty State ve Loading animasyonları polish
+- [x] Tema Mimarisi & Karanlık Mod (Dark Mode: `LIGHT_COLORS` & `DARK_COLORS`, `ThemeContext.tsx`, `App.tsx` dinamik status bar & navigasyon teması)
+- [x] Ayarlar Kalıcılığı (`SettingsScreen.tsx`, `@react-native-async-storage/async-storage` ile 2FA, e-posta ve bildirim tercihleri)
+- [x] Garanti Bildirimlerini Aç/Kapat Entegrasyonu (`cancelAllWarrantyNotifications` & `syncAllWarrantyNotifications`)
+- [x] Gerçek Önbellek Temizleme Motoru (`cacheHelper.ts`, `FileSystem.cacheDirectory` geçici dosyalarını silme & boyut hesaplama)
+- [x] Tech Orbit Loader & Açılış Ekranı Yükleme Animasyonu (`TechOrbitLoader.tsx`, `SplashScreen.tsx`, `ProductsScreen`, `ProductDetailScreen`, `EditProductScreen`)
+- [x] Empty State eyleme yönlendirici butonlar ve dinamik filtre sıfırlama
 - [ ] Android APK derleme ve sunum hazırlığı
 

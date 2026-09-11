@@ -1,7 +1,8 @@
 import { StyleSheet } from 'react-native';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../constants';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../constants';
+import { ThemeColors } from '../constants/colors';
 
-export const styles = StyleSheet.create({
+export const getStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -12,12 +13,12 @@ export const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: RADIUS.xl,
-    backgroundColor: COLORS.surfaceContainerLow,
+    backgroundColor: colors.surfaceContainerLow,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.outlineVariant + '40',
+    borderColor: colors.outlineVariant + '40',
     ...SHADOWS.sm,
   },
   innerIconCircle: {
@@ -29,7 +30,7 @@ export const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 24,
     fontWeight: '700',
-    color: COLORS.onBackground,
+    color: colors.onBackground,
     textAlign: 'center',
     marginBottom: SPACING.xs + 2,
   },
@@ -37,7 +38,7 @@ export const styles = StyleSheet.create({
     ...TYPOGRAPHY.bodyMd,
     fontSize: 13,
     lineHeight: 19,
-    color: COLORS.onSecondaryContainer,
+    color: colors.onSecondaryContainer,
     textAlign: 'center',
     maxWidth: 280,
     marginBottom: SPACING.lg,
@@ -46,7 +47,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: RADIUS.lg,
@@ -59,7 +60,7 @@ export const styles = StyleSheet.create({
   actionButtonText: {
     ...TYPOGRAPHY.labelMd,
     fontSize: 14,
-    color: COLORS.onPrimary,
+    color: colors.onPrimary,
     fontWeight: '600',
   },
 });

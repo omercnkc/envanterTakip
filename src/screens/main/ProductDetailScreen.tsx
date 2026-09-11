@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -30,14 +30,15 @@ import {
 } from 'lucide-react-native';
 
 import { Product } from '../../types';
-import { COLORS } from '../../constants';
+import { useTheme } from '../../context/ThemeContext';
 import { useInventory } from '../../context/InventoryContext';
+import { TechOrbitLoader } from '../../components';
 import {
   formatDateTurkish,
   formatCurrency,
   calculateWarrantyStatus,
 } from '../../utils/warrantyCalculator';
-import { styles } from './ProductDetailScreen.styles';
+import { getStyles } from './ProductDetailScreen.styles';
 
 export const ProductDetailScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -47,6 +48,9 @@ export const ProductDetailScreen: React.FC = () => {
   const { getProduct, deleteProduct } = useInventory();
   const [product, setProduct] = useState<Product | null>(initialProduct || null);
   const [loading, setLoading] = useState(!initialProduct);
+
+  const { colors } = useTheme();
+  const styles = useMemo(() => getStyles(colors), [colors]);
 
   const loadProduct = useCallback(async () => {
     if (!productId) return;
@@ -106,11 +110,13 @@ export const ProductDetailScreen: React.FC = () => {
 
   if (loading || !product) {
     return (
-      <SafeAreaView style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </SafeAreaView>
+      <TechOrbitLoader
+        message="Ürün Detayları Yükleniyor..."
+        subMessage="Garanti ve fatura bilgileri getiriliyor"
+      />
     );
   }
+
 
   const categoryName = product.category?.name || 'Genel';
   const brandText = product.brand ? ` · ${product.brand}` : '';
@@ -126,12 +132,12 @@ export const ProductDetailScreen: React.FC = () => {
             onPress={() => navigation.goBack()}
             activeOpacity={0.7}
           >
-            <ArrowLeft size={22} color={COLORS.onBackground} />
+            <ArrowLeft size={22} color={colors.onBackground} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Ürün Detayı</Text>
         </View>
         <TouchableOpacity style={styles.editIconButton} onPress={handleEdit} activeOpacity={0.7}>
-          <Edit2 size={19} color={COLORS.onSurfaceVariant} />
+          <Edit2 size={19} color={colors.onSurfaceVariant} />
         </TouchableOpacity>
       </View>
 
@@ -145,7 +151,7 @@ export const ProductDetailScreen: React.FC = () => {
             <Image source={{ uri: product.image_path }} style={styles.heroImage} resizeMode="cover" />
           ) : (
             <View style={styles.heroPlaceholder}>
-              <Package size={64} color={COLORS.outline} />
+              <Package size={64} color={colors.outline} />
             </View>
           )}
         </View>
@@ -174,7 +180,7 @@ export const ProductDetailScreen: React.FC = () => {
           {product.model && (
             <View style={styles.detailRow}>
               <View style={styles.detailLabelGroup}>
-                <Cpu size={17} color={COLORS.onSurfaceVariant} />
+                <Cpu size={17} color={colors.onSurfaceVariant} />
                 <Text style={styles.detailLabel}>Model</Text>
               </View>
               <Text style={styles.detailValue}>{product.model}</Text>
@@ -185,7 +191,7 @@ export const ProductDetailScreen: React.FC = () => {
           {product.serial_number && (
             <View style={styles.detailRow}>
               <View style={styles.detailLabelGroup}>
-                <QrCode size={17} color={COLORS.onSurfaceVariant} />
+                <QrCode size={17} color={colors.onSurfaceVariant} />
                 <Text style={styles.detailLabel}>Seri Numarası</Text>
               </View>
               <Text style={styles.detailValue}>{product.serial_number}</Text>
@@ -195,7 +201,7 @@ export const ProductDetailScreen: React.FC = () => {
           {/* Kategori */}
           <View style={styles.detailRow}>
             <View style={styles.detailLabelGroup}>
-              <Layers size={17} color={COLORS.onSurfaceVariant} />
+              <Layers size={17} color={colors.onSurfaceVariant} />
               <Text style={styles.detailLabel}>Kategori</Text>
             </View>
             <Text style={styles.detailValue}>{categoryName}</Text>
@@ -205,7 +211,7 @@ export const ProductDetailScreen: React.FC = () => {
           {product.purchase_date && (
             <View style={styles.detailRow}>
               <View style={styles.detailLabelGroup}>
-                <Calendar size={17} color={COLORS.onSurfaceVariant} />
+                <Calendar size={17} color={colors.onSurfaceVariant} />
                 <Text style={styles.detailLabel}>Satın Alma Tarihi</Text>
               </View>
               <Text style={styles.detailValue}>{formatDateTurkish(product.purchase_date)}</Text>
@@ -216,7 +222,7 @@ export const ProductDetailScreen: React.FC = () => {
           {product.purchase_price !== null && product.purchase_price !== undefined && (
             <View style={styles.detailRow}>
               <View style={styles.detailLabelGroup}>
-                <CreditCard size={17} color={COLORS.onSurfaceVariant} />
+                <CreditCard size={17} color={colors.onSurfaceVariant} />
                 <Text style={styles.detailLabel}>Satın Alınan Fiyatı</Text>
               </View>
               <Text style={styles.detailValue}>{formatCurrency(product.purchase_price)}</Text>
@@ -226,7 +232,7 @@ export const ProductDetailScreen: React.FC = () => {
           {/* Garanti Bitiş Tarihi */}
           <View style={styles.detailRow}>
             <View style={styles.detailLabelGroup}>
-              <ShieldCheck size={17} color={COLORS.onSurfaceVariant} />
+              <ShieldCheck size={17} color={colors.onSurfaceVariant} />
               <Text style={styles.detailLabel}>Garanti Bitiş Tarihi</Text>
             </View>
             <Text style={styles.detailValue}>{formatDateTurkish(product.warranty_end_date)}</Text>
@@ -236,7 +242,7 @@ export const ProductDetailScreen: React.FC = () => {
           {product.store_name && (
             <View style={styles.detailRow}>
               <View style={styles.detailLabelGroup}>
-                <Store size={17} color={COLORS.onSurfaceVariant} />
+                <Store size={17} color={colors.onSurfaceVariant} />
                 <Text style={styles.detailLabel}>Satın Alınan Mağaza</Text>
               </View>
               <Text style={styles.detailValue}>{product.store_name}</Text>
@@ -247,7 +253,7 @@ export const ProductDetailScreen: React.FC = () => {
           {product.description && (
             <View style={styles.descriptionRow}>
               <View style={styles.detailLabelGroup}>
-                <FileText size={17} color={COLORS.onSurfaceVariant} />
+                <FileText size={17} color={colors.onSurfaceVariant} />
                 <Text style={styles.detailLabel}>Açıklama</Text>
               </View>
               <Text style={styles.descriptionText}>{product.description}</Text>
@@ -265,7 +271,7 @@ export const ProductDetailScreen: React.FC = () => {
           >
             <View style={styles.invoiceLeft}>
               <View style={styles.invoiceIconBox}>
-                <Receipt size={22} color={COLORS.primary} />
+                <Receipt size={22} color={colors.primary} />
               </View>
               <View>
                 <Text style={styles.invoiceFileName}>
@@ -278,7 +284,7 @@ export const ProductDetailScreen: React.FC = () => {
             </View>
             {product.invoice_path && (
               <View style={styles.downloadButton}>
-                <ExternalLink size={18} color={COLORS.primary} />
+                <ExternalLink size={18} color={colors.primary} />
               </View>
             )}
           </TouchableOpacity>

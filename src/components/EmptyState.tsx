@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { PackageOpen, Plus } from 'lucide-react-native';
-import { COLORS } from '../constants';
-import { styles } from './EmptyState.styles';
+import { useTheme } from '../context/ThemeContext';
+import { getStyles } from './EmptyState.styles';
 
 interface EmptyStateProps {
   icon?: React.ReactNode;
@@ -19,11 +19,14 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   actionText = 'Ürün Ekle',
   onActionPress,
 }) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   return (
     <View style={styles.container}>
       <View style={styles.iconWrapper}>
         <View style={styles.innerIconCircle}>
-          {icon || <PackageOpen size={44} color={COLORS.primary} />}
+          {icon || <PackageOpen size={44} color={colors.primary} />}
         </View>
       </View>
       <Text style={styles.title}>{title}</Text>
@@ -34,7 +37,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           onPress={onActionPress}
           activeOpacity={0.8}
         >
-          <Plus size={18} color={COLORS.onPrimary} style={styles.buttonIcon} />
+          <Plus size={18} color={colors.onPrimary} style={styles.buttonIcon} />
           <Text style={styles.actionButtonText}>{actionText}</Text>
         </TouchableOpacity>
       )}

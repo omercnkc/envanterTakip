@@ -1,10 +1,11 @@
 import { StyleSheet } from 'react-native';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../../constants';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../../constants';
+import { ThemeColors } from '../../constants/colors';
 
-export const styles = StyleSheet.create({
+export const getStyles = (colors: ThemeColors) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   header: {
     paddingHorizontal: SPACING.containerMargin,
@@ -19,28 +20,28 @@ export const styles = StyleSheet.create({
   },
   headerTitle: {
     ...TYPOGRAPHY.headlineLgMobile,
-    color: COLORS.onBackground,
+    color: colors.onBackground,
     fontWeight: '700',
   },
   testButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.primaryContainer + '40',
+    backgroundColor: colors.primaryContainer + '40',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: RADIUS.full,
     gap: 6,
     borderWidth: 1,
-    borderColor: COLORS.primary + '30',
+    borderColor: colors.primary + '30',
   },
   testButtonText: {
     ...TYPOGRAPHY.labelSm,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: COLORS.surfaceContainerLow,
+    backgroundColor: colors.surfaceContainerLow,
     borderRadius: RADIUS.full,
     padding: 4,
     ...SHADOWS.sm,
@@ -53,16 +54,16 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabButtonActive: {
-    backgroundColor: COLORS.surfaceContainerLowest,
+    backgroundColor: colors.surfaceContainerLowest,
     ...SHADOWS.sm,
   },
   tabText: {
     ...TYPOGRAPHY.labelMd,
-    color: COLORS.secondary,
+    color: colors.secondary,
     fontWeight: '500',
   },
   tabTextActive: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
   listContent: {
@@ -74,11 +75,11 @@ export const styles = StyleSheet.create({
   notificationCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: COLORS.surfaceContainerLowest,
+    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: RADIUS.lg,
     padding: 14,
     borderWidth: 1,
-    borderColor: COLORS.surfaceContainerHigh,
+    borderColor: colors.surfaceContainerHigh,
     position: 'relative',
     ...SHADOWS.sm,
   },
@@ -86,19 +87,19 @@ export const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.surfaceContainerLow,
+    backgroundColor: colors.surfaceContainerLow,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
   iconBoxWarning: {
-    backgroundColor: COLORS.warningContainer,
+    backgroundColor: colors.warningContainer,
   },
   iconBoxError: {
-    backgroundColor: COLORS.errorContainer,
+    backgroundColor: colors.errorContainer,
   },
   iconBoxSuccess: {
-    backgroundColor: COLORS.tertiaryContainer + '20',
+    backgroundColor: colors.tertiaryContainer + '20',
   },
   content: {
     flex: 1,
@@ -106,16 +107,16 @@ export const styles = StyleSheet.create({
   title: {
     ...TYPOGRAPHY.bodyLg,
     fontWeight: '600',
-    color: COLORS.onBackground,
+    color: colors.onBackground,
   },
   message: {
     ...TYPOGRAPHY.bodyMd,
-    color: COLORS.onSurfaceVariant,
+    color: colors.onSurfaceVariant,
     marginTop: 2,
   },
   timestamp: {
     ...TYPOGRAPHY.bodySm,
-    color: COLORS.secondary,
+    color: colors.secondary,
     marginTop: 4,
     fontSize: 11,
   },
@@ -123,7 +124,7 @@ export const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     position: 'absolute',
     top: 14,
     right: 14,

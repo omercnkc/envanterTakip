@@ -1,16 +1,99 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, Animated } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
 import { AuthProvider } from './src/context/AuthContext';
 import { InventoryProvider } from './src/context/InventoryContext';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { navigationRef, navigate } from './src/navigation/navigationRef';
 import {
   setupNotificationChannel,
   requestNotificationPermissions,
 } from './src/utils/notificationHelper';
+import { DARK_COLORS, LIGHT_COLORS } from './src/constants/colors';
+
+/**
+ * Temalar arası geçişte gözü yormayan pürüzsüz dissolve geçişi sağlar
+ */
+const ThemeTransitionOverlay: React.FC = () => {
+  const { isDark } = useTheme();
+  const prevIsDarkRef = useRef<boolean | null>(null);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [overlayBg, setOverlayBg] = useState<string | null>(null);
+
+  useEffect(() => {
+    // İlk açılışta animasyon tetikleme
+    if (prevIsDarkRef.current === null) {
+      prevIsDarkRef.current = isDark;
+      return;
+    }
+
+    // Yalnızca tema modu gerçekten değiştiğinde yumuşak geçiş perdesi uygula
+    if (prevIsDarkRef.current !== isDark) {
+      const prevColor = prevIsDarkRef.current ? DARK_COLORS.background : LIGHT_COLORS.background;
+      setOverlayBg(prevColor);
+      fadeAnim.setValue(0.75);
+
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 260,
+        useNativeDriver: true,
+      }).start(() => {
+        setOverlayBg(null);
+      });
+
+      prevIsDarkRef.current = isDark;
+    }
+  }, [isDark, fadeAnim]);
+
+  if (!overlayBg) return null;
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        StyleSheet.absoluteFill,
+        {
+          backgroundColor: overlayBg,
+          opacity: fadeAnim,
+          zIndex: 99999,
+        },
+      ]}
+    />
+  );
+};
+
+const AppContent: React.FC = () => {
+  const { isDark, colors } = useTheme();
+
+  const navigationTheme = useMemo(() => {
+    const baseTheme = isDark ? DarkTheme : DefaultTheme;
+    return {
+      ...baseTheme,
+      dark: isDark,
+      colors: {
+        ...baseTheme.colors,
+        primary: colors.primary,
+        background: colors.background,
+        card: colors.surfaceContainerLowest,
+        text: colors.onBackground,
+        border: colors.outlineVariant,
+        notification: colors.error,
+      },
+    };
+  }, [isDark, colors]);
+
+  return (
+    <NavigationContainer ref={navigationRef} theme={navigationTheme}>
+      <RootNavigator />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <ThemeTransitionOverlay />
+    </NavigationContainer>
+  );
+};
 
 export default function App() {
   useEffect(() => {
@@ -43,15 +126,13 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <InventoryProvider>
-          <NavigationContainer ref={navigationRef}>
-            <RootNavigator />
-            <StatusBar style="dark" />
-          </NavigationContainer>
-        </InventoryProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <InventoryProvider>
+            <AppContent />
+          </InventoryProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }
-

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -25,7 +25,7 @@ import {
 } from 'lucide-react-native';
 
 import { ProductFormData, productFormSchema, Category } from '../../types';
-import { COLORS } from '../../constants';
+import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useInventory } from '../../context/InventoryContext';
 import { calculateWarrantyEndDate } from '../../utils/warrantyCalculator';
@@ -34,7 +34,7 @@ import { storageService } from '../../api/storageService';
 import { CategoryPickerModal } from '../../components/CategoryPickerModal';
 import { MediaPickerModal } from '../../components/MediaPickerModal';
 import { BarcodeScannerModal } from '../../components/BarcodeScannerModal';
-import { styles } from './AddProductScreen.styles';
+import { getStyles } from './AddProductScreen.styles';
 
 const DURATION_OPTIONS = [
   { label: '1 Yıl', months: 12 },
@@ -48,6 +48,8 @@ export const AddProductScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
   const { addProduct, categories } = useInventory();
+  const { colors } = useTheme();
+  const styles = useMemo(() => getStyles(colors), [colors]);
 
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
   const [photoPickerVisible, setPhotoPickerVisible] = useState(false);
@@ -244,9 +246,9 @@ export const AddProductScreen: React.FC = () => {
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>Ürün Fotoğrafı</Text>
             {isUploadingImage ? (
-              <View style={[styles.imagePreviewContainer, { justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.surfaceContainerLow }]}>
-                <ActivityIndicator size="large" color={COLORS.primary} />
-                <Text style={[styles.photoActionText, { marginTop: 8, color: COLORS.primary }]}>Görsel Yükleniyor...</Text>
+              <View style={[styles.imagePreviewContainer, { justifyContent: 'center', alignItems: 'center', backgroundColor: colors.surfaceContainerLow }]}>
+                <ActivityIndicator size="large" color={colors.primary} />
+                <Text style={[styles.photoActionText, { marginTop: 8, color: colors.primary }]}>Görsel Yükleniyor...</Text>
               </View>
             ) : imageUri ? (
               <View style={styles.imagePreviewContainer}>
@@ -259,7 +261,7 @@ export const AddProductScreen: React.FC = () => {
                   }}
                   activeOpacity={0.7}
                 >
-                  <X size={16} color={COLORS.onError} />
+                  <X size={16} color={colors.onError} />
                 </TouchableOpacity>
               </View>
             ) : (
@@ -269,7 +271,7 @@ export const AddProductScreen: React.FC = () => {
                   onPress={() => handlePickProductImage('camera')}
                   activeOpacity={0.7}
                 >
-                  <Camera size={26} color={COLORS.primary} />
+                  <Camera size={26} color={colors.primary} />
                   <Text style={styles.photoActionText}>Kamera</Text>
                 </TouchableOpacity>
 
@@ -278,7 +280,7 @@ export const AddProductScreen: React.FC = () => {
                   onPress={() => handlePickProductImage('gallery')}
                   activeOpacity={0.7}
                 >
-                  <ImageIcon size={26} color={COLORS.primary} />
+                  <ImageIcon size={26} color={colors.primary} />
                   <Text style={styles.photoActionText}>Galeriden Seç</Text>
                 </TouchableOpacity>
               </View>
@@ -307,7 +309,7 @@ export const AddProductScreen: React.FC = () => {
                     <TextInput
                       style={styles.textInput}
                       placeholder="Örn: Samsung QLED TV"
-                      placeholderTextColor={COLORS.outline}
+                      placeholderTextColor={colors.outline}
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
@@ -339,7 +341,7 @@ export const AddProductScreen: React.FC = () => {
                       <TextInput
                         style={styles.textInput}
                         placeholder="Örn: Samsung"
-                        placeholderTextColor={COLORS.outline}
+                        placeholderTextColor={colors.outline}
                         value={value}
                         onChangeText={onChange}
                         onBlur={onBlur}
@@ -359,7 +361,7 @@ export const AddProductScreen: React.FC = () => {
                       <TextInput
                         style={styles.textInput}
                         placeholder="Örn: Q60B"
-                        placeholderTextColor={COLORS.outline}
+                        placeholderTextColor={colors.outline}
                         value={value || ''}
                         onChangeText={onChange}
                         onBlur={onBlur}
@@ -388,7 +390,7 @@ export const AddProductScreen: React.FC = () => {
                 >
                   {selectedCategory ? selectedCategory.name : 'Kategori seçin'}
                 </Text>
-                <ChevronDown size={18} color={COLORS.outline} />
+                <ChevronDown size={18} color={colors.outline} />
               </TouchableOpacity>
             </View>
 
@@ -403,7 +405,7 @@ export const AddProductScreen: React.FC = () => {
                     <TextInput
                       style={styles.textInput}
                       placeholder="Seri numarasını girin veya okutun"
-                      placeholderTextColor={COLORS.outline}
+                      placeholderTextColor={colors.outline}
                       value={value || ''}
                       onChangeText={onChange}
                       onBlur={onBlur}
@@ -414,7 +416,7 @@ export const AddProductScreen: React.FC = () => {
                       activeOpacity={0.7}
                       hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                     >
-                      <ScanBarcode size={16} color={COLORS.primary} />
+                      <ScanBarcode size={16} color={colors.primary} />
                       <Text style={styles.scanButtonText}>Tara</Text>
                     </TouchableOpacity>
                   </View>
@@ -439,7 +441,7 @@ export const AddProductScreen: React.FC = () => {
                       <TextInput
                         style={styles.textInput}
                         placeholder="YYYY-AA-GG"
-                        placeholderTextColor={COLORS.outline}
+                        placeholderTextColor={colors.outline}
                         value={value || ''}
                         onChangeText={(text) => {
                           onChange(text);
@@ -468,7 +470,7 @@ export const AddProductScreen: React.FC = () => {
                       <TextInput
                         style={styles.textInput}
                         placeholder="0,00"
-                        placeholderTextColor={COLORS.outline}
+                        placeholderTextColor={colors.outline}
                         keyboardType="numeric"
                         value={value !== undefined ? String(value) : ''}
                         onChangeText={(t) =>
@@ -493,7 +495,7 @@ export const AddProductScreen: React.FC = () => {
                     <TextInput
                       style={styles.textInput}
                       placeholder="Örn: Vatan Bilgisayar"
-                      placeholderTextColor={COLORS.outline}
+                      placeholderTextColor={colors.outline}
                       value={value || ''}
                       onChangeText={onChange}
                       onBlur={onBlur}
@@ -542,7 +544,7 @@ export const AddProductScreen: React.FC = () => {
                     <TextInput
                       style={styles.textInput}
                       placeholder="YYYY-AA-GG"
-                      placeholderTextColor={COLORS.outline}
+                      placeholderTextColor={colors.outline}
                       value={value || ''}
                       onChangeText={onChange}
                       onBlur={onBlur}
@@ -568,7 +570,7 @@ export const AddProductScreen: React.FC = () => {
                     <TextInput
                       style={[styles.textInput, styles.textArea]}
                       placeholder="Eklemek istediğiniz notlar..."
-                      placeholderTextColor={COLORS.outline}
+                      placeholderTextColor={colors.outline}
                       multiline
                       numberOfLines={3}
                       textAlignVertical="top"
@@ -586,7 +588,7 @@ export const AddProductScreen: React.FC = () => {
               <Text style={styles.label}>Fatura Belgesi / Fotoğrafı</Text>
               {isUploadingInvoice ? (
                 <View style={[styles.invoiceUploadedBox, { justifyContent: 'center' }]}>
-                  <ActivityIndicator size="small" color={COLORS.primary} style={{ marginRight: 8 }} />
+                  <ActivityIndicator size="small" color={colors.primary} style={{ marginRight: 8 }} />
                   <Text style={styles.invoiceUploadedText}>Fatura Yükleniyor...</Text>
                 </View>
               ) : invoiceName ? (
@@ -601,7 +603,7 @@ export const AddProductScreen: React.FC = () => {
                     }}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <X size={16} color={COLORS.error} />
+                    <X size={16} color={colors.error} />
                   </TouchableOpacity>
                 </View>
               ) : (
@@ -610,7 +612,7 @@ export const AddProductScreen: React.FC = () => {
                   onPress={() => setInvoicePickerVisible(true)}
                   activeOpacity={0.7}
                 >
-                  <Upload size={24} color={COLORS.outline} />
+                  <Upload size={24} color={colors.outline} />
                   <Text style={styles.uploadDashedText}>
                     Fatura, fiş fotoğrafı veya PDF yükle
                   </Text>
@@ -631,7 +633,7 @@ export const AddProductScreen: React.FC = () => {
               activeOpacity={0.85}
             >
               {isSubmitting ? (
-                <ActivityIndicator color={COLORS.onPrimary} />
+                <ActivityIndicator color={colors.onPrimary} />
               ) : (
                 <Text style={styles.submitButtonText}>Ürünü Kaydet</Text>
               )}

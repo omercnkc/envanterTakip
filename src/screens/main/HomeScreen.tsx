@@ -21,18 +21,20 @@ import {
 } from 'lucide-react-native';
 
 import { Product } from '../../types';
-import { COLORS } from '../../constants';
+import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useInventory } from '../../context/InventoryContext';
 import { ProductCard } from '../../components/ProductCard';
 import { CircularProgress } from '../../components/CircularProgress';
 import { EmptyState } from '../../components/EmptyState';
-import { styles } from './HomeScreen.styles';
+import { getStyles } from './HomeScreen.styles';
 
 export const HomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { profile, user } = useAuth();
   const { products, stats, refreshProducts, isRefreshing } = useInventory();
+  const { colors } = useTheme();
+  const styles = useMemo(() => getStyles(colors), [colors]);
 
   const rawName = profile?.full_name || user?.email?.split('@')[0] || 'Misafir';
   const firstName = rawName.trim().split(/\s+/)[0] || rawName;
@@ -70,7 +72,7 @@ export const HomeScreen: React.FC = () => {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={refreshProducts}
-            colors={[COLORS.primary]}
+            colors={[colors.primary]}
           />
         }
       >
@@ -91,7 +93,7 @@ export const HomeScreen: React.FC = () => {
               onPress={() => navigation.navigate('Notifications')}
               activeOpacity={0.7}
             >
-              <Bell size={19} color={COLORS.primary} />
+              <Bell size={19} color={colors.primary} />
               {stats.expiringSoon > 0 && <View style={styles.badgeDot} />}
             </TouchableOpacity>
 
@@ -120,9 +122,9 @@ export const HomeScreen: React.FC = () => {
               onPress={() => navigation.navigate('ProductsTab')}
               activeOpacity={0.8}
             >
-              <TrendingUp size={14} color={COLORS.primary} />
+              <TrendingUp size={14} color={colors.primary} />
               <Text style={styles.bentoButtonText}>Genel Durumu Gör</Text>
-              <ChevronRight size={14} color={COLORS.primary} />
+              <ChevronRight size={14} color={colors.primary} />
             </TouchableOpacity>
           </View>
 
@@ -132,14 +134,14 @@ export const HomeScreen: React.FC = () => {
               size={94}
               strokeWidth={7}
               percentage={activePercentage}
-              color={COLORS.primary}
-              backgroundColor={COLORS.surfaceContainer}
+              color={colors.primary}
+              backgroundColor={colors.surfaceContainer}
               centerText={`%${activePercentage}`}
               centerSubtext="Garantiler aktif"
               textStyle={{ fontSize: 16, fontWeight: '700' }}
             />
             <View style={styles.bentoShieldBadge}>
-              <ShieldCheck size={13} color={COLORS.tertiary} />
+              <ShieldCheck size={13} color={colors.tertiary} />
             </View>
           </View>
         </View>
@@ -155,12 +157,12 @@ export const HomeScreen: React.FC = () => {
             <View
               style={[
                 styles.statIconBox,
-                { backgroundColor: COLORS.tertiaryContainer + '18' },
+                { backgroundColor: colors.tertiaryContainer + '18' },
               ]}
             >
-              <Shield size={16} color={COLORS.tertiary} />
+              <Shield size={16} color={colors.tertiary} />
             </View>
-            <Text style={[styles.statCount, { color: COLORS.tertiary }]}>
+            <Text style={[styles.statCount, { color: colors.tertiary }]}>
               {stats.active}
             </Text>
             <Text style={styles.statLabel} numberOfLines={2}>
@@ -177,12 +179,12 @@ export const HomeScreen: React.FC = () => {
             <View
               style={[
                 styles.statIconBox,
-                { backgroundColor: COLORS.warningContainer },
+                { backgroundColor: colors.warningContainer },
               ]}
             >
-              <Clock size={16} color={COLORS.warning} />
+              <Clock size={16} color={colors.warning} />
             </View>
-            <Text style={[styles.statCount, { color: COLORS.warning }]}>
+            <Text style={[styles.statCount, { color: colors.warning }]}>
               {stats.expiringSoon}
             </Text>
             <Text style={styles.statLabel} numberOfLines={2}>
@@ -199,12 +201,12 @@ export const HomeScreen: React.FC = () => {
             <View
               style={[
                 styles.statIconBox,
-                { backgroundColor: COLORS.errorContainer },
+                { backgroundColor: colors.errorContainer },
               ]}
             >
-              <CalendarX size={16} color={COLORS.error} />
+              <CalendarX size={16} color={colors.error} />
             </View>
-            <Text style={[styles.statCount, { color: COLORS.error }]}>
+            <Text style={[styles.statCount, { color: colors.error }]}>
               {stats.expired}
             </Text>
             <Text style={styles.statLabel} numberOfLines={2}>
@@ -221,12 +223,12 @@ export const HomeScreen: React.FC = () => {
             <View
               style={[
                 styles.statIconBox,
-                { backgroundColor: COLORS.surfaceContainerLow },
+                { backgroundColor: colors.surfaceContainerLow },
               ]}
             >
-              <Receipt size={16} color={COLORS.primary} />
+              <Receipt size={16} color={colors.primary} />
             </View>
-            <Text style={[styles.statCount, { color: COLORS.primary }]}>
+            <Text style={[styles.statCount, { color: colors.primary }]}>
               {stats.total}
             </Text>
             <Text style={styles.statLabel} numberOfLines={2}>
@@ -244,7 +246,7 @@ export const HomeScreen: React.FC = () => {
             activeOpacity={0.7}
           >
             <Text style={styles.seeAllText}>Tümünü Gör</Text>
-            <ChevronRight size={16} color={COLORS.primary} />
+            <ChevronRight size={16} color={colors.primary} />
           </TouchableOpacity>
         </View>
 

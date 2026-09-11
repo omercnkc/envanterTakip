@@ -18,12 +18,12 @@ import {
   Sparkles,
 } from 'lucide-react-native';
 
-import { COLORS } from '../../constants';
+import { useTheme } from '../../context/ThemeContext';
 import { useInventory } from '../../context/InventoryContext';
 import { calculateWarrantyStatus, formatDateTurkish } from '../../utils/warrantyCalculator';
 import { sendTestNotification } from '../../utils/notificationHelper';
 import { EmptyState } from '../../components/EmptyState';
-import { styles } from './NotificationsScreen.styles';
+import { getStyles } from './NotificationsScreen.styles';
 
 type NotificationFilterTab = 'all' | 'unread' | 'read';
 
@@ -43,6 +43,8 @@ export const NotificationsScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NotificationFilterTab>('all');
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const [isSendingTest, setIsSendingTest] = useState(false);
+  const { colors } = useTheme();
+  const styles = useMemo(() => getStyles(colors), [colors]);
 
   const handleSendTestNotification = async () => {
     if (isSendingTest) return;
@@ -127,25 +129,25 @@ export const NotificationsScreen: React.FC = () => {
       case 'warning':
         return (
           <View style={[styles.iconBox, styles.iconBoxWarning]}>
-            <BellRing size={20} color={COLORS.warning} />
+            <BellRing size={20} color={colors.warning} />
           </View>
         );
       case 'error':
         return (
           <View style={[styles.iconBox, styles.iconBoxError]}>
-            <AlertCircle size={20} color={COLORS.error} />
+            <AlertCircle size={20} color={colors.error} />
           </View>
         );
       case 'success':
         return (
           <View style={[styles.iconBox, styles.iconBoxSuccess]}>
-            <CheckCircle2 size={20} color={COLORS.tertiary} />
+            <CheckCircle2 size={20} color={colors.tertiary} />
           </View>
         );
       default:
         return (
           <View style={styles.iconBox}>
-            <Bell size={20} color={COLORS.primary} />
+            <Bell size={20} color={colors.primary} />
           </View>
         );
     }
@@ -163,9 +165,9 @@ export const NotificationsScreen: React.FC = () => {
             activeOpacity={0.7}
           >
             {isSendingTest ? (
-              <ActivityIndicator size="small" color={COLORS.primary} />
+              <ActivityIndicator size="small" color={colors.primary} />
             ) : (
-              <Sparkles size={14} color={COLORS.primary} />
+              <Sparkles size={14} color={colors.primary} />
             )}
             <Text style={styles.testButtonText}>
               {isSendingTest ? 'Gönderiliyor...' : 'Test Bildirimi'}
@@ -237,7 +239,7 @@ export const NotificationsScreen: React.FC = () => {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={refreshProducts}
-            colors={[COLORS.primary]}
+            colors={[colors.primary]}
           />
         }
         renderItem={({ item }) => (
@@ -257,7 +259,7 @@ export const NotificationsScreen: React.FC = () => {
         )}
         ListEmptyComponent={
           <EmptyState
-            icon={<Bell size={40} color={COLORS.outline} />}
+            icon={<Bell size={40} color={colors.outline} />}
             title="Bildirim Bulunmuyor"
             description="Garanti bitişleri ve sistem güncellemeleri burada listelenecektir."
             actionText="Ana Sayfaya Dön"

@@ -1,10 +1,11 @@
 import { StyleSheet } from 'react-native';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../../constants';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../../constants';
+import { ThemeColors } from '../../constants/colors';
 
-export const styles = StyleSheet.create({
+export const getStyles = (colors: ThemeColors) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingHorizontal: SPACING.containerMargin,
@@ -34,12 +35,12 @@ export const styles = StyleSheet.create({
   },
   greetingText: {
     ...TYPOGRAPHY.headlineLgMobile,
-    color: COLORS.onBackground,
+    color: colors.onBackground,
     fontWeight: '700',
   },
   subtitleText: {
     ...TYPOGRAPHY.bodySm,
-    color: COLORS.onSecondaryContainer,
+    color: colors.onSecondaryContainer,
     marginTop: 2,
   },
   headerRight: {
@@ -51,9 +52,9 @@ export const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: RADIUS.full,
-    backgroundColor: COLORS.surfaceContainerLowest,
+    backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: COLORS.outlineVariant + '40',
+    borderColor: colors.outlineVariant + '40',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -66,31 +67,31 @@ export const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 3.5,
-    backgroundColor: COLORS.error,
+    backgroundColor: colors.error,
   },
   avatar: {
     width: 40,
     height: 40,
     borderRadius: RADIUS.full,
-    backgroundColor: COLORS.primaryFixed,
+    backgroundColor: colors.primaryFixed,
     borderWidth: 1,
-    borderColor: COLORS.outlineVariant + '40',
+    borderColor: colors.outlineVariant + '40',
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
     ...TYPOGRAPHY.labelMd,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
 
   // Bento Summary Card
   bentoCard: {
-    backgroundColor: COLORS.surfaceContainerLowest,
+    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: RADIUS.xl,
     padding: SPACING.md + 4,
     borderWidth: 1,
-    borderColor: COLORS.surfaceContainerHigh,
+    borderColor: colors.surfaceContainerHigh,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -105,7 +106,7 @@ export const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: COLORS.surfaceContainerLow,
+    backgroundColor: colors.surfaceContainerLow,
     opacity: 0.6,
   },
   bentoLeft: {
@@ -115,7 +116,7 @@ export const styles = StyleSheet.create({
   },
   bentoTitle: {
     ...TYPOGRAPHY.bodyMd,
-    color: COLORS.onSecondaryContainer,
+    color: colors.onSecondaryContainer,
     marginBottom: 2,
   },
   bentoNumberRow: {
@@ -128,18 +129,18 @@ export const styles = StyleSheet.create({
     fontSize: 32,
     lineHeight: 38,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
   },
   bentoNumberLabel: {
     ...TYPOGRAPHY.bodyMd,
     fontWeight: '600',
-    color: COLORS.onBackground,
+    color: colors.onBackground,
   },
   bentoButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: COLORS.surfaceContainerLow,
+    backgroundColor: colors.surfaceContainerLow,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: RADIUS.full,
@@ -147,7 +148,7 @@ export const styles = StyleSheet.create({
   },
   bentoButtonText: {
     ...TYPOGRAPHY.labelMd,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   bentoChartWrapper: {
@@ -163,9 +164,9 @@ export const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: COLORS.surfaceContainerLowest,
+    backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: COLORS.outlineVariant + '40',
+    borderColor: colors.outlineVariant + '40',
     alignItems: 'center',
     justifyContent: 'center',
     ...SHADOWS.sm,
@@ -178,14 +179,14 @@ export const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: COLORS.surfaceContainerLowest,
+    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: RADIUS.md,
     paddingVertical: SPACING.sm + 2,
     paddingHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: COLORS.surfaceContainerHigh,
+    borderColor: colors.surfaceContainerHigh,
     ...SHADOWS.sm,
   },
   statIconBox: {
@@ -201,11 +202,12 @@ export const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 22,
     fontWeight: '700',
+    color: colors.onSurface,
   },
   statLabel: {
     fontSize: 10,
     lineHeight: 13,
-    color: COLORS.onSecondaryContainer,
+    color: colors.onSecondaryContainer,
     textAlign: 'center',
     marginTop: 2,
   },
@@ -218,7 +220,7 @@ export const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...TYPOGRAPHY.headlineMd,
-    color: COLORS.onBackground,
+    color: colors.onBackground,
     fontWeight: '600',
   },
   seeAllButton: {
@@ -228,7 +230,7 @@ export const styles = StyleSheet.create({
   },
   seeAllText: {
     ...TYPOGRAPHY.labelMd,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
 

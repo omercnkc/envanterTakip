@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, Animated, Image } from 'react-native';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { View, Text, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { COLORS } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
-import { styles } from './SplashScreen.styles';
+import { useThemeColors } from '../../context/ThemeContext';
+import { TechOrbitLoader } from '../../components/TechOrbitLoader';
+import { getStyles } from './SplashScreen.styles';
 
 export interface SplashScreenProps {
   onFinish?: () => void;
@@ -18,12 +19,14 @@ const STATUS_MESSAGES = [
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
   const { loading } = useAuth();
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   const [statusIndex, setStatusIndex] = useState(0);
 
-  // Animasyon Değerleri
+  // Giriş Animasyonu
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.9)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnim = useRef(new Animated.Value(0.92)).current;
 
   // 3 Nokta Yükleme Animasyonu
   const dot1 = useRef(new Animated.Value(0)).current;
@@ -31,11 +34,11 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
   const dot3 = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Giriş Animasyonu
+    // Giriş Açılışı
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 800,
+        duration: 700,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
@@ -45,42 +48,25 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
       }),
     ]).start();
 
-    // Pulse Animasyonu
-    const pulseLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.06,
-          duration: 1200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1200,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    pulseLoop.start();
-
     // Zıplayan Noktalar Animasyonu
     const animateDots = () => {
       Animated.loop(
         Animated.sequence([
-          Animated.stagger(150, [
+          Animated.stagger(140, [
             Animated.sequence([
-              Animated.timing(dot1, { toValue: -6, duration: 250, useNativeDriver: true }),
-              Animated.timing(dot1, { toValue: 0, duration: 250, useNativeDriver: true }),
+              Animated.timing(dot1, { toValue: -6, duration: 240, useNativeDriver: true }),
+              Animated.timing(dot1, { toValue: 0, duration: 240, useNativeDriver: true }),
             ]),
             Animated.sequence([
-              Animated.timing(dot2, { toValue: -6, duration: 250, useNativeDriver: true }),
-              Animated.timing(dot2, { toValue: 0, duration: 250, useNativeDriver: true }),
+              Animated.timing(dot2, { toValue: -6, duration: 240, useNativeDriver: true }),
+              Animated.timing(dot2, { toValue: 0, duration: 240, useNativeDriver: true }),
             ]),
             Animated.sequence([
-              Animated.timing(dot3, { toValue: -6, duration: 250, useNativeDriver: true }),
-              Animated.timing(dot3, { toValue: 0, duration: 250, useNativeDriver: true }),
+              Animated.timing(dot3, { toValue: -6, duration: 240, useNativeDriver: true }),
+              Animated.timing(dot3, { toValue: 0, duration: 240, useNativeDriver: true }),
             ]),
           ]),
-          Animated.delay(400),
+          Animated.delay(350),
         ])
       ).start();
     };
@@ -92,16 +78,15 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
     }, 1400);
 
     return () => {
-      pulseLoop.stop();
       clearInterval(interval);
     };
-  }, [fadeAnim, scaleAnim, pulseAnim, dot1, dot2, dot3]);
+  }, [fadeAnim, scaleAnim, dot1, dot2, dot3]);
 
-  // Oturum durumu kontrolü tamamlandığında en az 2000ms gösterip onFinish çağır
+  // Oturum durumu kontrolü tamamlandığında en az 2800ms gösterip onFinish çağır
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
     const startTime = Date.now();
-    const MIN_SPLASH_TIME = 2000;
+    const MIN_SPLASH_TIME = 2800; // Kullanıcının animasyonu doya doya görmesi için
 
     if (!loading) {
       const elapsed = Date.now() - startTime;
@@ -122,7 +107,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
       <View style={styles.bgBlobTop} />
       <View style={styles.bgBlobBottom} />
 
-      {/* Ana Logo ve Başlık */}
+      {/* Ana Animasyonlu Cihaz Yörüngesi */}
       <Animated.View
         style={[
           styles.contentCenter,
@@ -132,26 +117,11 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
           },
         ]}
       >
-        <View style={styles.logoWrapper}>
-          <Animated.View
-            style={[
-              styles.logoGlow,
-              {
-                transform: [{ scale: pulseAnim }],
-              },
-            ]}
-          />
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('../../../assets/icon.png')}
-              style={styles.appLogoImage}
-              resizeMode="cover"
-            />
-          </View>
-        </View>
-
-        <Text style={styles.title}>Safe Envanter</Text>
-        <Text style={styles.subtitle}>GARANTİ & VARLIK YÖNETİMİ</Text>
+        <TechOrbitLoader
+          fullScreen={false}
+          message="Safe Envanter"
+          subMessage="GARANTİ & VARLIK YÖNETİMİ"
+        />
       </Animated.View>
 
       {/* Alt Yükleniyor Durumu */}
