@@ -15,15 +15,20 @@ export const styles = StyleSheet.create({
     paddingBottom: SPACING.xl,
     ...SHADOWS.lg,
   },
+  dragHandleContainer: {
+    width: '100%',
+    alignItems: 'center',
+    paddingVertical: 10,
+    marginTop: -SPACING.xs,
+  },
   dragHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
+    width: 44,
+    height: 5,
+    borderRadius: 3,
     backgroundColor: COLORS.outlineVariant,
     alignSelf: 'center',
-    marginTop: SPACING.sm,
-    marginBottom: SPACING.xs,
   },
+
   header: {
     flexDirection: 'row',
     alignItems: 'center',

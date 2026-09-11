@@ -10,10 +10,13 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Animated,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Lock, Eye, EyeOff, ShieldCheck, X } from 'lucide-react-native';
+import { useSwipeDownToClose } from '../hooks/useSwipeDownToClose';
+
 
 import { COLORS } from '../constants';
 import { useAuth } from '../context/AuthContext';
@@ -33,6 +36,12 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const { panHandlers, translateY, handleClose } = useSwipeDownToClose({
+    onClose,
+    visible,
+  });
+
 
   const {
     control,
@@ -82,31 +91,34 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
-      onRequestClose={onClose}
+      animationType="fade"
+      onRequestClose={handleClose}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.overlay}
       >
-        <TouchableWithoutFeedback onPress={onClose}>
+        <TouchableWithoutFeedback onPress={handleClose}>
           <View style={styles.backdropTouchable} />
         </TouchableWithoutFeedback>
 
-        <View style={styles.modalContent}>
-          <View style={styles.handleBar} />
+        <Animated.View style={[styles.modalContent, { transform: [{ translateY }] }]}>
+          <View {...panHandlers} style={styles.handleContainer}>
+            <View style={styles.handleBar} />
+          </View>
 
           <View style={styles.headerRow}>
             <Text style={styles.title}>Şifre Değiştir</Text>
             <TouchableOpacity
               style={styles.closeIconButton}
-              onPress={onClose}
+              onPress={handleClose}
               disabled={submitting}
               activeOpacity={0.7}
             >
               <X size={20} color={COLORS.onSurfaceVariant} />
             </TouchableOpacity>
           </View>
+
           <Text style={styles.subtitle}>
             Hesap güvenliğiniz için yeni bir şifre belirleyin
           </Text>
@@ -214,12 +226,13 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
           <View style={styles.buttonRow}>
             <TouchableOpacity
               style={styles.cancelButton}
-              onPress={onClose}
+              onPress={handleClose}
               disabled={submitting}
               activeOpacity={0.7}
             >
               <Text style={styles.cancelButtonText}>Vazgeç</Text>
             </TouchableOpacity>
+
 
             <TouchableOpacity
               style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
@@ -234,8 +247,9 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               )}
             </TouchableOpacity>
           </View>
-        </View>
+        </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
+
   );
 };

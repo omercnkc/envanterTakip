@@ -10,10 +10,13 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Animated,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User, Mail, Lock, X } from 'lucide-react-native';
+import { useSwipeDownToClose } from '../hooks/useSwipeDownToClose';
+
 
 import { COLORS } from '../constants';
 import { useAuth } from '../context/AuthContext';
@@ -32,7 +35,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const { profile, user, updateProfile } = useAuth();
   const [submitting, setSubmitting] = useState(false);
 
+  const { panHandlers, translateY, handleClose } = useSwipeDownToClose({
+    onClose,
+    visible,
+  });
+
+
   const initialFullName = profile?.full_name || '';
+
 
   const {
     control,
@@ -78,31 +88,34 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
-      onRequestClose={onClose}
+      animationType="fade"
+      onRequestClose={handleClose}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.overlay}
       >
-        <TouchableWithoutFeedback onPress={onClose}>
+        <TouchableWithoutFeedback onPress={handleClose}>
           <View style={styles.backdropTouchable} />
         </TouchableWithoutFeedback>
 
-        <View style={styles.modalContent}>
-          <View style={styles.handleBar} />
+        <Animated.View style={[styles.modalContent, { transform: [{ translateY }] }]}>
+          <View {...panHandlers} style={styles.handleContainer}>
+            <View style={styles.handleBar} />
+          </View>
 
           <View style={styles.headerRow}>
             <Text style={styles.title}>Profili Düzenle</Text>
             <TouchableOpacity
               style={styles.closeIconButton}
-              onPress={onClose}
+              onPress={handleClose}
               disabled={submitting}
               activeOpacity={0.7}
             >
               <X size={20} color={COLORS.onSurfaceVariant} />
             </TouchableOpacity>
           </View>
+
           <Text style={styles.subtitle}>Hesap bilgilerinizi güncelleyin</Text>
 
           <View style={styles.form}>
@@ -160,12 +173,13 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           <View style={styles.buttonRow}>
             <TouchableOpacity
               style={styles.cancelButton}
-              onPress={onClose}
+              onPress={handleClose}
               disabled={submitting}
               activeOpacity={0.7}
             >
               <Text style={styles.cancelButtonText}>Vazgeç</Text>
             </TouchableOpacity>
+
 
             <TouchableOpacity
               style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
@@ -180,8 +194,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               )}
             </TouchableOpacity>
           </View>
-        </View>
+        </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
+
   );
 };

@@ -7,8 +7,11 @@ import {
   TouchableWithoutFeedback,
   ActivityIndicator,
   Alert,
+  Animated,
 } from 'react-native';
 import { FileSpreadsheet, FileCode, Share2, X } from 'lucide-react-native';
+import { useSwipeDownToClose } from '../hooks/useSwipeDownToClose';
+
 
 import { COLORS } from '../constants';
 import { useInventory } from '../context/InventoryContext';
@@ -27,6 +30,11 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
   const { products } = useInventory();
   const [selectedFormat, setSelectedFormat] = useState<'csv' | 'json'>('csv');
   const [loading, setLoading] = useState(false);
+
+  const { panHandlers, translateY, handleClose } = useSwipeDownToClose({
+    onClose,
+    visible,
+  });
 
   const productCount = products.length;
 
@@ -63,28 +71,31 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
-      onRequestClose={onClose}
+      animationType="fade"
+      onRequestClose={handleClose}
     >
       <View style={styles.overlay}>
-        <TouchableWithoutFeedback onPress={onClose}>
+        <TouchableWithoutFeedback onPress={handleClose}>
           <View style={styles.backdropTouchable} />
         </TouchableWithoutFeedback>
 
-        <View style={styles.modalContent}>
-          <View style={styles.handleBar} />
+        <Animated.View style={[styles.modalContent, { transform: [{ translateY }] }]}>
+          <View {...panHandlers} style={styles.handleContainer}>
+            <View style={styles.handleBar} />
+          </View>
 
           <View style={styles.headerRow}>
             <Text style={styles.title}>Verileri Dışa Aktar</Text>
             <TouchableOpacity
               style={styles.closeIconButton}
-              onPress={onClose}
+              onPress={handleClose}
               disabled={loading}
               activeOpacity={0.7}
             >
               <X size={20} color={COLORS.onSurfaceVariant} />
             </TouchableOpacity>
           </View>
+
           <Text style={styles.subtitle}>
             Envanterinizi istediğiniz formatta dışa aktarın ve paylaşın
           </Text>
@@ -183,7 +194,7 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
           <View style={styles.buttonRow}>
             <TouchableOpacity
               style={styles.cancelButton}
-              onPress={onClose}
+              onPress={handleClose}
               disabled={loading}
               activeOpacity={0.7}
             >
@@ -206,8 +217,9 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
               )}
             </TouchableOpacity>
           </View>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
+
   );
 };

@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, FlatList, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, Modal, TouchableOpacity, FlatList, TouchableWithoutFeedback, Animated } from 'react-native';
+import { useSwipeDownToClose } from '../hooks/useSwipeDownToClose';
 import {
+
   X,
   Check,
   Tv,
@@ -62,15 +64,25 @@ export const CategoryPickerModal: React.FC<CategoryPickerModalProps> = ({
   onSelect,
   onClose,
 }) => {
+  const { panHandlers, translateY, handleClose } = useSwipeDownToClose({
+    onClose,
+    visible,
+  });
+
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <TouchableWithoutFeedback onPress={onClose}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
+      <TouchableWithoutFeedback onPress={handleClose}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
-            <View style={styles.modalContent}>
+            <Animated.View style={[styles.modalContent, { transform: [{ translateY }] }]}>
+              <View {...panHandlers} style={styles.handleContainer}>
+                <View style={styles.handleBar} />
+              </View>
+
               <View style={styles.header}>
                 <Text style={styles.title}>Kategori Seçin</Text>
-                <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.7}>
+
+                <TouchableOpacity style={styles.closeButton} onPress={handleClose} activeOpacity={0.7}>
                   <X size={24} color={COLORS.onSurface} />
                 </TouchableOpacity>
               </View>
@@ -87,7 +99,7 @@ export const CategoryPickerModal: React.FC<CategoryPickerModalProps> = ({
                       style={[styles.categoryItem, isSelected && styles.categoryItemSelected]}
                       onPress={() => {
                         onSelect(item);
-                        onClose();
+                        handleClose();
                       }}
                       activeOpacity={0.7}
                     >
@@ -102,10 +114,11 @@ export const CategoryPickerModal: React.FC<CategoryPickerModalProps> = ({
                   );
                 }}
               />
-            </View>
+            </Animated.View>
           </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>
     </Modal>
+
   );
 };

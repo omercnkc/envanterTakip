@@ -16,10 +16,10 @@
 - **Sıradaki Odak**: Aşama 3 & 4 (Dokümantasyon & APK derleme hazırlığı).
 
 
-- `src/navigation/MainTabNavigator.tsx`: Alt menü (Bottom Tab Navigator) geçiş animasyonu "Akıcı Su Damlası (Liquid Teardrop)" fiziğine dönüştürüldü:
-  - Uzak sekmeler (n'den n+2 veya n+4'e) arasındaki takılma, aşırı esneme ve erken küçülme hataları giderildi.
-  - `react-native-svg` ile yön duyarlı aerodinamik su damlası silüeti (Path), 3D su parlaması (sheen) ve arkadan gelen sıvı kuyruk eklendi.
-  - Hedefe varış anında 5 aşamalı organik su/jöle titremesi (wobble oscillation) ve su ışıltısı halkası (`rippleGlow`) entegre edildi.
+- `src/navigation/MainTabNavigator.tsx`: Alt menü (Bottom Tab Navigator) geçiş animasyonu "Akıcı Su Damlası (Liquid Teardrop)" fiziğine dönüştürüldü.
+- `src/hooks/useSwipeDownToClose.ts`: Yarım açılan tüm Bottom Sheet modallara (`CategoryPickerModal`, `EditProfileModal`, `ChangePasswordModal`, `ExportDataModal`, `FilterModal`, `MediaPickerModal`) aşağı kaydırılarak kapatma (swipe-down-to-close) hareketi kazandırıldı:
+  - Çift kapanma animasyonu ve anlık zıplamalar giderildi (`animationType="fade"` ile yerel kayma ayrıştırıldı, `translateY` kontrolü optimize edildi).
+  - Hızlı ardışık dokunuşlarda çift tetiklenmeyi önleyen `isClosing` kilidi ve buton/arka plan için `handleClose` akıcı kapanma fonksiyonu entegre edildi.
 - `npx tsc --noEmit` çalıştırıldı -> 0 hata.
 
 

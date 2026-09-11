@@ -17,7 +17,22 @@ export const styles = StyleSheet.create({
     maxHeight: '80%',
     ...SHADOWS.lg,
   },
+  handleContainer: {
+    width: '100%',
+    alignItems: 'center',
+    paddingVertical: 8,
+    marginTop: -SPACING.xs,
+    marginBottom: SPACING.xs,
+  },
+  handleBar: {
+    width: 44,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: COLORS.outlineVariant,
+    alignSelf: 'center',
+  },
   header: {
+
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

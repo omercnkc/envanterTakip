@@ -19,14 +19,21 @@ export const styles = StyleSheet.create({
     paddingBottom: SPACING.xl,
     ...SHADOWS.lg,
   },
+  handleContainer: {
+    width: '100%',
+    alignItems: 'center',
+    paddingVertical: 10,
+    marginTop: -SPACING.xs,
+    marginBottom: SPACING.xs,
+  },
   handleBar: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
+    width: 44,
+    height: 5,
+    borderRadius: 3,
     backgroundColor: COLORS.outlineVariant,
     alignSelf: 'center',
-    marginBottom: SPACING.md,
   },
+
   title: {
     ...TYPOGRAPHY.headlineMd,
     color: COLORS.onBackground,

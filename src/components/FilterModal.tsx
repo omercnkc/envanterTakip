@@ -6,10 +6,13 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   ScrollView,
+  Animated,
 } from 'react-native';
 import { DEFAULT_CATEGORIES, CategoryItem } from '../constants';
 import { ProductFilterOptions } from '../types';
+import { useSwipeDownToClose } from '../hooks/useSwipeDownToClose';
 import { styles } from './FilterModal.styles';
+
 
 type WarrantyFilterStatus = NonNullable<ProductFilterOptions['warrantyStatus']>;
 
@@ -32,20 +35,29 @@ export const FilterModal: React.FC<FilterModalProps> = ({
   onSelectStatus,
   onReset,
 }) => {
+  const { panHandlers, translateY, handleClose } = useSwipeDownToClose({
+    onClose,
+    visible,
+  });
+
   return (
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
-      onRequestClose={onClose}
+      animationType="fade"
+      onRequestClose={handleClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
+      <TouchableWithoutFeedback onPress={handleClose}>
         <View style={styles.overlay}>
+
           <TouchableWithoutFeedback>
-            <View style={styles.modalContainer}>
-              <View style={styles.dragHandle} />
+            <Animated.View style={[styles.modalContainer, { transform: [{ translateY }] }]}>
+              <View {...panHandlers} style={styles.dragHandleContainer}>
+                <View style={styles.dragHandle} />
+              </View>
 
               <View style={styles.header}>
+
                 <Text style={styles.title}>Filtrele</Text>
                 <TouchableOpacity onPress={onReset} activeOpacity={0.7}>
                   <Text style={styles.resetButtonText}>Temizle</Text>
@@ -178,16 +190,17 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               <View style={styles.footer}>
                 <TouchableOpacity
                   style={styles.applyButton}
-                  onPress={onClose}
+                  onPress={handleClose}
                   activeOpacity={0.8}
                 >
                   <Text style={styles.applyButtonText}>Uygula</Text>
                 </TouchableOpacity>
               </View>
-            </View>
+            </Animated.View>
           </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>
     </Modal>
+
   );
 };

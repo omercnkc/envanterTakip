@@ -5,10 +5,13 @@ import {
   Modal,
   TouchableOpacity,
   TouchableWithoutFeedback,
+  Animated,
 } from 'react-native';
 import { Camera, Image as ImageIcon, FileText, ChevronRight } from 'lucide-react-native';
 import { COLORS } from '../constants';
+import { useSwipeDownToClose } from '../hooks/useSwipeDownToClose';
 import { styles } from './MediaPickerModal.styles';
+
 
 interface MediaPickerModalProps {
   visible: boolean;
@@ -31,21 +34,30 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
   subtitle = 'Fotoğraf çekin veya cihazınızdan seçin',
   includeDocumentOption = false,
 }) => {
+  const { panHandlers, translateY, handleClose } = useSwipeDownToClose({
+    onClose,
+    visible,
+  });
+
   return (
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
-      onRequestClose={onClose}
+      animationType="fade"
+      onRequestClose={handleClose}
     >
       <View style={styles.overlay}>
-        <TouchableWithoutFeedback onPress={onClose}>
+        <TouchableWithoutFeedback onPress={handleClose}>
           <View style={styles.backdropTouchable} />
         </TouchableWithoutFeedback>
 
-        <View style={styles.modalContent}>
-          <View style={styles.handleBar} />
+
+        <Animated.View style={[styles.modalContent, { transform: [{ translateY }] }]}>
+          <View {...panHandlers} style={styles.handleContainer}>
+            <View style={styles.handleBar} />
+          </View>
           <Text style={styles.title}>{title}</Text>
+
           <Text style={styles.subtitle}>{subtitle}</Text>
 
           <View style={styles.optionsList}>
@@ -122,13 +134,15 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
           {/* Vazgeç Butonu */}
           <TouchableOpacity
             style={styles.cancelButton}
-            onPress={onClose}
+            onPress={handleClose}
             activeOpacity={0.7}
           >
             <Text style={styles.cancelButtonText}>Vazgeç</Text>
           </TouchableOpacity>
-        </View>
+
+        </Animated.View>
       </View>
     </Modal>
+
   );
 };
