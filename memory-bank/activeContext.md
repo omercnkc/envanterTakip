@@ -16,10 +16,19 @@
 - **Sıradaki Odak**: Aşama 3 & 4 (Dokümantasyon & APK derleme hazırlığı).
 
 
-- `src/navigation/MainTabNavigator.tsx`: Alt menü (Bottom Tab Navigator) geçiş animasyonu "Akıcı Su Damlası (Liquid Teardrop)" fiziğine dönüştürüldü.
-- `src/hooks/useSwipeDownToClose.ts`: Yarım açılan tüm Bottom Sheet modallara (`CategoryPickerModal`, `EditProfileModal`, `ChangePasswordModal`, `ExportDataModal`, `FilterModal`, `MediaPickerModal`) aşağı kaydırılarak kapatma (swipe-down-to-close) hareketi kazandırıldı:
-  - Çift kapanma animasyonu ve anlık zıplamalar giderildi (`animationType="fade"` ile yerel kayma ayrıştırıldı, `translateY` kontrolü optimize edildi).
-  - Hızlı ardışık dokunuşlarda çift tetiklenmeyi önleyen `isClosing` kilidi ve buton/arka plan için `handleClose` akıcı kapanma fonksiyonu entegre edildi.
+- `src/navigation/MainTabNavigator.tsx`: Alt menü (Bottom Tab Navigator) geçiş animasyonu **Kinetik 'Shooting Line' (Fırlayan Işın)** mimarisine dönüştürüldü:
+  - Sekmeler arası geçişte anlık atlama kaldırıldı; kaynak ikonun alt taban çizgisinden (`y = 54`) hedefin altına doğru tek parça SVG path (`M... L... A...`) fırlatıldı.
+  - Yön duyarlılığı: Gidilen hareket yönüne doğru (sağa giderken sağa-yukarı, sola giderken sola-yukarı) çember çizilmektedir.
+  - Tek renkli akış: Şerit içi ve çember içi tek ve net renkle dolmaktadır (farklı renk çekirdekler kaldırıldı).
+  - 5 Sekmeye özel renk paleti entegre edildi:
+    - 🏠 Ana Sayfa: `COLORS.primary` (`#4648d4`)
+    - 📦 Ürünler: `COLORS.tertiary` (`#006c49`)
+    - ➕ Ekle: `COLORS.primaryContainer` (`#6063ee`)
+    - 🔔 Bildirimler: `COLORS.error` (`#ba1a1a`)
+    - 👤 Profil: `COLORS.warning` (`#d97706`)
+  - Çoklu çizgi kuyruğu (`lines` array) ile ardışık hızlı dokunmalar güvenceye alındı.
+  - İkon gecikmesi optimize edildi: Tıklanır tıklanmaz (`0ms`) merkeze yükselme (`friction: 6.5, tension: 110`), 140ms'de ışın varışıyla renk dolumu ve crossfade senkronize edildi.
+- `src/hooks/useSwipeDownToClose.ts`: Yarım açılan tüm Bottom Sheet modallara aşağı kaydırarak kapatma hareketi kazandırıldı.
 - `npx tsc --noEmit` çalıştırıldı -> 0 hata.
 
 

@@ -51,5 +51,6 @@
 - [x] Tech Orbit Loader & Açılış Ekranı Yükleme Animasyonu (`TechOrbitLoader.tsx`, `SplashScreen.tsx`, `ProductsScreen`, `ProductDetailScreen`, `EditProductScreen`)
 - [x] Empty State eyleme yönlendirici butonlar ve dinamik filtre sıfırlama
 - [x] Yarım açılan Bottom Sheet modallarında aşağı çekerek kapatma (`useSwipeDownToClose.ts`, tek seferde akıcı slide-down animasyonu)
+- [x] Alt Menü Kinetik 'Shooting Line' (Fırlayan Işın) & Çember Çizimi + Patlayan Renk Dolumu Animasyonu (`MainTabNavigator.tsx`)
 - [ ] Android APK derleme ve sunum hazırlığı
 
