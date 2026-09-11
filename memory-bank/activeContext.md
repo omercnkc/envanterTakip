@@ -16,12 +16,12 @@
 - **Sıradaki Odak**: Aşama 3 & 4 (Dokümantasyon & APK derleme hazırlığı).
 
 
-## 2. Son Yapılan Değişiklikler (Recent Changes)
-- `app.json`: `userInterfaceStyle` ayarı `"light"` yerine `"automatic"` yapıldı. Böylece iOS/Android sistem karanlık/aydınlık mod değişimleri Expo ve React Native tarafından dinamik olarak algılanabilir hale getirildi.
-- `src/context/ThemeContext.tsx`: `Appearance.addChangeListener` ve `useColorScheme` ile telefonun sistem teması canlı olarak takip edildi, `systemColorScheme` context'e aktarıldı, `LayoutAnimation` entegre edildi.
-- `App.tsx`: `ThemeTransitionOverlay` eklenerek açık/koyu mod değişimlerinde gözü yoran ani renk parlaması yerine yumuşak ve şık bir dissolve (çözünme) geçiş animasyonu uygulandı.
-- `src/screens/main/SettingsScreen.tsx`: Eski kaba `Alert.alert` tema seçim diyaloğu kaldırıldı; yerine şık 3'lü interaktif segment seçici (☀️ Açık, 🌙 Koyu, 📱 Sistem) ve sistem modu durum bilgi rozeti eklendi.
+- `src/navigation/MainTabNavigator.tsx`: Alt menü (Bottom Tab Navigator) geçiş animasyonu "Akıcı Su Damlası (Liquid Teardrop)" fiziğine dönüştürüldü:
+  - Uzak sekmeler (n'den n+2 veya n+4'e) arasındaki takılma, aşırı esneme ve erken küçülme hataları giderildi.
+  - `react-native-svg` ile yön duyarlı aerodinamik su damlası silüeti (Path), 3D su parlaması (sheen) ve arkadan gelen sıvı kuyruk eklendi.
+  - Hedefe varış anında 5 aşamalı organik su/jöle titremesi (wobble oscillation) ve su ışıltısı halkası (`rippleGlow`) entegre edildi.
 - `npx tsc --noEmit` çalıştırıldı -> 0 hata.
+
 
 ## 3. Sıradaki Adımlar (Next Steps)
 1. **4. Hafta – Aşama 2: UI/UX Cila & Mikro-Animasyonlar**:

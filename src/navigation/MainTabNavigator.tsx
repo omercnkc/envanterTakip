@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -7,13 +7,17 @@ import {
   Dimensions,
   Platform,
   Animated,
+  Easing,
 } from 'react-native';
+
 import {
   createBottomTabNavigator,
   BottomTabBarProps,
 } from '@react-navigation/bottom-tabs';
 import { Home, Package, Plus, Bell, User } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
+
 
 import { useTheme } from '../context/ThemeContext';
 import { ThemeColors } from '../constants/colors';
@@ -33,11 +37,12 @@ const BEAD_SIZE = 48; // Yüzen boncuk boyutu
 
 const getTabsConfig = (colors: ThemeColors) => [
   { name: 'HomeTab', title: 'Ana Sayfa', icon: Home, color: colors.primary },
-  { name: 'ProductsTab', title: 'Ürünler', icon: Package, color: colors.tertiary },
-  { name: 'AddTab', title: 'Ekle', icon: Plus, color: colors.primaryContainer },
-  { name: 'NotificationsTab', title: 'Bildirimler', icon: Bell, color: colors.error },
-  { name: 'ProfileTab', title: 'Profil', icon: User, color: colors.warning },
+  { name: 'ProductsTab', title: 'Ürünler', icon: Package, color: colors.primary },
+  { name: 'AddTab', title: 'Ekle', icon: Plus, color: colors.primary },
+  { name: 'NotificationsTab', title: 'Bildirimler', icon: Bell, color: colors.primary },
+  { name: 'ProfileTab', title: 'Profil', icon: User, color: colors.primary },
 ];
+
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -57,11 +62,12 @@ const AnimatedTabItem: React.FC<TabItemProps> = ({ tab, isActive, onPress }) => 
   useEffect(() => {
     Animated.spring(animValue, {
       toValue: isActive ? 1 : 0,
-      friction: 6,
-      tension: 65,
+      friction: 7.5,
+      tension: 70,
       useNativeDriver: true,
     }).start();
   }, [isActive, animValue]);
+
 
   const iconTranslateY = animValue.interpolate({
     inputRange: [0, 1],
@@ -151,7 +157,7 @@ const AnimatedTabItem: React.FC<TabItemProps> = ({ tab, isActive, onPress }) => 
   );
 };
 
-// Özel Yüzen Boncuklu Tab Bar Komponenti (Damlacık / Jelly Esneme Efektli)
+// Özel Yüzen Boncuklu Tab Bar Komponenti (Gerçek Su Damlası & Jöle Titremesi - Liquid Teardrop)
 const FloatingBeadTabBar: React.FC<BottomTabBarProps> = ({
   state,
   descriptors,
@@ -162,50 +168,116 @@ const FloatingBeadTabBar: React.FC<BottomTabBarProps> = ({
   const styles = useMemo(() => getStyles(colors), [colors]);
   const tabsConfig = useMemo(() => getTabsConfig(colors), [colors]);
   const activeIndex = state.index;
-  const activeTabConfig = tabsConfig[activeIndex] || tabsConfig[0];
 
-  const beadX = useRef(
-    new Animated.Value(
-      activeIndex * TAB_WIDTH + TAB_WIDTH / 2 - BEAD_SIZE / 2
-    )
-  ).current;
+  const getBeadX = (index: number) => index * TAB_WIDTH + TAB_WIDTH / 2 - BEAD_SIZE / 2;
 
-  // Damlacık / Jelly esneme efekti (Stretch)
-  const stretchAnim = useRef(new Animated.Value(1)).current;
+  // Ana Su Damlası Pozisyonu
+  const beadX = useRef(new Animated.Value(getBeadX(activeIndex))).current;
+
+  // Arkasından Gelen Sıvı Kuyruk (Gooey trailing tail)
+  const tailX = useRef(new Animated.Value(getBeadX(activeIndex))).current;
+  const tailOpacity = useRef(new Animated.Value(0)).current;
+
+  // Uçuş Hali (SVG Sivri Su Damlası) vs Durma Hali Geçişi
+  const flyingOpacity = useRef(new Animated.Value(0)).current;
+  const restingOpacity = useRef(new Animated.Value(1)).current;
+
+  // Hedefe Varış Anındaki Su / Jöle Titremesi (Wobble Oscillation)
+  const wobbleX = useRef(new Animated.Value(1)).current;
+  const wobbleY = useRef(new Animated.Value(1)).current;
+  const rippleGlow = useRef(new Animated.Value(1)).current;
+
+  // Hareket Yönü: +1 (Sağa doğru), -1 (Sola doğru)
+  const [moveDirection, setMoveDirection] = useState<1 | -1>(1);
   const prevIndexRef = useRef(activeIndex);
 
   useEffect(() => {
-    const targetX = activeIndex * TAB_WIDTH + TAB_WIDTH / 2 - BEAD_SIZE / 2;
-    Animated.spring(beadX, {
-      toValue: targetX,
-      friction: 6,
-      tension: 65,
-      useNativeDriver: true,
-    }).start();
-  }, [activeIndex, beadX]);
+    const prevIndex = prevIndexRef.current;
+    const isChanging = prevIndex !== activeIndex;
+    prevIndexRef.current = activeIndex;
+
+    const targetX = getBeadX(activeIndex);
+
+    if (isChanging) {
+      const distance = Math.abs(activeIndex - prevIndex);
+      const dir: 1 | -1 = activeIndex >= prevIndex ? 1 : -1;
+      setMoveDirection(dir);
+
+      // Mesafeye göre optimize edilmiş akıcı su hızı (200ms - 320ms)
+      const travelDuration = Math.min(320, 190 + distance * 35);
+
+      // 1. Su damlası uçuş moduna geç
+      flyingOpacity.setValue(1);
+      restingOpacity.setValue(0);
+      tailOpacity.setValue(0.75);
+
+      // Ana damla ve kuyruk koordineli akışı
+      Animated.parallel([
+        // A. Ana Damla: Su gibi hızlı fırlayıp hedefe yaklaşırken yumuşar
+        Animated.timing(beadX, {
+          toValue: targetX,
+          duration: travelDuration,
+          easing: Easing.bezier(0.22, 1, 0.36, 1),
+          useNativeDriver: true,
+        }),
+
+        // B. Arkadan Gelen Sıvı Kuyruk: Ana damlanın hemen arkasından su gibi takip eder
+        Animated.sequence([
+          Animated.timing(tailX, {
+            toValue: targetX,
+            duration: travelDuration + 35,
+            easing: Easing.bezier(0.25, 0.8, 0.45, 1),
+            useNativeDriver: true,
+          }),
+          Animated.timing(tailOpacity, {
+            toValue: 0,
+            duration: 60,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start(() => {
+        // Hedefe varıldığında uçuş damlasından duran su damlasına yumuşak geçiş
+        Animated.parallel([
+          Animated.timing(flyingOpacity, { toValue: 0, duration: 80, useNativeDriver: true }),
+          Animated.timing(restingOpacity, { toValue: 1, duration: 80, useNativeDriver: true }),
+        ]).start();
+
+        // 2. HEDEFE VARIŞ: Su Damlası Jöle Titremesi (Liquid Wobble / Ripple)
+        wobbleX.setValue(1);
+        wobbleY.setValue(1);
+        rippleGlow.setValue(1.4);
+
+        Animated.parallel([
+          // Yatay Dalgalanma (Yayılma -> Geri Sekme -> Titreme -> Durulma)
+          Animated.sequence([
+            Animated.timing(wobbleX, { toValue: 1.28, duration: 70, useNativeDriver: true }),
+            Animated.timing(wobbleX, { toValue: 0.85, duration: 80, useNativeDriver: true }),
+            Animated.timing(wobbleX, { toValue: 1.12, duration: 70, useNativeDriver: true }),
+            Animated.timing(wobbleX, { toValue: 0.96, duration: 60, useNativeDriver: true }),
+            Animated.timing(wobbleX, { toValue: 1.0, duration: 50, useNativeDriver: true }),
+          ]),
+          // Dikey Dalgalanma (Sıkışma -> Yukarı Fırlama -> Titreme -> Durulma)
+          Animated.sequence([
+            Animated.timing(wobbleY, { toValue: 0.76, duration: 70, useNativeDriver: true }),
+            Animated.timing(wobbleY, { toValue: 1.22, duration: 80, useNativeDriver: true }),
+            Animated.timing(wobbleY, { toValue: 0.91, duration: 70, useNativeDriver: true }),
+            Animated.timing(wobbleY, { toValue: 1.04, duration: 60, useNativeDriver: true }),
+            Animated.timing(wobbleY, { toValue: 1.0, duration: 50, useNativeDriver: true }),
+          ]),
+          // Su Parıltısı Halka Yayılımı
+          Animated.sequence([
+            Animated.timing(rippleGlow, { toValue: 1.65, duration: 110, useNativeDriver: true }),
+            Animated.timing(rippleGlow, { toValue: 1.0, duration: 220, useNativeDriver: true }),
+          ]),
+        ]).start();
+      });
+    } else {
+      beadX.setValue(targetX);
+      tailX.setValue(targetX);
+    }
+  }, [activeIndex, beadX, tailX, tailOpacity, flyingOpacity, restingOpacity, wobbleX, wobbleY, rippleGlow]);
 
   const handleTabPress = (index: number, routeName: string) => {
-    if (index !== activeIndex) {
-      // Gidilecek hedefin uzaklığını ölçme
-      const distance = Math.abs(index - activeIndex);
-      const stretchFactor = 1 + distance * 0.25;
-
-      // Harekete başlarken yatay esneme
-      stretchAnim.setValue(stretchFactor);
-
-      // Hedefe yaklaşırken damlacığın toparlanıp yuvarlak formuna dönmesi (Jelly bounce)
-      setTimeout(() => {
-        Animated.spring(stretchAnim, {
-          toValue: 1,
-          friction: 6,
-          tension: 80,
-          useNativeDriver: true,
-        }).start();
-      }, 180);
-    }
-
-    prevIndexRef.current = index;
-
     const isFocused = state.index === index;
     const event = navigation.emit({
       type: 'tabPress',
@@ -234,34 +306,102 @@ const FloatingBeadTabBar: React.FC<BottomTabBarProps> = ({
           ]}
         />
 
-        {/* Yüzen Renkli Halka (Glow Efekti - Arkadaki Yumuşak Işık) */}
+        {/* Arkasından Gelen Sıvı Kuyruk Damlası (Trailing Gooey Drop) */}
         <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.trailingDrop,
+            {
+              backgroundColor: colors.primary,
+              transform: [
+                { translateX: tailX },
+                { scale: 0.62 },
+              ],
+              opacity: tailOpacity,
+            },
+          ]}
+        />
+
+        {/* Yüzen Renkli Halka (Glow Efekti - Arkadaki Yumuşak Işık & Dalgalanma) */}
+        <Animated.View
+          pointerEvents="none"
           style={[
             styles.beadGlow,
             {
-              backgroundColor: activeTabConfig.color,
+              backgroundColor: colors.primary,
               transform: [
                 { translateX: beadX },
-                { scaleX: stretchAnim },
-                { scale: 1.3 },
+                { scaleX: wobbleX },
+                { scaleY: wobbleY },
+                { scale: rippleGlow },
               ],
             },
           ]}
         />
 
-        {/* Yüzen Renkli Halka (Ana Boncuk - Damlacık) */}
+        {/* Ana Su Damlası Gövdesi (Main Liquid Droplet) */}
         <Animated.View
           style={[
-            styles.beadCircle,
+            styles.beadContainer,
             {
-              backgroundColor: activeTabConfig.color,
               transform: [
                 { translateX: beadX },
-                { scaleX: stretchAnim },
+                { scaleX: wobbleX },
+                { scaleY: wobbleY },
               ],
             },
           ]}
-        />
+        >
+          {/* A. HAREKET HALİNDEKİ SİVRİ SU DAMLASI (SVG STREAMLINED TEARDROP) */}
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.flyingDropletWrapper,
+              {
+                opacity: flyingOpacity,
+                left: moveDirection === 1 ? 0 : -16,
+              },
+            ]}
+          >
+            <Svg width={64} height={48} viewBox="0 0 64 48">
+              {/* Damla Gövdesi */}
+              <Path
+                d={
+                  moveDirection === 1
+                    ? "M 24,0 C 38,0 52,11 64,24 C 52,37 38,48 24,48 A 24,24 0 0,1 24,0 Z"
+                    : "M 40,0 C 26,0 12,11 0,24 C 12,37 26,48 40,48 A 24,24 0 0,0 40,0 Z"
+                }
+                fill={colors.primary}
+              />
+              {/* Su Damlası Üst Işıltısı */}
+              <Path
+                d={
+                  moveDirection === 1
+                    ? "M 13,8 C 20,4 28,6 32,10 C 28,8 19,7 14,11 Z"
+                    : "M 33,8 C 40,4 48,6 52,10 C 48,8 39,7 34,11 Z"
+                }
+                fill="rgba(255, 255, 255, 0.45)"
+              />
+            </Svg>
+          </Animated.View>
+
+          {/* B. DURMA HALİNDEKİ SU DAMLASI (RESTING WATER DROPLET WITH SHEEN) */}
+          <Animated.View
+            style={[
+              styles.beadCircle,
+              {
+                backgroundColor: colors.primary,
+                opacity: restingOpacity,
+              },
+            ]}
+          >
+            {/* Su Damlası Üst Parlaması (Glossy Water Sheen) */}
+            <View style={styles.waterGlossHighlight} />
+          </Animated.View>
+        </Animated.View>
+
+
+
 
         {/* Sekmeler (Tıklanabilir İkonlar ve Yazılar) */}
         <View style={styles.tabsRow}>
@@ -333,6 +473,32 @@ const getStyles = (colors: ThemeColors) => StyleSheet.create({
     // Android Elevation
     elevation: 10,
   },
+  trailingDrop: {
+    position: 'absolute',
+    bottom: 38,
+    left: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    zIndex: 8,
+  },
+  beadContainer: {
+    position: 'absolute',
+    bottom: 30,
+    left: 0,
+    width: BEAD_SIZE,
+    height: BEAD_SIZE,
+    zIndex: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  flyingDropletWrapper: {
+    position: 'absolute',
+    top: 0,
+    width: 64,
+    height: 48,
+    zIndex: 12,
+  },
   beadGlow: {
     position: 'absolute',
     bottom: 30,
@@ -343,20 +509,30 @@ const getStyles = (colors: ThemeColors) => StyleSheet.create({
     opacity: 0.25,
   },
   beadCircle: {
-    position: 'absolute',
-    bottom: 30,
-    left: 0,
     width: BEAD_SIZE,
     height: BEAD_SIZE,
     borderRadius: BEAD_SIZE / 2,
-    zIndex: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
     // Soft drop shadow
     shadowColor: '#121c2a',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.22,
     shadowRadius: 12,
     elevation: 8,
   },
+  waterGlossHighlight: {
+    position: 'absolute',
+    top: 6,
+    left: 10,
+    width: 14,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.45)',
+    transform: [{ rotate: '-28deg' }],
+  },
+
+
   tabsRow: {
     position: 'absolute',
     bottom: 0,
