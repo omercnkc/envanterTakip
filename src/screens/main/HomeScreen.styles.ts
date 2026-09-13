@@ -123,7 +123,6 @@ export const getStyles = (colors: ThemeColors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: 6,
-    marginBottom: SPACING.md,
   },
   bentoBigNumber: {
     fontSize: 32,
@@ -136,21 +135,6 @@ export const getStyles = (colors: ThemeColors) => StyleSheet.create({
     fontWeight: '600',
     color: colors.onBackground,
   },
-  bentoButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: colors.surfaceContainerLow,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: RADIUS.full,
-    alignSelf: 'flex-start',
-  },
-  bentoButtonText: {
-    ...TYPOGRAPHY.labelMd,
-    color: colors.primary,
-    fontWeight: '600',
-  },
   bentoRightWidget: {
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -162,15 +146,14 @@ export const getStyles = (colors: ThemeColors) => StyleSheet.create({
     maxWidth: 165,
     minWidth: 140,
     zIndex: 10,
-    ...SHADOWS.sm,
   },
   bentoRightWidgetWarning: {
-    backgroundColor: colors.warningContainer + '35',
-    borderColor: colors.warning + '70',
+    backgroundColor: colors.warranty?.expiringBg || colors.warningContainer,
+    borderColor: (colors.warranty?.expiring || colors.warning) + '40',
   },
   bentoRightWidgetSafe: {
-    backgroundColor: colors.tertiaryContainer + '20',
-    borderColor: colors.tertiary + '50',
+    backgroundColor: colors.warranty?.activeBg || colors.surfaceContainerLow,
+    borderColor: (colors.warranty?.active || colors.tertiary) + '40',
   },
   bentoStatusRow: {
     flexDirection: 'row',

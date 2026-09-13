@@ -18,37 +18,61 @@ export const productFormSchema = z.object({
     .min(1, 'Marka alanı zorunludur')
     .max(50, 'Marka adı çok uzun'),
   model: z.string().trim().max(50, 'Model çok uzun').optional().nullable(),
-  category_id: z.number().min(1, 'Lütfen bir kategori seçin'),
-  serial_number: z.string().trim().max(100, 'Seri numarası çok uzun').optional().nullable(),
+  category_id: z
+    .number()
+    .min(1, 'Lütfen bir kategori seçin'),
+
+  // Delil Nitelikli Zorunlu Alanlar:
+  serial_number: z
+    .string()
+    .trim()
+    .min(1, 'Seri numarası delil niteliği taşıdığı için zorunludur')
+    .max(100, 'Seri numarası çok uzun'),
+
   purchase_date: z
     .string()
-    .optional()
-    .nullable()
-    .refine(
-      (val) =>
-        !val ||
-        val.trim() === '' ||
-        /^(\d{4}-\d{1,2}-\d{1,2}|\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{4})$/.test(val.trim()),
+    .trim()
+    .min(1, 'Satın alma tarihi delil olarak zorunludur')
+    .regex(
+      /^(\d{4}-\d{1,2}-\d{1,2}|\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{4})$/,
       'Satın alma tarihi GG/AA/YYYY formatında olmalıdır'
     ),
+
   purchase_price: z
+    .number({ message: 'Lütfen geçerli bir fiyat giriniz' })
+    .positive('Satın alma fiyatı 0\'dan büyük olmalıdır'),
+
+  store_name: z
+    .string()
+    .trim()
+    .min(1, 'Satın alınan mağaza / satıcı bilgisi zorunludur')
+    .max(100, 'Mağaza adı çok uzun'),
+
+  warranty_duration_months: z
     .number()
-    .nonnegative('Fiyat negatif olamaz')
+    .positive('Garanti süresi pozitif olmalıdır')
     .optional()
     .nullable(),
-  warranty_duration_months: z.number().positive('Garanti süresi pozitif olmalıdır').optional().nullable(),
+
   warranty_end_date: z
     .string()
+    .trim()
     .min(1, 'Garanti bitiş tarihi zorunludur')
     .regex(
       /^(\d{4}-\d{1,2}-\d{1,2}|\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{4})$/,
       'Tarih GG/AA/YYYY formatında olmalıdır'
     ),
 
-  store_name: z.string().trim().max(100, 'Mağaza adı çok uzun').optional().nullable(),
+  invoice_path: z
+    .string()
+    .nullable()
+    .refine(
+      (val) => val !== null && val !== undefined && val.trim().length > 0,
+      'Fatura belgesi veya fotoğrafı delil olarak zorunludur'
+    ),
+
   description: z.string().trim().max(500, 'Açıklama çok uzun').optional().nullable(),
   image_path: z.string().optional().nullable(),
-  invoice_path: z.string().optional().nullable(),
 });
 
 export type ProductFormData = z.infer<typeof productFormSchema>;

@@ -16,7 +16,6 @@ import {
   Receipt,
   Bell,
   ChevronRight,
-  TrendingUp,
   ShieldCheck,
 } from 'lucide-react-native';
 
@@ -160,15 +159,6 @@ export const HomeScreen: React.FC = () => {
               <Text style={styles.bentoBigNumber}>{stats.total}</Text>
               <Text style={styles.bentoNumberLabel}>ürün</Text>
             </View>
-            <TouchableOpacity
-              style={styles.bentoButton}
-              onPress={() => navigation.navigate('ProductsTab')}
-              activeOpacity={0.8}
-            >
-              <TrendingUp size={14} color={colors.primary} />
-              <Text style={styles.bentoButtonText}>Genel Durumu Gör</Text>
-              <ChevronRight size={14} color={colors.primary} />
-            </TouchableOpacity>
           </View>
 
           {/* En Yakın Garanti Bitiş / Güvende Rozeti */}
@@ -190,17 +180,17 @@ export const HomeScreen: React.FC = () => {
                   <View
                     style={[
                       styles.bentoStatusIconBox,
-                      { backgroundColor: colors.warning + '25' },
+                      { backgroundColor: (colors.warranty?.expiring || colors.warning) + '20' },
                     ]}
                   >
-                    <Clock size={12} color={colors.warning} />
+                    <Clock size={12} color={colors.warranty?.expiring || colors.warning} />
                   </View>
-                  <Text style={[styles.bentoStatusBadgeText, { color: colors.warning }]}>
+                  <Text style={[styles.bentoStatusBadgeText, { color: colors.warranty?.expiring || colors.warning }]}>
                     Yaklaşan Garanti
                   </Text>
                 </View>
                 <Text
-                  style={[styles.bentoStatusMainText, { color: colors.warning }]}
+                  style={styles.bentoStatusMainText}
                   numberOfLines={1}
                 >
                   {closestWarrantyInfo.daysRemaining === 0
@@ -213,7 +203,7 @@ export const HomeScreen: React.FC = () => {
                   <Text style={styles.bentoStatusProductName} numberOfLines={1}>
                     {closestWarrantyInfo.product?.name}
                   </Text>
-                  <ChevronRight size={13} color={colors.warning} />
+                  <ChevronRight size={13} color={colors.outline} />
                 </View>
               </>
             ) : closestWarrantyInfo.type === 'safe' ? (
@@ -222,12 +212,12 @@ export const HomeScreen: React.FC = () => {
                   <View
                     style={[
                       styles.bentoStatusIconBox,
-                      { backgroundColor: colors.tertiary + '25' },
+                      { backgroundColor: (colors.warranty?.active || colors.tertiary) + '20' },
                     ]}
                   >
-                    <ShieldCheck size={12} color={colors.tertiary} />
+                    <ShieldCheck size={12} color={colors.warranty?.active || colors.tertiary} />
                   </View>
-                  <Text style={[styles.bentoStatusBadgeText, { color: colors.tertiary }]}>
+                  <Text style={[styles.bentoStatusBadgeText, { color: colors.warranty?.active || colors.tertiary }]}>
                     Garantiler Güvende
                   </Text>
                 </View>

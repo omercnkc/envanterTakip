@@ -35,7 +35,7 @@ export const getStyles = (colors: ThemeColors) => StyleSheet.create({
   scrollContent: {
     paddingHorizontal: SPACING.containerMargin,
     paddingTop: SPACING.sm,
-    paddingBottom: 100, // Space for fixed bottom bar
+    paddingBottom: SPACING.xxl,
     gap: SPACING.sectionGap - 8,
   },
   section: {
@@ -107,6 +107,10 @@ export const getStyles = (colors: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
+  },
+  uploadDashedBoxError: {
+    borderColor: colors.error,
+    backgroundColor: colors.errorContainer + '20',
   },
   uploadDashedText: {
     ...TYPOGRAPHY.bodySm,
@@ -250,25 +254,18 @@ export const getStyles = (colors: ThemeColors) => StyleSheet.create({
     color: colors.onPrimary,
     fontWeight: '600',
   },
-  fixedBottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: SPACING.containerMargin,
-    paddingVertical: 14,
-    backgroundColor: colors.background,
-    borderTopWidth: 1,
-    borderTopColor: colors.surfaceContainerHigh,
-    ...SHADOWS.md,
+  // Submit Section
+  submitSection: {
+    marginTop: SPACING.xs,
+    marginBottom: SPACING.md,
   },
   submitButton: {
-    height: 50,
+    height: 52,
     backgroundColor: colors.primary,
     borderRadius: RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    ...SHADOWS.sm,
+    ...SHADOWS.md,
   },
   submitButtonDisabled: {
     opacity: 0.65,

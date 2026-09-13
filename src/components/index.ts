@@ -12,4 +12,5 @@ export * from './EditProfileModal';
 export * from './ChangePasswordModal';
 export * from './ExportDataModal';
 export * from './TechOrbitLoader';
+export * from './ThemeSegmentedControl';
 

@@ -62,6 +62,40 @@ export const AddProductScreen: React.FC = () => {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isUploadingInvoice, setIsUploadingInvoice] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [priceInputText, setPriceInputText] = useState<string>('');
+
+  const handlePriceChange = (text: string, onChangeForm: (val: number | undefined) => void) => {
+    // Negatif işareti (-) ve harfleri tamamen engelle
+    let clean = text.replace(/[^0-9.,]/g, '');
+
+    // Virgülü noktaya çevir
+    clean = clean.replace(',', '.');
+
+    // Birden fazla noktayı engelle
+    const parts = clean.split('.');
+    if (parts.length > 2) {
+      clean = parts[0] + '.' + parts.slice(1).join('');
+    }
+
+    // Maksimum 2 ondalık basamağa izin ver (kuruş)
+    if (parts.length === 2 && parts[1].length > 2) {
+      clean = parts[0] + '.' + parts[1].slice(0, 2);
+    }
+
+    setPriceInputText(clean);
+
+    if (!clean || clean === '.') {
+      onChangeForm(undefined);
+      return;
+    }
+
+    const parsed = parseFloat(clean);
+    if (!isNaN(parsed) && isFinite(parsed)) {
+      onChangeForm(parsed);
+    } else {
+      onChangeForm(undefined);
+    }
+  };
 
   // Varsayılan bugünün tarihi (gün/ay/yıl)
   const todayStr = formatDateTurkish(new Date());
@@ -187,7 +221,7 @@ export const AddProductScreen: React.FC = () => {
         setInvoiceName(null);
         setValue('invoice_path', null);
       } else if (uploadRes.publicUrl) {
-        setValue('invoice_path', uploadRes.publicUrl);
+        setValue('invoice_path', uploadRes.publicUrl, { shouldValidate: true });
       }
     } catch {
       Alert.alert('Hata', 'Fatura yüklenirken beklenmeyen bir hata oluştu.');
@@ -212,6 +246,7 @@ export const AddProductScreen: React.FC = () => {
           text: 'Tamam',
           onPress: () => {
             reset();
+            setPriceInputText('');
             setImageUri(null);
             setInvoiceName(null);
             setSelectedCategory(null);
@@ -223,6 +258,17 @@ export const AddProductScreen: React.FC = () => {
       Alert.alert('Hata', 'Ürün kaydedilemedi. Lütfen tekrar deneyin.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const onInvalid = (formErrors: any) => {
+    const errorKeys = Object.keys(formErrors);
+    if (errorKeys.length > 0) {
+      const firstError = formErrors[errorKeys[0]]?.message;
+      Alert.alert(
+        'Delil & Zorunlu Alanlar Eksik',
+        firstError || 'Lütfen seri numarası, fatura ve satın alma bilgilerini eksiksiz doldurun.'
+      );
     }
   };
 
@@ -396,12 +442,20 @@ export const AddProductScreen: React.FC = () => {
 
             {/* Seri Numarası */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Seri Numarası</Text>
+              <Text style={styles.label}>
+                Seri Numarası <Text style={styles.requiredStar}>*</Text>
+              </Text>
               <Controller
                 control={control}
                 name="serial_number"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <View style={[styles.inputBox, styles.serialInputBox]}>
+                  <View
+                    style={[
+                      styles.inputBox,
+                      styles.serialInputBox,
+                      errors.serial_number && styles.inputBoxError,
+                    ]}
+                  >
                     <TextInput
                       style={styles.textInput}
                       placeholder="Seri numarasını girin veya okutun"
@@ -422,6 +476,9 @@ export const AddProductScreen: React.FC = () => {
                   </View>
                 )}
               />
+              {errors.serial_number && (
+                <Text style={styles.errorText}>{errors.serial_number.message}</Text>
+              )}
             </View>
           </View>
 
@@ -432,12 +489,19 @@ export const AddProductScreen: React.FC = () => {
             <View style={styles.row}>
               {/* Satın Alma Tarihi */}
               <View style={[styles.inputGroup, styles.flex1]}>
-                <Text style={styles.label}>Satın Alma Tarihi</Text>
+                <Text style={styles.label}>
+                  Satın Alma Tarihi <Text style={styles.requiredStar}>*</Text>
+                </Text>
                 <Controller
                   control={control}
                   name="purchase_date"
                   render={({ field: { onChange, onBlur, value } }) => (
-                    <View style={styles.inputBox}>
+                    <View
+                      style={[
+                        styles.inputBox,
+                        errors.purchase_date && styles.inputBoxError,
+                      ]}
+                    >
                       <TextInput
                         style={styles.textInput}
                         placeholder="GG/AA/YYYY"
@@ -456,42 +520,69 @@ export const AddProductScreen: React.FC = () => {
                     </View>
                   )}
                 />
+                {errors.purchase_date && (
+                  <Text style={styles.errorText}>{errors.purchase_date.message}</Text>
+                )}
               </View>
 
               {/* Satın Alma Fiyatı */}
               <View style={[styles.inputGroup, styles.flex1]}>
-                <Text style={styles.label}>Satın Alma Fiyatı</Text>
+                <Text style={styles.label}>
+                  Satın Alma Fiyatı <Text style={styles.requiredStar}>*</Text>
+                </Text>
                 <Controller
                   control={control}
                   name="purchase_price"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <View style={[styles.inputBox, styles.priceInputBox]}>
+                  render={({ field: { onChange, onBlur } }) => (
+                    <View
+                      style={[
+                        styles.inputBox,
+                        styles.priceInputBox,
+                        errors.purchase_price && styles.inputBoxError,
+                      ]}
+                    >
                       <Text style={styles.currencySymbol}>₺</Text>
                       <TextInput
                         style={styles.textInput}
                         placeholder="0,00"
                         placeholderTextColor={colors.outline}
-                        keyboardType="numeric"
-                        value={value !== undefined ? String(value) : ''}
-                        onChangeText={(t) =>
-                          onChange(t ? parseFloat(t.replace(',', '.')) : undefined)
-                        }
-                        onBlur={onBlur}
+                        keyboardType="decimal-pad"
+                        value={priceInputText}
+                        onChangeText={(t) => handlePriceChange(t, onChange)}
+                        onBlur={() => {
+                          onBlur();
+                          if (priceInputText.endsWith('.')) {
+                            const trimmed = priceInputText.slice(0, -1);
+                            setPriceInputText(trimmed);
+                            const parsed = parseFloat(trimmed);
+                            onChange(!isNaN(parsed) && isFinite(parsed) ? parsed : undefined);
+                          }
+                        }}
                       />
                     </View>
                   )}
                 />
+                {errors.purchase_price && (
+                  <Text style={styles.errorText}>{errors.purchase_price.message}</Text>
+                )}
               </View>
             </View>
 
             {/* Satın Alınan Mağaza */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Satın Alınan Mağaza</Text>
+              <Text style={styles.label}>
+                Satın Alınan Mağaza <Text style={styles.requiredStar}>*</Text>
+              </Text>
               <Controller
                 control={control}
                 name="store_name"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <View style={styles.inputBox}>
+                  <View
+                    style={[
+                      styles.inputBox,
+                      errors.store_name && styles.inputBoxError,
+                    ]}
+                  >
                     <TextInput
                       style={styles.textInput}
                       placeholder="Örn: Vatan Bilgisayar"
@@ -503,6 +594,9 @@ export const AddProductScreen: React.FC = () => {
                   </View>
                 )}
               />
+              {errors.store_name && (
+                <Text style={styles.errorText}>{errors.store_name.message}</Text>
+              )}
             </View>
 
             {/* Garanti Süresi Seçimi */}
@@ -535,12 +629,19 @@ export const AddProductScreen: React.FC = () => {
 
             {/* Garanti Bitiş Tarihi */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Garanti Bitiş Tarihi</Text>
+              <Text style={styles.label}>
+                Garanti Bitiş Tarihi <Text style={styles.requiredStar}>*</Text>
+              </Text>
               <Controller
                 control={control}
                 name="warranty_end_date"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <View style={styles.inputBox}>
+                  <View
+                    style={[
+                      styles.inputBox,
+                      errors.warranty_end_date && styles.inputBoxError,
+                    ]}
+                  >
                     <TextInput
                       style={styles.textInput}
                       placeholder="GG/AA/YYYY"
@@ -552,6 +653,9 @@ export const AddProductScreen: React.FC = () => {
                   </View>
                 )}
               />
+              {errors.warranty_end_date && (
+                <Text style={styles.errorText}>{errors.warranty_end_date.message}</Text>
+              )}
             </View>
           </View>
 
@@ -585,7 +689,9 @@ export const AddProductScreen: React.FC = () => {
 
             {/* Fatura Fotoğrafı */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Fatura Belgesi / Fotoğrafı</Text>
+              <Text style={styles.label}>
+                Fatura Belgesi / Fotoğrafı <Text style={styles.requiredStar}>*</Text>
+              </Text>
               {isUploadingInvoice ? (
                 <View style={[styles.invoiceUploadedBox, { justifyContent: 'center' }]}>
                   <ActivityIndicator size="small" color={colors.primary} style={{ marginRight: 8 }} />
@@ -599,7 +705,7 @@ export const AddProductScreen: React.FC = () => {
                   <TouchableOpacity
                     onPress={() => {
                       setInvoiceName(null);
-                      setValue('invoice_path', null);
+                      setValue('invoice_path', null, { shouldValidate: true });
                     }}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
@@ -608,15 +714,26 @@ export const AddProductScreen: React.FC = () => {
                 </View>
               ) : (
                 <TouchableOpacity
-                  style={styles.uploadDashedBox}
+                  style={[
+                    styles.uploadDashedBox,
+                    errors.invoice_path && styles.uploadDashedBoxError,
+                  ]}
                   onPress={() => setInvoicePickerVisible(true)}
                   activeOpacity={0.7}
                 >
-                  <Upload size={24} color={colors.outline} />
-                  <Text style={styles.uploadDashedText}>
+                  <Upload size={24} color={errors.invoice_path ? colors.error : colors.outline} />
+                  <Text
+                    style={[
+                      styles.uploadDashedText,
+                      errors.invoice_path && { color: colors.error, fontWeight: '600' },
+                    ]}
+                  >
                     Fatura, fiş fotoğrafı veya PDF yükle
                   </Text>
                 </TouchableOpacity>
+              )}
+              {errors.invoice_path && (
+                <Text style={styles.errorText}>{errors.invoice_path.message}</Text>
               )}
             </View>
           </View>
@@ -628,7 +745,7 @@ export const AddProductScreen: React.FC = () => {
                 styles.submitButton,
                 isSubmitting && styles.submitButtonDisabled,
               ]}
-              onPress={handleSubmit(onSubmit)}
+              onPress={handleSubmit(onSubmit, onInvalid)}
               disabled={isSubmitting || isUploadingImage || isUploadingInvoice}
               activeOpacity={0.85}
             >

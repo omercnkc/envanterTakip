@@ -96,35 +96,7 @@ export const getStyles = (colors: ThemeColors) =>
       fontWeight: '600',
       color: colors.primary,
     },
-    segmentedContainer: {
-      flexDirection: 'row',
-      backgroundColor: colors.surfaceContainer,
-      borderRadius: RADIUS.md,
-      padding: 4,
-      gap: 6,
-    },
-    segmentButton: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 9,
-      borderRadius: RADIUS.sm,
-      gap: 6,
-    },
-    segmentButtonActive: {
-      backgroundColor: colors.primary,
-      ...SHADOWS.sm,
-    },
-    segmentText: {
-      fontSize: 13,
-      fontWeight: '600',
-      color: colors.onSurfaceVariant,
-    },
-    segmentTextActive: {
-      color: colors.onPrimary,
-      fontWeight: '700',
-    },
+
     systemThemeInfoBox: {
       backgroundColor: colors.surfaceContainerLow,
       paddingHorizontal: 12,

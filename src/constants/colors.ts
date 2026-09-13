@@ -151,7 +151,7 @@ export const LIGHT_COLORS: ThemeColors = {
     activeBg: '#ecfdf5',
     activeText: '#065f46',
     expiring: '#f59e0b',
-    expiringBg: '#fffbeb',
+    expiringBg: '#fef3c7',
     expiringText: '#92400e',
     expired: '#ef4444',
     expiredBg: '#fef2f2',

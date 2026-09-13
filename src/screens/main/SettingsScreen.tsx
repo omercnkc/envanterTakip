@@ -15,9 +15,6 @@ import {
   ChevronRight,
   Shield,
   Bell,
-  Moon,
-  Sun,
-  Smartphone,
   Palette,
   Globe,
   Download,
@@ -37,6 +34,7 @@ import {
   EditProfileModal,
   ChangePasswordModal,
   ExportDataModal,
+  ThemeSegmentedControl,
 } from '../../components';
 import { getStyles } from './SettingsScreen.styles';
 
@@ -283,76 +281,8 @@ export const SettingsScreen: React.FC = () => {
                 </Text>
               </View>
 
-              <View style={styles.segmentedContainer}>
-                {/* Açık Mod */}
-                <TouchableOpacity
-                  style={[
-                    styles.segmentButton,
-                    theme === 'light' && styles.segmentButtonActive,
-                  ]}
-                  onPress={() => setTheme('light')}
-                  activeOpacity={0.8}
-                >
-                  <Sun
-                    size={16}
-                    color={theme === 'light' ? colors.onPrimary : colors.onSurfaceVariant}
-                  />
-                  <Text
-                    style={[
-                      styles.segmentText,
-                      theme === 'light' && styles.segmentTextActive,
-                    ]}
-                  >
-                    Açık
-                  </Text>
-                </TouchableOpacity>
-
-                {/* Koyu Mod */}
-                <TouchableOpacity
-                  style={[
-                    styles.segmentButton,
-                    theme === 'dark' && styles.segmentButtonActive,
-                  ]}
-                  onPress={() => setTheme('dark')}
-                  activeOpacity={0.8}
-                >
-                  <Moon
-                    size={16}
-                    color={theme === 'dark' ? colors.onPrimary : colors.onSurfaceVariant}
-                  />
-                  <Text
-                    style={[
-                      styles.segmentText,
-                      theme === 'dark' && styles.segmentTextActive,
-                    ]}
-                  >
-                    Koyu
-                  </Text>
-                </TouchableOpacity>
-
-                {/* Sistem Modu */}
-                <TouchableOpacity
-                  style={[
-                    styles.segmentButton,
-                    theme === 'system' && styles.segmentButtonActive,
-                  ]}
-                  onPress={() => setTheme('system')}
-                  activeOpacity={0.8}
-                >
-                  <Smartphone
-                    size={16}
-                    color={theme === 'system' ? colors.onPrimary : colors.onSurfaceVariant}
-                  />
-                  <Text
-                    style={[
-                      styles.segmentText,
-                      theme === 'system' && styles.segmentTextActive,
-                    ]}
-                  >
-                    Sistem
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              {/* Animasyonlu Segment Tema Seçici (Sliding Pill) */}
+              <ThemeSegmentedControl />
 
               {/* Sistem Modu Bilgi Rozeti */}
               {theme === 'system' && (

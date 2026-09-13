@@ -218,6 +218,10 @@ export const getStyles = (colors: ThemeColors) => StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
   },
+  uploadDashedBoxError: {
+    borderColor: colors.error,
+    backgroundColor: colors.errorContainer + '20',
+  },
   uploadDashedText: {
     ...TYPOGRAPHY.bodySm,
     color: colors.onSurfaceVariant,
