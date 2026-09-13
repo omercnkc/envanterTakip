@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { Search, X, SlidersHorizontal } from 'lucide-react-native';
+import { Search, X, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react-native';
 
 import { Product } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
@@ -49,8 +49,9 @@ export const ProductsScreen: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [page, setPage] = useState(1);
+  const flatListRef = React.useRef<FlatList<any>>(null);
 
-  // Arama metni değiştiğinde filtre seçeneklerini güncelle
+  // Arama metni değiştiğinde 1. sayfaya sıfırla
   const handleSearchChange = (text: string) => {
     setSearchText(text);
     setPage(1);
@@ -67,19 +68,31 @@ export const ProductsScreen: React.FC = () => {
   };
 
   const handleRefresh = async () => {
-    setPage(1);
     await refreshProducts();
   };
 
-  const displayedProducts = useMemo(() => {
-    return products.slice(0, page * ITEMS_PER_PAGE);
-  }, [products, page]);
+  // Toplam sayfa sayısı (Her sayfada 5 ürün)
+  const totalPages = Math.max(1, Math.ceil(products.length / ITEMS_PER_PAGE));
 
-  const hasMore = displayedProducts.length < products.length;
+  // Filtreleme sonrası sayfa aşımı olursa son sayfaya çek
+  React.useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [totalPages, page]);
 
-  const handleLoadMore = () => {
-    if (hasMore) {
-      setPage((prev) => prev + 1);
+  const startIndex = (page - 1) * ITEMS_PER_PAGE;
+  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, products.length);
+
+  // Lazy evaluation: SADECE AKTİF SAYFADAKİ 5 ÜRÜNÜ RENDERLA
+  const activePageProducts = useMemo(() => {
+    return products.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [products, startIndex]);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
+      setPage(newPage);
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
     }
   };
 
@@ -176,16 +189,21 @@ export const ProductsScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Ürün Sayacı Başlığı */}
+        {/* Ürün Sayacı ve Sayfa Bilgisi */}
         <View style={styles.listHeaderRow}>
           <Text style={styles.productCountText}>
-            {products.length > ITEMS_PER_PAGE
-              ? `${displayedProducts.length} / ${products.length} ürün gösteriliyor`
-              : `${products.length} ürün`}
+            {products.length > 0
+              ? `${startIndex + 1}-${endIndex} / ${products.length} ürün`
+              : '0 ürün'}
           </Text>
+          {totalPages > 1 && (
+            <Text style={styles.pageIndicatorText}>
+              Sayfa {page} / {totalPages}
+            </Text>
+          )}
         </View>
 
-        {/* Ürün Listesi */}
+        {/* Ürün Listesi - Yalnızca aktif sayfa renderlanır */}
         {isLoading && !isRefreshing ? (
           <TechOrbitLoader
             message="Envanter Yükleniyor..."
@@ -194,15 +212,11 @@ export const ProductsScreen: React.FC = () => {
           />
         ) : (
           <FlatList
-            data={displayedProducts}
+            ref={flatListRef}
+            data={activePageProducts}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
-            initialNumToRender={5}
-            maxToRenderPerBatch={5}
-            windowSize={5}
-            onEndReached={handleLoadMore}
-            onEndReachedThreshold={0.2}
             refreshControl={
               <RefreshControl
                 refreshing={isRefreshing}
@@ -219,14 +233,105 @@ export const ProductsScreen: React.FC = () => {
               />
             )}
             ListFooterComponent={
-              hasMore ? (
-                <View style={styles.footerContainer}>
-                  <ActivityIndicator size="small" color={colors.primary} style={{ marginBottom: 4 }} />
-                  <Text style={styles.footerText}>Diğer ürünler yükleniyor...</Text>
-                </View>
-              ) : products.length > ITEMS_PER_PAGE ? (
-                <View style={styles.footerContainer}>
-                  <Text style={styles.footerText}>Tüm ürünler listelendi ({products.length})</Text>
+              totalPages > 1 ? (
+                <View style={styles.paginationWrapper}>
+                  <View style={styles.paginationContainer}>
+                    {/* Önceki Butonu */}
+                    <TouchableOpacity
+                      style={[
+                        styles.pageButton,
+                        page === 1 && styles.pageButtonDisabled,
+                      ]}
+                      onPress={() => handlePageChange(page - 1)}
+                      disabled={page === 1}
+                      activeOpacity={0.7}
+                    >
+                      <ChevronLeft
+                        size={16}
+                        color={page === 1 ? colors.outline : colors.onSurface}
+                      />
+                      <Text
+                        style={[
+                          styles.pageButtonText,
+                          page === 1 && styles.pageButtonTextDisabled,
+                        ]}
+                      >
+                        Önceki
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Sayfa Butonları */}
+                    <View style={styles.pagePillsContainer}>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                        // Çok sayıda sayfa varsa akıllı elips göster
+                        if (
+                          totalPages > 6 &&
+                          Math.abs(pageNum - page) > 2 &&
+                          pageNum !== 1 &&
+                          pageNum !== totalPages
+                        ) {
+                          if (pageNum === 2 || pageNum === totalPages - 1) {
+                            return (
+                              <Text key={pageNum} style={styles.ellipsisText}>
+                                •
+                              </Text>
+                            );
+                          }
+                          return null;
+                        }
+
+                        const isActive = pageNum === page;
+                        return (
+                          <TouchableOpacity
+                            key={pageNum}
+                            style={[
+                              styles.pagePill,
+                              isActive && styles.pagePillActive,
+                            ]}
+                            onPress={() => handlePageChange(pageNum)}
+                            activeOpacity={0.7}
+                          >
+                            <Text
+                              style={[
+                                styles.pagePillText,
+                                isActive && styles.pagePillTextActive,
+                              ]}
+                            >
+                              {pageNum}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+
+                    {/* Sonraki Butonu */}
+                    <TouchableOpacity
+                      style={[
+                        styles.pageButton,
+                        page === totalPages && styles.pageButtonDisabled,
+                      ]}
+                      onPress={() => handlePageChange(page + 1)}
+                      disabled={page === totalPages}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          styles.pageButtonText,
+                          page === totalPages && styles.pageButtonTextDisabled,
+                        ]}
+                      >
+                        Sonraki
+                      </Text>
+                      <ChevronRight
+                        size={16}
+                        color={page === totalPages ? colors.outline : colors.onSurface}
+                      />
+                    </TouchableOpacity>
+                  </View>
+
+                  <Text style={styles.pageSummaryText}>
+                    {products.length} üründen {startIndex + 1}-{endIndex} arası görüntüleniyor
+                  </Text>
                 </View>
               ) : null
             }

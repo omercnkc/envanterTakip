@@ -63,10 +63,19 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(
 
     const categoryName = product.category?.name || 'Genel';
     const brandName = product.brand ? ` • ${product.brand}` : '';
-    const statusInfo = calculateWarrantyStatus(product.warranty_end_date, colors);
-    const percentage = calculateWarrantyPercentage(
-      product.purchase_date,
-      product.warranty_end_date
+
+    // Lazy evaluation: Yüzde hesaplamasını sadece gösterge aktifse çalıştır
+    const statusInfo = useMemo(
+      () => calculateWarrantyStatus(product.warranty_end_date, colors),
+      [product.warranty_end_date, colors]
+    );
+
+    const percentage = useMemo(
+      () =>
+        showPercentageGauge
+          ? calculateWarrantyPercentage(product.purchase_date, product.warranty_end_date)
+          : 0,
+      [showPercentageGauge, product.purchase_date, product.warranty_end_date]
     );
 
     return (
