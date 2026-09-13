@@ -213,9 +213,11 @@ export const ProductsScreen: React.FC = () => {
         ) : (
           <FlatList
             ref={flatListRef}
+            style={styles.flatList}
             data={activePageProducts}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContent}
+            ListFooterComponentStyle={totalPages > 1 ? styles.listFooter : undefined}
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
@@ -336,32 +338,34 @@ export const ProductsScreen: React.FC = () => {
               ) : null
             }
             ListEmptyComponent={
-              <EmptyState
-                title={
-                  searchText || hasActiveFilters
-                    ? 'Eşleşen Ürün Bulunamadı'
-                    : 'Henüz ürün eklenmemiş'
-                }
-                description={
-                  searchText || hasActiveFilters
-                    ? 'Arama kriterlerinizi veya filtrelerinizi değiştirerek tekrar deneyebilirsiniz.'
-                    : 'Envanterinizi oluşturmak ve garantilerinizi takip etmek için ilk ürününüzü ekleyin.'
-                }
-                actionText={
-                  searchText || hasActiveFilters
-                    ? 'Filtreleri Temizle'
-                    : 'İlk Ürünü Ekle'
-                }
-                onActionPress={() => {
-                  if (searchText || hasActiveFilters) {
-                    setSearchText('');
-                    setPage(1);
-                    resetFilters();
-                  } else {
-                    navigation.navigate('AddTab');
+              <View style={styles.listEmpty}>
+                <EmptyState
+                  title={
+                    searchText || hasActiveFilters
+                      ? 'Eşleşen Ürün Bulunamadı'
+                      : 'Henüz ürün eklenmemiş'
                   }
-                }}
-              />
+                  description={
+                    searchText || hasActiveFilters
+                      ? 'Arama kriterlerinizi veya filtrelerinizi değiştirerek tekrar deneyebilirsiniz.'
+                      : 'Envanterinizi oluşturmak ve garantilerinizi takip etmek için ilk ürününüzü ekleyin.'
+                  }
+                  actionText={
+                    searchText || hasActiveFilters
+                      ? 'Filtreleri Temizle'
+                      : 'İlk Ürünü Ekle'
+                  }
+                  onActionPress={() => {
+                    if (searchText || hasActiveFilters) {
+                      setSearchText('');
+                      setPage(1);
+                      resetFilters();
+                    } else {
+                      navigation.navigate('AddTab');
+                    }
+                  }}
+                />
+              </View>
             }
           />
         )}

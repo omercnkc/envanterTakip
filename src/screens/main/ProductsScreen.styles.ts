@@ -114,13 +114,25 @@ export const getStyles = (colors: ThemeColors) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  flatList: {
+    flex: 1,
+  },
   listContent: {
-    paddingBottom: 140,
+    flexGrow: 1,
+    paddingBottom: 95,
     gap: SPACING.sm + 2,
   },
+  listFooter: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  listEmpty: {
+    flex: 1,
+    justifyContent: 'center',
+  },
   paginationWrapper: {
-    marginTop: SPACING.md,
-    paddingTop: SPACING.sm,
+    marginTop: 'auto',
+    paddingTop: SPACING.md,
     alignItems: 'center',
   },
   paginationContainer: {

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,12 +10,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Bell,
   BellRing,
   AlertCircle,
   CheckCircle2,
   Sparkles,
+  Trash2,
+  CheckCheck,
 } from 'lucide-react-native';
 
 import { useTheme } from '../../context/ThemeContext';
@@ -37,14 +40,39 @@ interface NotificationItem {
   isRead: boolean;
 }
 
+const READ_NOTIFICATIONS_KEY = '@safe_envanter_read_notification_ids';
+const DELETED_NOTIFICATIONS_KEY = '@safe_envanter_deleted_notification_ids';
+
 export const NotificationsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { products, isRefreshing, refreshProducts } = useInventory();
   const [activeTab, setActiveTab] = useState<NotificationFilterTab>('all');
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const [isSendingTest, setIsSendingTest] = useState(false);
   const { colors } = useTheme();
   const styles = useMemo(() => getStyles(colors), [colors]);
+
+  // Kalıcı okundu ve silindi kimliklerini yükle
+  useEffect(() => {
+    const loadStoredState = async () => {
+      try {
+        const [storedRead, storedDeleted] = await Promise.all([
+          AsyncStorage.getItem(READ_NOTIFICATIONS_KEY),
+          AsyncStorage.getItem(DELETED_NOTIFICATIONS_KEY),
+        ]);
+        if (storedRead) {
+          setReadIds(new Set(JSON.parse(storedRead)));
+        }
+        if (storedDeleted) {
+          setDeletedIds(new Set(JSON.parse(storedDeleted)));
+        }
+      } catch (err) {
+        console.warn('Bildirim geçmişi yüklenirken hata:', err);
+      }
+    };
+    loadStoredState();
+  }, []);
 
   const handleSendTestNotification = async () => {
     if (isSendingTest) return;
@@ -66,48 +94,74 @@ export const NotificationsScreen: React.FC = () => {
     }
   };
 
-  // Ürünlerin garanti durumlarına göre dinamik bildirimler oluşturma
+  // YALNIZCA BELİRTİLEN EŞİK TARİHLERİ GELİNCE (30 gün, 7 gün, 1 gün, 0 gün ve süresi dolanlar) BİLDİRİM OLUŞTURULUR
+  // Devam eden normal garantili ürünler bildirim listesini meşgul etmez.
   const notifications: NotificationItem[] = useMemo(() => {
     const list: NotificationItem[] = [];
 
     products.forEach((p) => {
       const { status, daysRemaining } = calculateWarrantyStatus(p.warranty_end_date);
 
+      // 1. Süresi Dolmuş Ürünler
       if (status === 'expired') {
-        list.push({
-          id: `expired-${p.id}`,
-          productId: p.id,
-          productName: p.name,
-          message: 'Garanti süresi sona erdi.',
-          timestamp: p.warranty_end_date ? formatDateTurkish(p.warranty_end_date) : 'Geçti',
-          type: 'error',
-          isRead: readIds.has(`expired-${p.id}`),
-        });
-      } else if (status === 'expiring_soon') {
-        list.push({
-          id: `expiring-${p.id}`,
-          productId: p.id,
-          productName: p.name,
-          message: `Garantinin bitmesine ${daysRemaining} gün kaldı.`,
-          timestamp: p.warranty_end_date ? formatDateTurkish(p.warranty_end_date) : 'Yakında',
-          type: 'warning',
-          isRead: readIds.has(`expiring-${p.id}`),
-        });
-      } else {
-        list.push({
-          id: `active-${p.id}`,
-          productId: p.id,
-          productName: p.name,
-          message: 'Garanti koruması aktif olarak devam ediyor.',
-          timestamp: p.warranty_end_date ? formatDateTurkish(p.warranty_end_date) : 'Aktif',
-          type: 'info',
-          isRead: readIds.has(`active-${p.id}`),
-        });
+        const id = `expired-${p.id}`;
+        if (!deletedIds.has(id)) {
+          list.push({
+            id,
+            productId: p.id,
+            productName: p.name,
+            message: 'Garanti süresi sona erdi.',
+            timestamp: p.warranty_end_date ? formatDateTurkish(p.warranty_end_date) : 'Süresi Doldu',
+            type: 'error',
+            isRead: readIds.has(id),
+          });
+        }
       }
+      // 2. SADECE eşik tarihine girmiş ürünler (<= 30 gün kalanlar)
+      else if (status === 'expiring_soon' && daysRemaining !== null && daysRemaining <= 30) {
+        let msg = '';
+        let type: 'warning' | 'error' = 'warning';
+
+        if (daysRemaining === 0) {
+          msg = 'Garanti süresi bugün sona eriyor!';
+          type = 'error';
+        } else if (daysRemaining === 1) {
+          msg = 'Garanti süresi yarın sona eriyor!';
+          type = 'error';
+        } else if (daysRemaining <= 7) {
+          msg = `Garanti süresinin bitmesine son ${daysRemaining} gün kaldı!`;
+          type = 'warning';
+        } else {
+          msg = `Garantinin bitmesine ${daysRemaining} gün kaldı.`;
+          type = 'warning';
+        }
+
+        const id = `expiring-${p.id}`;
+        if (!deletedIds.has(id)) {
+          list.push({
+            id,
+            productId: p.id,
+            productName: p.name,
+            message: msg,
+            timestamp: p.warranty_end_date ? formatDateTurkish(p.warranty_end_date) : 'Yakında',
+            type,
+            isRead: readIds.has(id),
+          });
+        }
+      }
+      // Devam eden normal ürünler (status === 'active' ve > 30 gün) için bildirim eklenmez!
     });
 
     return list;
-  }, [products, readIds]);
+  }, [products, readIds, deletedIds]);
+
+  // Sayı Hesaplamaları (Tümü, Okunmayan, Okunan)
+  const counts = useMemo(() => {
+    const total = notifications.length;
+    const unread = notifications.filter((n) => !n.isRead).length;
+    const read = notifications.filter((n) => n.isRead).length;
+    return { all: total, unread, read };
+  }, [notifications]);
 
   const filteredNotifications = useMemo(() => {
     if (activeTab === 'unread') {
@@ -119,9 +173,67 @@ export const NotificationsScreen: React.FC = () => {
     return notifications;
   }, [notifications, activeTab]);
 
-  const handleNotificationPress = (item: NotificationItem) => {
-    setReadIds((prev) => new Set(prev).add(item.id));
+  // Tekil Bildirimi Okundu Yap ve Detaya Git
+  const handleNotificationPress = async (item: NotificationItem) => {
+    if (!item.isRead) {
+      const updated = new Set(readIds).add(item.id);
+      setReadIds(updated);
+      try {
+        await AsyncStorage.setItem(READ_NOTIFICATIONS_KEY, JSON.stringify([...updated]));
+      } catch (err) {
+        console.warn('Okundu durumu kaydedilemedi:', err);
+      }
+    }
     navigation.navigate('ProductDetail', { productId: item.productId });
+  };
+
+  // Tekil Bildirimi Sil
+  const handleDeleteNotification = async (id: string) => {
+    const updated = new Set(deletedIds).add(id);
+    setDeletedIds(updated);
+    try {
+      await AsyncStorage.setItem(DELETED_NOTIFICATIONS_KEY, JSON.stringify([...updated]));
+    } catch (err) {
+      console.warn('Silme kaydedilemedi:', err);
+    }
+  };
+
+  // Tüm Bildirimleri Okundu İşaretle
+  const handleMarkAllRead = async () => {
+    const allIds = notifications.map((n) => n.id);
+    const updated = new Set([...readIds, ...allIds]);
+    setReadIds(updated);
+    try {
+      await AsyncStorage.setItem(READ_NOTIFICATIONS_KEY, JSON.stringify([...updated]));
+    } catch (err) {
+      console.warn('Okundu durumu kaydedilemedi:', err);
+    }
+  };
+
+  // Tüm Bildirimleri Sil (Onay İstemli)
+  const handleClearAll = () => {
+    if (notifications.length === 0) return;
+    Alert.alert(
+      'Bildirimleri Sil',
+      'Mevcut tüm bildirimleri silmek istediğinizden emin misiniz?',
+      [
+        { text: 'Vazgeç', style: 'cancel' },
+        {
+          text: 'Tümünü Sil',
+          style: 'destructive',
+          onPress: async () => {
+            const allIds = notifications.map((n) => n.id);
+            const updated = new Set([...deletedIds, ...allIds]);
+            setDeletedIds(updated);
+            try {
+              await AsyncStorage.setItem(DELETED_NOTIFICATIONS_KEY, JSON.stringify([...updated]));
+            } catch (err) {
+              console.warn('Silme kaydedilemedi:', err);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const getIcon = (type: NotificationItem['type']) => {
@@ -170,12 +282,12 @@ export const NotificationsScreen: React.FC = () => {
               <Sparkles size={14} color={colors.primary} />
             )}
             <Text style={styles.testButtonText}>
-              {isSendingTest ? 'Gönderiliyor...' : 'Test Bildirimi'}
+              {isSendingTest ? '...' : 'Test Bildirimi'}
             </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Segmented Capsule Tabs */}
+        {/* Tümü, Okunmayan ve Okunan Sayılı Sekmeleri */}
         <View style={styles.tabContainer}>
           <TouchableOpacity
             style={[styles.tabButton, activeTab === 'all' && styles.tabButtonActive]}
@@ -188,15 +300,12 @@ export const NotificationsScreen: React.FC = () => {
                 activeTab === 'all' && styles.tabTextActive,
               ]}
             >
-              Tümü
+              Tümü ({counts.all})
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeTab === 'unread' && styles.tabButtonActive,
-            ]}
+            style={[styles.tabButton, activeTab === 'unread' && styles.tabButtonActive]}
             onPress={() => setActiveTab('unread')}
             activeOpacity={0.7}
           >
@@ -206,15 +315,12 @@ export const NotificationsScreen: React.FC = () => {
                 activeTab === 'unread' && styles.tabTextActive,
               ]}
             >
-              Okunmadı
+              Okunmayan ({counts.unread})
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeTab === 'read' && styles.tabButtonActive,
-            ]}
+            style={[styles.tabButton, activeTab === 'read' && styles.tabButtonActive]}
             onPress={() => setActiveTab('read')}
             activeOpacity={0.7}
           >
@@ -224,10 +330,45 @@ export const NotificationsScreen: React.FC = () => {
                 activeTab === 'read' && styles.tabTextActive,
               ]}
             >
-              Okundu
+              Okunan ({counts.read})
             </Text>
           </TouchableOpacity>
         </View>
+
+        {/* Sekmelerin Altındaki Temiz Araç Çubuğu (Tümünü Oku & Tümünü Sil) */}
+        {notifications.length > 0 && (
+          <View style={styles.toolbarRow}>
+            <Text style={styles.toolbarSummary}>
+              {activeTab === 'unread'
+                ? `${counts.unread} Okunmamış`
+                : activeTab === 'read'
+                ? `${counts.read} Okunmuş`
+                : `${counts.all} Bildirim`}
+            </Text>
+            <View style={styles.toolbarActions}>
+              {counts.unread > 0 && (
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={handleMarkAllRead}
+                  activeOpacity={0.7}
+                >
+                  <CheckCheck size={13} color={colors.primary} />
+                  <Text style={styles.actionButtonText}>Tümünü Oku</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                style={[styles.actionButton, styles.actionButtonDanger]}
+                onPress={handleClearAll}
+                activeOpacity={0.7}
+              >
+                <Trash2 size={13} color={colors.error} />
+                <Text style={[styles.actionButtonText, styles.actionButtonDangerText]}>
+                  Tümünü Sil
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </View>
 
       <FlatList
@@ -254,14 +395,24 @@ export const NotificationsScreen: React.FC = () => {
               <Text style={styles.message}>{item.message}</Text>
               <Text style={styles.timestamp}>{item.timestamp}</Text>
             </View>
-            {!item.isRead && <View style={styles.unreadDot} />}
+            <View style={styles.cardRight}>
+              {!item.isRead && <View style={styles.unreadDot} />}
+              <TouchableOpacity
+                style={styles.deleteIconButton}
+                onPress={() => handleDeleteNotification(item.id)}
+                activeOpacity={0.7}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Trash2 size={15} color={colors.outline} />
+              </TouchableOpacity>
+            </View>
           </TouchableOpacity>
         )}
         ListEmptyComponent={
           <EmptyState
             icon={<Bell size={40} color={colors.outline} />}
             title="Bildirim Bulunmuyor"
-            description="Garanti bitişleri ve sistem güncellemeleri burada listelenecektir."
+            description="Yalnızca belirttiğiniz garanti süresi yaklaşan (son 30, 7, 1 gün) veya süresi dolan ürünler burada listelenir."
             actionText="Ana Sayfaya Dön"
             onActionPress={() => navigation.navigate('HomeTab')}
           />
