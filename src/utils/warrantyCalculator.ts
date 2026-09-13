@@ -3,24 +3,71 @@
  * Garanti bitiş tarihine göre gün sayısını ve durum rozetini hesaplar.
  */
 
-import { differenceInDays, format, parseISO, isValid, addMonths } from 'date-fns';
+import { differenceInDays, format, parseISO, isValid, addMonths, parse } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { WarrantyStatusType, WarrantyCalculationResult } from '../types';
 import { COLORS } from '../constants';
+import { ThemeColors } from '../constants/colors';
 
 /**
- * Verilen ISO tarih dizgisine (YYYY-MM-DD) göre garanti durumunu hesaplar.
+ * ISO, GG/AA/YYYY, GG.AA.YYYY veya GG-AA-YYYY formatındaki tarihleri ve Date nesnelerini ayrıştırır.
+ */
+export const parseAnyDate = (dateStr: string | Date | null | undefined): Date | null => {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) {
+    return isValid(dateStr) ? dateStr : null;
+  }
+  if (typeof dateStr !== 'string') return null;
+  const trimmed = dateStr.trim();
+  if (!trimmed) return null;
+
+  // 1. Standart ISO formatı (YYYY-MM-DD veya YYYY-MM-DDTHH:mm:ss...)
+  if (/^\d{4}-\d{1,2}-\d{1,2}/.test(trimmed)) {
+    const isoDate = parseISO(trimmed);
+    if (isValid(isoDate)) return isoDate;
+  }
+
+  // 2. GG/AA/YYYY veya G/A/YYYY formatı
+  let date = parse(trimmed, 'dd/MM/yyyy', new Date());
+  if (isValid(date)) return date;
+  date = parse(trimmed, 'd/M/yyyy', new Date());
+  if (isValid(date)) return date;
+
+  // 3. GG.AA.YYYY veya G.A.YYYY formatı
+  date = parse(trimmed, 'dd.MM.yyyy', new Date());
+  if (isValid(date)) return date;
+  date = parse(trimmed, 'd.M.yyyy', new Date());
+  if (isValid(date)) return date;
+
+  // 4. GG-AA-YYYY veya G-A-YYYY formatı
+  date = parse(trimmed, 'dd-MM-yyyy', new Date());
+  if (isValid(date)) return date;
+  date = parse(trimmed, 'd-M-yyyy', new Date());
+  if (isValid(date)) return date;
+
+  // 5. Genel ISO fallback
+  date = parseISO(trimmed);
+  if (isValid(date)) return date;
+
+  return null;
+};
+
+/**
+ * Verilen tarih dizgisine göre garanti durumunu hesaplar.
  */
 export const calculateWarrantyStatus = (
-  warrantyEndDateStr: string | null | undefined
+  warrantyEndDateStr: string | null | undefined,
+  themeColors?: ThemeColors
 ): WarrantyCalculationResult => {
+  const currentColors = themeColors || COLORS;
+
   if (!warrantyEndDateStr) {
     return {
       status: 'expired',
       daysRemaining: 0,
       label: 'Tarih Belirtilmedi',
-      color: COLORS.secondary,
-      bgColor: COLORS.secondaryContainer,
+      color: currentColors.secondary,
+      bgColor: currentColors.secondaryContainer,
     };
   }
 
@@ -29,14 +76,14 @@ export const calculateWarrantyStatus = (
     // Saat/dakika farkını sıfırlamak için gün başlangıcına eşitle
     today.setHours(0, 0, 0, 0);
 
-    const endDate = parseISO(warrantyEndDateStr);
-    if (!isValid(endDate)) {
+    const endDate = parseAnyDate(warrantyEndDateStr);
+    if (!endDate) {
       return {
         status: 'expired',
         daysRemaining: 0,
         label: 'Geçersiz Tarih',
-        color: COLORS.secondary,
-        bgColor: COLORS.secondaryContainer,
+        color: currentColors.secondary,
+        bgColor: currentColors.secondaryContainer,
       };
     }
     endDate.setHours(0, 0, 0, 0);
@@ -48,24 +95,24 @@ export const calculateWarrantyStatus = (
         status: 'active',
         daysRemaining,
         label: 'Devam Ediyor',
-        color: COLORS.tertiary,
-        bgColor: COLORS.tertiaryContainer + '20',
+        color: currentColors.warranty?.active || currentColors.tertiary,
+        bgColor: currentColors.warranty?.activeBg || currentColors.tertiaryContainer + '20',
       };
     } else if (daysRemaining >= 0 && daysRemaining <= 30) {
       return {
         status: 'expiring_soon',
         daysRemaining,
         label: 'Yakında Bitecek',
-        color: COLORS.warning,
-        bgColor: COLORS.warningContainer,
+        color: currentColors.warranty?.expiring || currentColors.warning,
+        bgColor: currentColors.warranty?.expiringBg || currentColors.warningContainer,
       };
     } else {
       return {
         status: 'expired',
         daysRemaining: Math.abs(daysRemaining),
         label: 'Süresi Doldu',
-        color: COLORS.error,
-        bgColor: COLORS.errorContainer + '60',
+        color: currentColors.warranty?.expired || currentColors.error,
+        bgColor: currentColors.warranty?.expiredBg || currentColors.errorContainer + '60',
       };
     }
   } catch {
@@ -73,8 +120,8 @@ export const calculateWarrantyStatus = (
       status: 'expired',
       daysRemaining: 0,
       label: 'Süresi Doldu',
-      color: COLORS.error,
-      bgColor: COLORS.errorContainer + '60',
+      color: currentColors.warranty?.expired || currentColors.error,
+      bgColor: currentColors.warranty?.expiredBg || currentColors.errorContainer + '60',
     };
   }
 };
@@ -91,13 +138,12 @@ export const calculateWarrantyPercentage = (
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const endDate = parseISO(warrantyEndDateStr);
-    if (!isValid(endDate)) return 0;
+    const endDate = parseAnyDate(warrantyEndDateStr);
+    if (!endDate) return 0;
     endDate.setHours(0, 0, 0, 0);
 
-    const startDate = purchaseDateStr && isValid(parseISO(purchaseDateStr))
-      ? parseISO(purchaseDateStr)
-      : addMonths(endDate, -24);
+    const parsedStart = parseAnyDate(purchaseDateStr);
+    const startDate = parsedStart || addMonths(endDate, -24);
     startDate.setHours(0, 0, 0, 0);
 
     const totalDuration = differenceInDays(endDate, startDate);
@@ -114,34 +160,46 @@ export const calculateWarrantyPercentage = (
 };
 
 /**
- * ISO tarih dizgisini kullanıcı dostu Türkçe formata dönüştürür (örn: 12.04.2028).
+ * Tarih dizgisini veya Date nesnesini kullanıcı dostu Türkçe gün/ay/yıl formatına dönüştürür (örn: 10/07/2027).
  */
-export const formatDateTurkish = (dateStr: string | null | undefined): string => {
+export const formatDateTurkish = (dateStr: string | Date | null | undefined): string => {
   if (!dateStr) return '-';
   try {
-    const date = parseISO(dateStr);
-    if (!isValid(date)) return dateStr;
-    return format(date, 'dd.MM.yyyy', { locale: tr });
+    const date = parseAnyDate(dateStr);
+    if (!date) return typeof dateStr === 'string' ? dateStr : '-';
+    return format(date, 'dd/MM/yyyy', { locale: tr });
   } catch {
-    return dateStr;
+    return typeof dateStr === 'string' ? dateStr : '-';
   }
 };
 
 /**
  * Satın alma tarihi ve garanti süresinden (ay olarak) garanti bitiş tarihini otomatik hesaplar.
+ * Kullanıcıya gün/ay/yıl (dd/MM/yyyy) formatında döner.
  */
 export const calculateWarrantyEndDate = (
   purchaseDateStr: string,
   durationMonths: number
 ): string => {
   try {
-    const purchaseDate = parseISO(purchaseDateStr);
-    if (!isValid(purchaseDate)) return '';
+    const purchaseDate = parseAnyDate(purchaseDateStr);
+    if (!purchaseDate) return '';
     const calculatedDate = addMonths(purchaseDate, durationMonths);
-    return format(calculatedDate, 'yyyy-MM-dd');
+    return format(calculatedDate, 'dd/MM/yyyy');
   } catch {
     return '';
   }
+};
+
+
+/**
+ * Herhangi bir geçerli tarih dizgisini Supabase için standart ISO (YYYY-MM-DD) formatına dönüştürür.
+ */
+export const normalizeToISODate = (dateStr: string | null | undefined): string | null => {
+  if (!dateStr) return null;
+  const date = parseAnyDate(dateStr);
+  if (!date) return null;
+  return format(date, 'yyyy-MM-dd');
 };
 
 /**
@@ -151,3 +209,4 @@ export const formatCurrency = (amount: number | null | undefined): string => {
   if (amount === undefined || amount === null) return '₺0';
   return `₺${amount.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}`;
 };
+

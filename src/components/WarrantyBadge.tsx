@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 import { calculateWarrantyStatus } from '../utils/warrantyCalculator';
 import { styles } from './WarrantyBadge.styles';
 
@@ -12,7 +13,8 @@ export const WarrantyBadge: React.FC<WarrantyBadgeProps> = ({
   warrantyEndDate,
   showDot = true,
 }) => {
-  const { label, color, bgColor } = calculateWarrantyStatus(warrantyEndDate);
+  const { colors } = useTheme();
+  const { label, color, bgColor } = calculateWarrantyStatus(warrantyEndDate, colors);
 
   return (
     <View style={[styles.badge, { backgroundColor: bgColor }]}>
@@ -21,3 +23,4 @@ export const WarrantyBadge: React.FC<WarrantyBadgeProps> = ({
     </View>
   );
 };
+

@@ -21,7 +21,7 @@ import { ProductFormData, productFormSchema, Category } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useInventory } from '../../context/InventoryContext';
-import { calculateWarrantyEndDate } from '../../utils/warrantyCalculator';
+import { calculateWarrantyEndDate, formatDateTurkish } from '../../utils/warrantyCalculator';
 import { mediaHelper } from '../../utils/mediaHelper';
 import { storageService } from '../../api/storageService';
 import { CategoryPickerModal } from '../../components/CategoryPickerModal';
@@ -78,10 +78,12 @@ export const EditProductScreen: React.FC = () => {
           model: initialProduct.model || '',
           category_id: initialProduct.category_id,
           serial_number: initialProduct.serial_number || '',
-          purchase_date: initialProduct.purchase_date || '',
+          purchase_date: initialProduct.purchase_date
+            ? formatDateTurkish(initialProduct.purchase_date)
+            : '',
           purchase_price: initialProduct.purchase_price ?? undefined,
           warranty_duration_months: initialProduct.warranty_duration_months ?? 24,
-          warranty_end_date: initialProduct.warranty_end_date,
+          warranty_end_date: formatDateTurkish(initialProduct.warranty_end_date),
           store_name: initialProduct.store_name || '',
           description: initialProduct.description || '',
           image_path: initialProduct.image_path || null,
@@ -115,10 +117,12 @@ export const EditProductScreen: React.FC = () => {
             model: prod.model || '',
             category_id: prod.category_id,
             serial_number: prod.serial_number || '',
-            purchase_date: prod.purchase_date || '',
+            purchase_date: prod.purchase_date
+              ? formatDateTurkish(prod.purchase_date)
+              : '',
             purchase_price: prod.purchase_price ?? undefined,
             warranty_duration_months: prod.warranty_duration_months ?? 24,
-            warranty_end_date: prod.warranty_end_date,
+            warranty_end_date: formatDateTurkish(prod.warranty_end_date),
             store_name: prod.store_name || '',
             description: prod.description || '',
             image_path: prod.image_path || null,
@@ -494,7 +498,7 @@ export const EditProductScreen: React.FC = () => {
                     <View style={styles.inputBox}>
                       <TextInput
                         style={styles.textInput}
-                        placeholder="YYYY-AA-GG"
+                        placeholder="GG/AA/YYYY"
                         placeholderTextColor={colors.outline}
                         value={value || ''}
                         onChangeText={(text) => {
@@ -597,7 +601,7 @@ export const EditProductScreen: React.FC = () => {
                   <View style={styles.inputBox}>
                     <TextInput
                       style={styles.textInput}
-                      placeholder="YYYY-AA-GG"
+                      placeholder="GG/AA/YYYY"
                       placeholderTextColor={colors.outline}
                       value={value || ''}
                       onChangeText={onChange}

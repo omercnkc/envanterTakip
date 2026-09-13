@@ -6,6 +6,7 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { Product } from '../types';
+import { parseAnyDate } from './warrantyCalculator';
 
 // Bildirimlerin uygulama ön plandayken de sesli ve banner olarak görünmesini sağla
 Notifications.setNotificationHandler({
@@ -118,15 +119,21 @@ export async function scheduleWarrantyNotifications(product: Product): Promise<v
   // Önce bu ürün için önceden planlanmış bildirimleri iptal et (çakışmayı önle)
   await cancelWarrantyNotifications(product.id);
 
-  // Bitiş tarihini parse et (YYYY-MM-DD)
-  const parts = product.warranty_end_date.split('-').map(Number);
-  if (parts.length < 3 || isNaN(parts[0]) || isNaN(parts[1]) || isNaN(parts[2])) {
+  // Bitiş tarihini parse et (GG/AA/YYYY veya ISO)
+  const parsedDate = parseAnyDate(product.warranty_end_date);
+  if (!parsedDate) {
     return;
   }
 
-  const [year, month, day] = parts;
   // Bitiş günü saat 10:00:00 olarak referans al
-  const expiryDate = new Date(year, month - 1, day, 10, 0, 0);
+  const expiryDate = new Date(
+    parsedDate.getFullYear(),
+    parsedDate.getMonth(),
+    parsedDate.getDate(),
+    10,
+    0,
+    0
+  );
 
   const now = Date.now();
 

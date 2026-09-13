@@ -20,7 +20,17 @@ export const productFormSchema = z.object({
   model: z.string().trim().max(50, 'Model çok uzun').optional().nullable(),
   category_id: z.number().min(1, 'Lütfen bir kategori seçin'),
   serial_number: z.string().trim().max(100, 'Seri numarası çok uzun').optional().nullable(),
-  purchase_date: z.string().optional().nullable(),
+  purchase_date: z
+    .string()
+    .optional()
+    .nullable()
+    .refine(
+      (val) =>
+        !val ||
+        val.trim() === '' ||
+        /^(\d{4}-\d{1,2}-\d{1,2}|\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{4})$/.test(val.trim()),
+      'Satın alma tarihi GG/AA/YYYY formatında olmalıdır'
+    ),
   purchase_price: z
     .number()
     .nonnegative('Fiyat negatif olamaz')
@@ -30,7 +40,11 @@ export const productFormSchema = z.object({
   warranty_end_date: z
     .string()
     .min(1, 'Garanti bitiş tarihi zorunludur')
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Tarih YYYY-AA-GG formatında olmalıdır'),
+    .regex(
+      /^(\d{4}-\d{1,2}-\d{1,2}|\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{4})$/,
+      'Tarih GG/AA/YYYY formatında olmalıdır'
+    ),
+
   store_name: z.string().trim().max(100, 'Mağaza adı çok uzun').optional().nullable(),
   description: z.string().trim().max(500, 'Açıklama çok uzun').optional().nullable(),
   image_path: z.string().optional().nullable(),

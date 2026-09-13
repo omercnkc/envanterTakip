@@ -151,26 +151,66 @@ export const getStyles = (colors: ThemeColors) => StyleSheet.create({
     color: colors.primary,
     fontWeight: '600',
   },
-  bentoChartWrapper: {
-    position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
-  },
-  bentoShieldBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.surfaceContainerLowest,
+  bentoRightWidget: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: RADIUS.lg,
+    backgroundColor: colors.surfaceContainerLow,
     borderWidth: 1,
-    borderColor: colors.outlineVariant + '40',
-    alignItems: 'center',
+    borderColor: colors.outlineVariant + '35',
     justifyContent: 'center',
+    maxWidth: 165,
+    minWidth: 140,
+    zIndex: 10,
     ...SHADOWS.sm,
   },
+  bentoRightWidgetWarning: {
+    backgroundColor: colors.warningContainer + '35',
+    borderColor: colors.warning + '70',
+  },
+  bentoRightWidgetSafe: {
+    backgroundColor: colors.tertiaryContainer + '20',
+    borderColor: colors.tertiary + '50',
+  },
+  bentoStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginBottom: 4,
+  },
+  bentoStatusIconBox: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bentoStatusBadgeText: {
+    ...TYPOGRAPHY.labelSm,
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  bentoStatusMainText: {
+    ...TYPOGRAPHY.headlineMd,
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: '700',
+    color: colors.onBackground,
+  },
+  bentoStatusProductRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 4,
+    gap: 4,
+  },
+  bentoStatusProductName: {
+    ...TYPOGRAPHY.bodySm,
+    fontSize: 11,
+    color: colors.onSecondaryContainer,
+    flex: 1,
+  },
+
 
   // 4-Column Stats Grid
   statsGrid: {

@@ -86,10 +86,10 @@ export const exportService = {
         brand: p.brand || null,
         model: p.model || null,
         serialNumber: p.serial_number || null,
-        purchaseDate: p.purchase_date || null,
+        purchaseDate: p.purchase_date ? formatDateTurkish(p.purchase_date) : null,
         purchasePrice: p.purchase_price || 0,
         warrantyDurationMonths: p.warranty_duration_months || 24,
-        warrantyEndDate: p.warranty_end_date,
+        warrantyEndDate: formatDateTurkish(p.warranty_end_date),
         warrantyStatus: {
           status: warranty.status,
           label: warranty.label,

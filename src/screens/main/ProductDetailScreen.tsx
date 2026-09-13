@@ -120,7 +120,7 @@ export const ProductDetailScreen: React.FC = () => {
 
   const categoryName = product.category?.name || 'Genel';
   const brandText = product.brand ? ` · ${product.brand}` : '';
-  const statusInfo = calculateWarrantyStatus(product.warranty_end_date);
+  const statusInfo = calculateWarrantyStatus(product.warranty_end_date, colors);
 
   return (
     <SafeAreaView style={styles.safeArea}>

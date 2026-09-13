@@ -6,7 +6,8 @@
 import { supabase, isSupabaseConfigured } from './supabase';
 import { Product, ProductFormData, ProductFilterOptions } from '../types';
 import { formatAppError } from '../utils/errorHandler';
-import { calculateWarrantyStatus } from '../utils/warrantyCalculator';
+import { calculateWarrantyStatus, normalizeToISODate } from '../utils/warrantyCalculator';
+
 
 // Supabase henüz bağlanmadıysa veya demo modunda kullanılacak yerel mock veri deposu
 const MOCK_USER_ID = '00000000-0000-0000-0000-000000000000';
@@ -208,6 +209,10 @@ export const productService = {
     formData: ProductFormData,
     userId: string
   ): Promise<{ data: Product | null; error: string | null }> {
+    const normalizedPurchaseDate = normalizeToISODate(formData.purchase_date);
+    const normalizedWarrantyEndDate =
+      normalizeToISODate(formData.warranty_end_date) || formData.warranty_end_date;
+
     if (!isSupabaseConfigured()) {
       const newProduct: Product = {
         id: `mock-${Date.now()}`,
@@ -217,10 +222,10 @@ export const productService = {
         brand: formData.brand ? formData.brand.trim() : null,
         model: formData.model ? formData.model.trim() : null,
         serial_number: formData.serial_number ? formData.serial_number.trim() : null,
-        purchase_date: formData.purchase_date || null,
+        purchase_date: normalizedPurchaseDate,
         purchase_price: formData.purchase_price ?? 0,
         warranty_duration_months: formData.warranty_duration_months ?? 24,
-        warranty_end_date: formData.warranty_end_date,
+        warranty_end_date: normalizedWarrantyEndDate,
         store_name: formData.store_name ? formData.store_name.trim() : null,
         description: formData.description ? formData.description.trim() : null,
         image_path: formData.image_path || null,
@@ -241,10 +246,10 @@ export const productService = {
           brand: formData.brand ? formData.brand.trim() : null,
           model: formData.model ? formData.model.trim() : null,
           serial_number: formData.serial_number ? formData.serial_number.trim() : null,
-          purchase_date: formData.purchase_date || null,
+          purchase_date: normalizedPurchaseDate,
           purchase_price: formData.purchase_price ?? 0,
           warranty_duration_months: formData.warranty_duration_months ?? 24,
-          warranty_end_date: formData.warranty_end_date,
+          warranty_end_date: normalizedWarrantyEndDate,
           store_name: formData.store_name ? formData.store_name.trim() : null,
           description: formData.description ? formData.description.trim() : null,
           image_path: formData.image_path || null,
@@ -270,13 +275,22 @@ export const productService = {
     productId: string,
     formData: Partial<ProductFormData>
   ): Promise<{ data: Product | null; error: string | null }> {
+    const updatePayload: Record<string, any> = { ...formData };
+    if (formData.purchase_date !== undefined) {
+      updatePayload.purchase_date = normalizeToISODate(formData.purchase_date);
+    }
+    if (formData.warranty_end_date !== undefined) {
+      updatePayload.warranty_end_date =
+        normalizeToISODate(formData.warranty_end_date) || formData.warranty_end_date;
+    }
+
     if (!isSupabaseConfigured()) {
       const index = mockProductsStore.findIndex((p) => p.id === productId);
       if (index === -1) return { data: null, error: 'Güncellenecek ürün bulunamadı.' };
 
       const updated = {
         ...mockProductsStore[index],
-        ...formData,
+        ...updatePayload,
         updated_at: new Date().toISOString(),
       };
       mockProductsStore[index] = updated as Product;
@@ -287,12 +301,13 @@ export const productService = {
       const { data, error } = await supabase
         .from('products')
         .update({
-          ...formData,
+          ...updatePayload,
           updated_at: new Date().toISOString(),
         })
         .eq('id', productId)
         .select('*, category:categories(*)')
         .single();
+
 
       if (error) {
         return { data: null, error: formatAppError(error).fullMessage };

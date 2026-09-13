@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import {
   Tv,
@@ -16,14 +16,14 @@ import {
 } from 'lucide-react-native';
 
 import { Product } from '../types';
-import { COLORS } from '../constants';
+import { useTheme } from '../context/ThemeContext';
 import {
   formatDateTurkish,
   calculateWarrantyStatus,
   calculateWarrantyPercentage,
 } from '../utils/warrantyCalculator';
 import { CircularProgress } from './CircularProgress';
-import { styles } from './ProductCard.styles';
+import { getStyles } from './ProductCard.styles';
 
 interface ProductCardProps {
   product: Product;
@@ -31,8 +31,7 @@ interface ProductCardProps {
   showPercentageGauge?: boolean;
 }
 
-const getCategoryIcon = (iconName?: string | null, size = 26) => {
-  const color = COLORS.primary;
+const getCategoryIcon = (iconName?: string | null, size = 26, color = '#4648d4') => {
   switch (iconName) {
     case 'tv':
       return <Tv size={size} color={color} />;
@@ -59,9 +58,12 @@ const getCategoryIcon = (iconName?: string | null, size = 26) => {
 
 export const ProductCard: React.FC<ProductCardProps> = React.memo(
   ({ product, onPress, showPercentageGauge = false }) => {
+    const { colors } = useTheme();
+    const styles = useMemo(() => getStyles(colors), [colors]);
+
     const categoryName = product.category?.name || 'Genel';
     const brandName = product.brand ? ` • ${product.brand}` : '';
-    const statusInfo = calculateWarrantyStatus(product.warranty_end_date);
+    const statusInfo = calculateWarrantyStatus(product.warranty_end_date, colors);
     const percentage = calculateWarrantyPercentage(
       product.purchase_date,
       product.warranty_end_date
@@ -79,7 +81,7 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(
             />
           ) : (
             <View style={styles.iconPlaceholder}>
-              {getCategoryIcon(product.category?.icon)}
+              {getCategoryIcon(product.category?.icon, 26, colors.primary)}
             </View>
           )}
         </View>
@@ -94,10 +96,10 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(
             {brandName}
           </Text>
           <View style={styles.dateRow}>
-            <Calendar size={13} color={COLORS.outline} style={styles.dateIcon} />
+            <Calendar size={13} color={colors.outline} style={styles.dateIcon} />
             <Text style={styles.warrantyDate} numberOfLines={1}>
               {showPercentageGauge
-                ? `${formatDateTurkish(product.warranty_end_date)}'e kadar`
+                ? `${formatDateTurkish(product.warranty_end_date)} tarihine kadar`
                 : `Garanti bitişi: ${formatDateTurkish(product.warranty_end_date)}`}
             </Text>
           </View>
@@ -112,11 +114,11 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(
                 strokeWidth={3}
                 percentage={percentage}
                 color={statusInfo.color}
-                backgroundColor={COLORS.surfaceContainer}
+                backgroundColor={colors.surfaceContainer}
                 centerText={`%${percentage}`}
                 textStyle={{ fontSize: 10, fontWeight: '700' }}
               />
-              <ChevronRight size={16} color={COLORS.outline} style={styles.chevron} />
+              <ChevronRight size={16} color={colors.outline} style={styles.chevron} />
             </View>
           ) : (
             <View style={styles.statusBadgeWrapper}>
@@ -130,3 +132,4 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(
     );
   }
 );
+

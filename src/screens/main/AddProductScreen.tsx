@@ -28,7 +28,7 @@ import { ProductFormData, productFormSchema, Category } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useInventory } from '../../context/InventoryContext';
-import { calculateWarrantyEndDate } from '../../utils/warrantyCalculator';
+import { calculateWarrantyEndDate, formatDateTurkish } from '../../utils/warrantyCalculator';
 import { mediaHelper } from '../../utils/mediaHelper';
 import { storageService } from '../../api/storageService';
 import { CategoryPickerModal } from '../../components/CategoryPickerModal';
@@ -63,8 +63,8 @@ export const AddProductScreen: React.FC = () => {
   const [isUploadingInvoice, setIsUploadingInvoice] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Varsayılan bugünün tarihi
-  const todayStr = new Date().toISOString().split('T')[0];
+  // Varsayılan bugünün tarihi (gün/ay/yıl)
+  const todayStr = formatDateTurkish(new Date());
   const defaultWarrantyEnd = calculateWarrantyEndDate(todayStr, 24);
 
   const {
@@ -440,7 +440,7 @@ export const AddProductScreen: React.FC = () => {
                     <View style={styles.inputBox}>
                       <TextInput
                         style={styles.textInput}
-                        placeholder="YYYY-AA-GG"
+                        placeholder="GG/AA/YYYY"
                         placeholderTextColor={colors.outline}
                         value={value || ''}
                         onChangeText={(text) => {
@@ -543,7 +543,7 @@ export const AddProductScreen: React.FC = () => {
                   <View style={styles.inputBox}>
                     <TextInput
                       style={styles.textInput}
-                      placeholder="YYYY-AA-GG"
+                      placeholder="GG/AA/YYYY"
                       placeholderTextColor={colors.outline}
                       value={value || ''}
                       onChangeText={onChange}

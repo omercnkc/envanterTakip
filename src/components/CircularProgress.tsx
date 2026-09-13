@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
-import { COLORS } from '../constants';
+import { useTheme } from '../context/ThemeContext';
 
 interface CircularProgressProps {
   size?: number;
@@ -20,14 +20,18 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
   size = 100,
   strokeWidth = 8,
   percentage = 0,
-  color = COLORS.primary,
-  backgroundColor = COLORS.surfaceContainer,
+  color,
+  backgroundColor,
   showText = true,
   centerText,
   centerSubtext,
   textStyle,
   subtextStyle,
 }) => {
+  const { colors } = useTheme();
+  const activeColor = color ?? colors.primary;
+  const activeBgColor = backgroundColor ?? colors.surfaceContainer;
+
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const validPercentage = Math.min(100, Math.max(0, percentage));
@@ -41,7 +45,7 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={backgroundColor}
+          stroke={activeBgColor}
           strokeWidth={strokeWidth}
           fill="none"
         />
@@ -50,7 +54,7 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={color}
+          stroke={activeColor}
           strokeWidth={strokeWidth}
           strokeDasharray={`${circumference} ${circumference}`}
           strokeDashoffset={strokeDashoffset}
@@ -62,11 +66,19 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
 
       {showText && (
         <View style={styles.textContainer}>
-          <Text style={[styles.percentageText, textStyle, { color }]}>
+          <Text style={[styles.percentageText, textStyle, { color: activeColor }]}>
             {centerText !== undefined ? centerText : `%${Math.round(validPercentage)}`}
           </Text>
           {centerSubtext && (
-            <Text style={[styles.subtext, subtextStyle]}>{centerSubtext}</Text>
+            <Text
+              style={[
+                styles.subtext,
+                { color: colors.onSecondaryContainer },
+                subtextStyle,
+              ]}
+            >
+              {centerSubtext}
+            </Text>
           )}
         </View>
       )}
@@ -94,8 +106,8 @@ const styles = StyleSheet.create({
   subtext: {
     fontSize: 9,
     lineHeight: 12,
-    color: COLORS.onSecondaryContainer,
     textAlign: 'center',
     marginTop: 1,
   },
 });
+

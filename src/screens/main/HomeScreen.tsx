@@ -25,8 +25,8 @@ import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useInventory } from '../../context/InventoryContext';
 import { ProductCard } from '../../components/ProductCard';
-import { CircularProgress } from '../../components/CircularProgress';
 import { EmptyState } from '../../components/EmptyState';
+import { calculateWarrantyStatus } from '../../utils/warrantyCalculator';
 import { getStyles } from './HomeScreen.styles';
 
 export const HomeScreen: React.FC = () => {
@@ -40,11 +40,44 @@ export const HomeScreen: React.FC = () => {
   const firstName = rawName.trim().split(/\s+/)[0] || rawName;
   const userInitials = (firstName[0] || 'U').toUpperCase();
 
-  // Aktif garanti yüzdesi
-  const activePercentage = useMemo(() => {
-    if (stats.total === 0) return 0;
-    return Math.round((stats.active / stats.total) * 100);
-  }, [stats.active, stats.total]);
+  // Sıradaki / En yakın garanti bitişine sahip ürünü hesapla
+  const closestWarrantyInfo = useMemo(() => {
+    if (!products || products.length === 0) {
+      return { type: 'empty' as const, product: null, daysRemaining: null };
+    }
+
+    // Aktif veya süresi yaklaşan ürünleri filtrele
+    const activeProductsWithDays = products
+      .map((p) => {
+        const status = calculateWarrantyStatus(p.warranty_end_date, colors);
+        return {
+          product: p,
+          status,
+          daysRemaining: status.daysRemaining,
+          isExpired: status.status === 'expired',
+          isExpiringSoon: status.status === 'expiring_soon',
+        };
+      })
+      .filter((item) => !item.isExpired && item.product.warranty_end_date);
+
+    if (activeProductsWithDays.length === 0) {
+      return {
+        type: 'none' as const,
+        product: null,
+        daysRemaining: null,
+      };
+    }
+
+    // Kalan güne göre en yakından en uzağa sırala
+    activeProductsWithDays.sort((a, b) => a.daysRemaining - b.daysRemaining);
+    const nearest = activeProductsWithDays[0];
+
+    return {
+      type: nearest.isExpiringSoon ? ('expiring_soon' as const) : ('safe' as const),
+      product: nearest.product,
+      daysRemaining: nearest.daysRemaining,
+    };
+  }, [products, colors]);
 
   // Yaklaşan garantili ve son eklenen ürünler
   const recentProducts = useMemo(() => products.slice(0, 5), [products]);
@@ -62,6 +95,16 @@ export const HomeScreen: React.FC = () => {
     },
     [navigation]
   );
+
+  const handleClosestProductPress = useCallback(() => {
+    if (closestWarrantyInfo.product) {
+      handleProductPress(closestWarrantyInfo.product);
+    } else if (closestWarrantyInfo.type === 'empty') {
+      navigation.navigate('AddTab');
+    } else {
+      navigation.navigate('ProductsTab');
+    }
+  }, [closestWarrantyInfo, handleProductPress, navigation]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -128,23 +171,107 @@ export const HomeScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Dairesel Garanti Göstergesi */}
-          <View style={styles.bentoChartWrapper}>
-            <CircularProgress
-              size={94}
-              strokeWidth={7}
-              percentage={activePercentage}
-              color={colors.primary}
-              backgroundColor={colors.surfaceContainer}
-              centerText={`%${activePercentage}`}
-              centerSubtext="Garantiler aktif"
-              textStyle={{ fontSize: 16, fontWeight: '700' }}
-            />
-            <View style={styles.bentoShieldBadge}>
-              <ShieldCheck size={13} color={colors.tertiary} />
-            </View>
-          </View>
+          {/* En Yakın Garanti Bitiş / Güvende Rozeti */}
+          <TouchableOpacity
+            style={[
+              styles.bentoRightWidget,
+              closestWarrantyInfo.type === 'expiring_soon'
+                ? styles.bentoRightWidgetWarning
+                : closestWarrantyInfo.type === 'safe'
+                ? styles.bentoRightWidgetSafe
+                : null,
+            ]}
+            onPress={handleClosestProductPress}
+            activeOpacity={0.75}
+          >
+            {closestWarrantyInfo.type === 'expiring_soon' ? (
+              <>
+                <View style={styles.bentoStatusRow}>
+                  <View
+                    style={[
+                      styles.bentoStatusIconBox,
+                      { backgroundColor: colors.warning + '25' },
+                    ]}
+                  >
+                    <Clock size={12} color={colors.warning} />
+                  </View>
+                  <Text style={[styles.bentoStatusBadgeText, { color: colors.warning }]}>
+                    Yaklaşan Garanti
+                  </Text>
+                </View>
+                <Text
+                  style={[styles.bentoStatusMainText, { color: colors.warning }]}
+                  numberOfLines={1}
+                >
+                  {closestWarrantyInfo.daysRemaining === 0
+                    ? 'Bugün Son Gün'
+                    : closestWarrantyInfo.daysRemaining === 1
+                    ? 'Yarın Bitiyor'
+                    : `Sıradaki: ${closestWarrantyInfo.daysRemaining} gün`}
+                </Text>
+                <View style={styles.bentoStatusProductRow}>
+                  <Text style={styles.bentoStatusProductName} numberOfLines={1}>
+                    {closestWarrantyInfo.product?.name}
+                  </Text>
+                  <ChevronRight size={13} color={colors.warning} />
+                </View>
+              </>
+            ) : closestWarrantyInfo.type === 'safe' ? (
+              <>
+                <View style={styles.bentoStatusRow}>
+                  <View
+                    style={[
+                      styles.bentoStatusIconBox,
+                      { backgroundColor: colors.tertiary + '25' },
+                    ]}
+                  >
+                    <ShieldCheck size={12} color={colors.tertiary} />
+                  </View>
+                  <Text style={[styles.bentoStatusBadgeText, { color: colors.tertiary }]}>
+                    Garantiler Güvende
+                  </Text>
+                </View>
+                <Text style={styles.bentoStatusMainText} numberOfLines={1}>
+                  Bu Ay Risk Yok
+                </Text>
+                <View style={styles.bentoStatusProductRow}>
+                  <Text style={styles.bentoStatusProductName} numberOfLines={1}>
+                    {closestWarrantyInfo.product
+                      ? `Sıradaki: ${closestWarrantyInfo.product.name}`
+                      : 'Tümü koruma altında'}
+                  </Text>
+                  <ChevronRight size={13} color={colors.outline} />
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={styles.bentoStatusRow}>
+                  <View
+                    style={[
+                      styles.bentoStatusIconBox,
+                      { backgroundColor: colors.primary + '20' },
+                    ]}
+                  >
+                    <ShieldCheck size={12} color={colors.primary} />
+                  </View>
+                  <Text style={[styles.bentoStatusBadgeText, { color: colors.primary }]}>
+                    Garantiler Güvende
+                  </Text>
+                </View>
+                <Text style={styles.bentoStatusMainText} numberOfLines={1}>
+                  {stats.total === 0 ? 'Ürün Eklenmedi' : 'Aktif Garanti Yok'}
+                </Text>
+                <View style={styles.bentoStatusProductRow}>
+                  <Text style={styles.bentoStatusProductName} numberOfLines={1}>
+                    {stats.total === 0 ? 'İlk ürünü ekleyin' : 'Tümü sona erdi'}
+                  </Text>
+                  <ChevronRight size={13} color={colors.outline} />
+                </View>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
+
 
         {/* 4'lü İstatistik Izgarası */}
         <View style={styles.statsGrid}>
