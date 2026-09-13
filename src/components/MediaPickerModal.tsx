@@ -66,7 +66,9 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
               style={styles.optionItem}
               onPress={() => {
                 onClose();
-                onSelectCamera();
+                setTimeout(() => {
+                  onSelectCamera();
+                }, 100);
               }}
               activeOpacity={0.7}
             >
@@ -85,7 +87,9 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
               style={styles.optionItem}
               onPress={() => {
                 onClose();
-                onSelectGallery();
+                setTimeout(() => {
+                  onSelectGallery();
+                }, 100);
               }}
               activeOpacity={0.7}
             >
@@ -110,7 +114,9 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
                 style={styles.optionItem}
                 onPress={() => {
                   onClose();
-                  onSelectDocument();
+                  setTimeout(() => {
+                    onSelectDocument();
+                  }, 100);
                 }}
                 activeOpacity={0.7}
               >

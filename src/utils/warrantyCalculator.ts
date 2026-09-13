@@ -210,3 +210,26 @@ export const formatCurrency = (amount: number | null | undefined): string => {
   return `₺${amount.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}`;
 };
 
+/**
+ * Kullanıcı tarih girerken rakamları otomatik olarak GG/AA/YYYY formatına maskeler.
+ * Kullanıcının manuel olarak '/' yazmasına gerek kalmaz.
+ */
+export const maskDateInput = (text: string, prevText: string = ''): string => {
+  const isDeleting = prevText.length > text.length;
+
+  if (isDeleting) {
+    if (prevText.endsWith('/') && text.length === prevText.length - 1) {
+      return text.slice(0, -1);
+    }
+    return text;
+  }
+
+  const digits = text.replace(/\D/g, '').slice(0, 8);
+  if (digits.length === 0) return '';
+  if (digits.length < 2) return digits;
+  if (digits.length === 2) return `${digits}/`;
+  if (digits.length < 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  if (digits.length === 4) return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+};
+

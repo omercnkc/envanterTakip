@@ -22,6 +22,8 @@ import { FilterModal } from '../../components/FilterModal';
 import { TechOrbitLoader } from '../../components/TechOrbitLoader';
 import { getStyles } from './ProductsScreen.styles';
 
+const ITEMS_PER_PAGE = 5;
+
 const QUICK_FILTER_TABS = [
   { id: 'all', label: 'Tümü' },
   { id: 'active', label: 'Devam Eden' },
@@ -46,19 +48,39 @@ export const ProductsScreen: React.FC = () => {
 
   const [searchText, setSearchText] = useState('');
   const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [page, setPage] = useState(1);
 
   // Arama metni değiştiğinde filtre seçeneklerini güncelle
   const handleSearchChange = (text: string) => {
     setSearchText(text);
+    setPage(1);
     setFilterOptions((prev) => ({ ...prev, searchQuery: text }));
   };
 
   // Garanti durumu sekmesi değişimi
   const handleSelectStatus = (statusId: string) => {
+    setPage(1);
     setFilterOptions((prev) => ({
       ...prev,
       warrantyStatus: statusId as any,
     }));
+  };
+
+  const handleRefresh = async () => {
+    setPage(1);
+    await refreshProducts();
+  };
+
+  const displayedProducts = useMemo(() => {
+    return products.slice(0, page * ITEMS_PER_PAGE);
+  }, [products, page]);
+
+  const hasMore = displayedProducts.length < products.length;
+
+  const handleLoadMore = () => {
+    if (hasMore) {
+      setPage((prev) => prev + 1);
+    }
   };
 
   const handleProductPress = useCallback(
@@ -156,7 +178,11 @@ export const ProductsScreen: React.FC = () => {
 
         {/* Ürün Sayacı Başlığı */}
         <View style={styles.listHeaderRow}>
-          <Text style={styles.productCountText}>{products.length} ürün</Text>
+          <Text style={styles.productCountText}>
+            {products.length > ITEMS_PER_PAGE
+              ? `${displayedProducts.length} / ${products.length} ürün gösteriliyor`
+              : `${products.length} ürün`}
+          </Text>
         </View>
 
         {/* Ürün Listesi */}
@@ -167,16 +193,20 @@ export const ProductsScreen: React.FC = () => {
             fullScreen={false}
           />
         ) : (
-
           <FlatList
-            data={products}
+            data={displayedProducts}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
+            initialNumToRender={5}
+            maxToRenderPerBatch={5}
+            windowSize={5}
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.2}
             refreshControl={
               <RefreshControl
                 refreshing={isRefreshing}
-                onRefresh={refreshProducts}
+                onRefresh={handleRefresh}
                 tintColor={colors.primary}
                 colors={[colors.primary]}
               />
@@ -188,6 +218,18 @@ export const ProductsScreen: React.FC = () => {
                 onPress={() => handleProductPress(item)}
               />
             )}
+            ListFooterComponent={
+              hasMore ? (
+                <View style={styles.footerContainer}>
+                  <ActivityIndicator size="small" color={colors.primary} style={{ marginBottom: 4 }} />
+                  <Text style={styles.footerText}>Diğer ürünler yükleniyor...</Text>
+                </View>
+              ) : products.length > ITEMS_PER_PAGE ? (
+                <View style={styles.footerContainer}>
+                  <Text style={styles.footerText}>Tüm ürünler listelendi ({products.length})</Text>
+                </View>
+              ) : null
+            }
             ListEmptyComponent={
               <EmptyState
                 title={
@@ -208,6 +250,7 @@ export const ProductsScreen: React.FC = () => {
                 onActionPress={() => {
                   if (searchText || hasActiveFilters) {
                     setSearchText('');
+                    setPage(1);
                     resetFilters();
                   } else {
                     navigation.navigate('AddTab');
@@ -234,6 +277,7 @@ export const ProductsScreen: React.FC = () => {
         onReset={() => {
           resetFilters();
           setSearchText('');
+          setPage(1);
         }}
       />
     </SafeAreaView>

@@ -78,8 +78,8 @@ export const HomeScreen: React.FC = () => {
     };
   }, [products, colors]);
 
-  // Yaklaşan garantili ve son eklenen ürünler
-  const recentProducts = useMemo(() => products.slice(0, 5), [products]);
+  // Yaklaşan garantili ve son eklenen ürünler (Ana sayfada tam sığması için max 3 kart)
+  const recentProducts = useMemo(() => products.slice(0, 3), [products]);
 
   const handleStatCardPress = (statusFilter?: string) => {
     navigation.navigate('ProductsTab', { filterStatus: statusFilter });
@@ -121,12 +121,22 @@ export const HomeScreen: React.FC = () => {
         {/* Top App Bar Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <View style={styles.greetingRow}>
-              <Text style={styles.greetingText}>Merhaba, {firstName}</Text>
+            <TouchableOpacity
+              style={styles.avatar}
+              onPress={() => navigation.navigate('ProfileTab')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.avatarText}>{userInitials}</Text>
+            </TouchableOpacity>
+
+            <View style={styles.greetingTextContainer}>
+              <Text style={styles.greetingText} numberOfLines={1}>
+                Merhaba, {firstName}
+              </Text>
+              <Text style={styles.subtitleText} numberOfLines={1}>
+                Envanterin güvende, garantilerini takip et.
+              </Text>
             </View>
-            <Text style={styles.subtitleText}>
-              Envanterin güvende, garantilerini takip et.
-            </Text>
           </View>
 
           <View style={styles.headerRight}>
@@ -135,16 +145,8 @@ export const HomeScreen: React.FC = () => {
               onPress={() => navigation.navigate('Notifications')}
               activeOpacity={0.7}
             >
-              <Bell size={19} color={colors.primary} />
+              <Bell size={17} color={colors.primary} />
               {stats.expiringSoon > 0 && <View style={styles.badgeDot} />}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.avatar}
-              onPress={() => navigation.navigate('ProfileTab')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.avatarText}>{userInitials}</Text>
             </TouchableOpacity>
           </View>
         </View>

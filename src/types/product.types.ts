@@ -27,7 +27,7 @@ export const productFormSchema = z.object({
     .string()
     .trim()
     .min(1, 'Seri numarası delil niteliği taşıdığı için zorunludur')
-    .max(100, 'Seri numarası çok uzun'),
+    .max(35, 'Seri numarası en fazla 35 karakter olabilir'),
 
   purchase_date: z
     .string()

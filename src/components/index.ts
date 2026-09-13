@@ -15,3 +15,4 @@ export * from './TechOrbitLoader';
 export * from './ThemeSegmentedControl';
 export * from './ImageViewerModal';
 export * from './BiometricLockOverlay';
+export * from './AppCameraModal';

@@ -93,6 +93,12 @@ export const BiometricLockOverlay: React.FC = () => {
     checkAndLock();
 
     const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      // Harici kamera / galeri seçici açıkken kilit tetikleme
+      if (biometricHelper.isPickerActive()) {
+        appState.current = nextAppState;
+        return;
+      }
+
       // Arka plana geçerken zamanı kaydet
       if (nextAppState.match(/inactive|background/)) {
         biometricHelper.recordBackground();

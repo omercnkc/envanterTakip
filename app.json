@@ -20,7 +20,15 @@
         "backgroundColor": "#f8f9ff",
         "foregroundImage": "./assets/android-icon-foreground.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -31,7 +39,14 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Ürün barkodu ve seri numarasını kamerayla tarayabilmek için kamera izni gerekiyor."
+          "cameraPermission": "Ürün barkodu, seri numarası ve ürün fotoğraflarını çekebilmek için kamera izni gerekiyor."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Ürün ve fatura görselleri seçebilmek için galeri erişim izni gerekiyor.",
+          "cameraPermission": "Ürün ve fatura fotoğrafları çekebilmek için kamera erişim izni gerekiyor."
         }
       ],
       "expo-sharing"

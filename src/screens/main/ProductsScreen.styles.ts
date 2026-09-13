@@ -112,4 +112,14 @@ export const getStyles = (colors: ThemeColors) => StyleSheet.create({
     paddingBottom: 135,
     gap: SPACING.sm + 2,
   },
+  footerContainer: {
+    paddingVertical: SPACING.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  footerText: {
+    ...TYPOGRAPHY.labelMd,
+    color: colors.outline,
+    fontSize: 12,
+  },
 });

@@ -6,6 +6,7 @@
 import { Alert, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
+import { biometricHelper } from './biometricHelper';
 
 export interface PickMediaResult {
   uri: string | null;
@@ -55,6 +56,7 @@ export const mediaHelper = {
    * Kamera ile anlık fotoğraf çeker.
    */
   async pickFromCamera(): Promise<PickMediaResult> {
+    biometricHelper.setPickerActive(true);
     try {
       const hasPermission = await this.requestCameraPermission();
       if (!hasPermission) {
@@ -64,7 +66,7 @@ export const mediaHelper = {
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ['images'],
         allowsEditing: false,
-        quality: 0.85,
+        quality: 0.7,
       });
 
       if (result.canceled || !result.assets || result.assets.length === 0) {
@@ -82,6 +84,8 @@ export const mediaHelper = {
     } catch (err) {
       console.error('Kamera hatası:', err);
       return { uri: null, canceled: true, error: 'Kamera açılamadı.' };
+    } finally {
+      biometricHelper.setPickerActive(false);
     }
   },
 
@@ -89,6 +93,7 @@ export const mediaHelper = {
    * Galeriden görsel seçer (Kullanıcıyı küçük kırpmaya zorlamaz, tam görseli alır).
    */
   async pickFromGallery(): Promise<PickMediaResult> {
+    biometricHelper.setPickerActive(true);
     try {
       const hasPermission = await this.requestMediaLibraryPermission();
       if (!hasPermission) {
@@ -98,7 +103,7 @@ export const mediaHelper = {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
         allowsEditing: false,
-        quality: 0.85,
+        quality: 0.7,
       });
 
       if (result.canceled || !result.assets || result.assets.length === 0) {
@@ -116,6 +121,8 @@ export const mediaHelper = {
     } catch (err) {
       console.error('Galeri seçim hatası:', err);
       return { uri: null, canceled: true, error: 'Galeri açılamadı.' };
+    } finally {
+      biometricHelper.setPickerActive(false);
     }
   },
 
@@ -123,6 +130,7 @@ export const mediaHelper = {
    * Fatura için belge (PDF veya Görsel) seçer.
    */
   async pickDocument(): Promise<PickMediaResult> {
+    biometricHelper.setPickerActive(true);
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: ['application/pdf', 'image/*'],
@@ -148,6 +156,8 @@ export const mediaHelper = {
     } catch (err) {
       console.error('Belge seçim hatası:', err);
       return { uri: null, canceled: true, error: 'Belge seçilemedi.' };
+    } finally {
+      biometricHelper.setPickerActive(false);
     }
   },
 };

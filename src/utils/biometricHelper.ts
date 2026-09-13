@@ -44,8 +44,36 @@ export interface BiometricCheckResult {
 
 let inMemoryLastUnlockTime = 0;
 let inMemoryBackgroundTime = 0;
+let isMediaPickerActive = false;
+let mediaPickerTimeout: any = null;
 
 export const biometricHelper = {
+  /**
+   * Medya / Kamera / Belge seçicisi veya sistem arayüzü açıkken kilit kontrolünü askıya alır.
+   */
+  setPickerActive(active: boolean): void {
+    if (mediaPickerTimeout) {
+      clearTimeout(mediaPickerTimeout);
+      mediaPickerTimeout = null;
+    }
+
+    if (active) {
+      isMediaPickerActive = true;
+      inMemoryLastUnlockTime = Date.now();
+    } else {
+      inMemoryLastUnlockTime = Date.now();
+      // Harici arayüz kapandıktan ve ön plana dönüldükten sonra 3 saniye boyunca kilidi tetikleme
+      mediaPickerTimeout = setTimeout(() => {
+        isMediaPickerActive = false;
+        mediaPickerTimeout = null;
+      }, 3000);
+    }
+  },
+
+  isPickerActive(): boolean {
+    return isMediaPickerActive;
+  },
+
   /**
    * Cihazın biyometrik donanım ve kayıt durumunu sorgular.
    */
@@ -149,6 +177,10 @@ export const biometricHelper = {
    * Uygulamanın arka plana geçtiği zamanı kaydeder.
    */
   async recordBackground(): Promise<void> {
+    if (isMediaPickerActive) {
+      // Harici kamera / galeri / dosya seçici açıkken arka plan kilit süresi tetikleme
+      return;
+    }
     const now = Date.now();
     inMemoryBackgroundTime = now;
     try {
@@ -163,18 +195,21 @@ export const biometricHelper = {
    */
   async shouldLockOnResume(): Promise<boolean> {
     try {
+      if (isMediaPickerActive) {
+        return false;
+      }
       const enabled = await this.isEnabled();
       if (!enabled) return false;
 
       const now = Date.now();
 
-      // Son kilit açma üzerinden 15 saniyeden az geçtiyse (örn. yeni giriş yapıldı) asla kilitleme!
+      // Son kilit açma / işlem üzerinden 25 saniyeden az geçtiyse asla kilitleme
       let lastUnlock = inMemoryLastUnlockTime;
       if (!lastUnlock) {
         const storedUnlock = await AsyncStorage.getItem(LAST_UNLOCK_KEY);
         lastUnlock = storedUnlock ? parseInt(storedUnlock, 10) : 0;
       }
-      if (lastUnlock && now - lastUnlock < 15000) {
+      if (lastUnlock && now - lastUnlock < 25000) {
         return false;
       }
 

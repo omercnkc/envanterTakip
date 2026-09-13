@@ -54,18 +54,18 @@ interface ShootingLineProps {
 const ShootingLine: React.FC<ShootingLineProps> = ({ x1, x2, color }) => {
   const isRight = x2 > x1;
   const lineLength = Math.abs(x2 - x1);
-  const circleCircumference = 141.37; // 2 * PI * Yarıçap (22.5)
+  const circleCircumference = 116.24; // 2 * PI * Yarıçap (18.5)
 
   // Çizgi desenini başlangıçta yolun tamamen dışında başlatıyoruz
   const offset = useRef(new Animated.Value(circleCircumference)).current;
   const opacity = useRef(new Animated.Value(1)).current;
 
-  // M = X1 noktasından ve tam hedefin tabanı olan 52.5px yüksekliğinden başla
+  // M = X1 noktasından ve tam hedefin tabanı olan 43.5px yüksekliğinden başla
   // L = Hedef X2 noktasına düz bir çizgi çek
   // A = Çember çiz. İvme yönüne göre sağdan veya soldan kıvrılarak yukarı çıkar.
   const pathData = isRight
-    ? `M ${x1} 52.5 L ${x2} 52.5 A 22.5 22.5 0 1 0 ${x2 - 0.01} 52.5`
-    : `M ${x1} 52.5 L ${x2} 52.5 A 22.5 22.5 0 1 1 ${x2 + 0.01} 52.5`;
+    ? `M ${x1} 43.5 L ${x2} 43.5 A 18.5 18.5 0 1 0 ${x2 - 0.01} 43.5`
+    : `M ${x1} 43.5 L ${x2} 43.5 A 18.5 18.5 0 1 1 ${x2 + 0.01} 43.5`;
 
   useEffect(() => {
     // 1. Çizim animasyonu (400ms cubic-bezier(0.4, 0, 0.2, 1))
@@ -91,7 +91,7 @@ const ShootingLine: React.FC<ShootingLineProps> = ({ x1, x2, color }) => {
 
   return (
     <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity }]}>
-      <Svg width={TAB_BAR_WIDTH} height={90} viewBox={`0 0 ${TAB_BAR_WIDTH} 90`}>
+      <Svg width={TAB_BAR_WIDTH} height={74} viewBox={`0 0 ${TAB_BAR_WIDTH} 74`}>
         <AnimatedPath
           d={pathData}
           fill="none"
@@ -194,7 +194,7 @@ const TabItem: React.FC<TabItemProps> = ({ tab, isActive, onPress }) => {
   // İkon Yükselme ve Büyüme (Anında merkeze oturur)
   const iconTranslateY = iconPosAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -28],
+    outputRange: [0, -22],
   });
   const iconScale = iconPosAnim.interpolate({
     inputRange: [0, 1],
@@ -212,7 +212,7 @@ const TabItem: React.FC<TabItemProps> = ({ tab, isActive, onPress }) => {
   const labelOpacity = iconPosAnim;
   const labelTranslateY = iconPosAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [12, 0],
+    outputRange: [8, 0],
   });
 
   return (
@@ -258,12 +258,12 @@ const TabItem: React.FC<TabItemProps> = ({ tab, isActive, onPress }) => {
       >
         {/* Pasif İkon (Gri) */}
         <Animated.View style={[styles.iconAbsolute, { opacity: passiveIconOpacity }]}>
-          <Icon size={24} color={colors.secondary} strokeWidth={2.5} />
+          <Icon size={21} color={colors.secondary} strokeWidth={2.4} />
         </Animated.View>
 
         {/* Aktif İkon (Beyaz) */}
         <Animated.View style={[styles.iconAbsolute, { opacity: activeIconOpacity }]}>
-          <Icon size={24} color={colors.onPrimary} strokeWidth={2.5} />
+          <Icon size={21} color={colors.onPrimary} strokeWidth={2.4} />
         </Animated.View>
       </Animated.View>
 
@@ -323,7 +323,7 @@ const FloatingBeadTabBar: React.FC<BottomTabBarProps> = ({
   };
 
   const bottomOffset =
-    Math.max(insets.bottom, 12) + (Platform.OS === 'android' ? 12 : 6);
+    Math.max(insets.bottom, 6) + (Platform.OS === 'android' ? 6 : 2);
 
   return (
     <View style={[styles.tabBarWrapper, { bottom: bottomOffset }]}>
@@ -390,7 +390,7 @@ const getStyles = (colors: ThemeColors) =>
     tabBarContainer: {
       position: 'relative',
       width: TAB_BAR_WIDTH,
-      height: 90,
+      height: 74,
       justifyContent: 'flex-end',
     },
     pillBackground: {
@@ -398,25 +398,25 @@ const getStyles = (colors: ThemeColors) =>
       bottom: 0,
       left: 0,
       right: 0,
-      height: 72,
+      height: 58,
       backgroundColor: colors.surfaceContainerLowest,
-      borderRadius: 36,
+      borderRadius: 29,
       borderWidth: 1,
       borderColor: colors.surfaceContainerHigh,
       // iOS Shadow
       shadowColor: '#121c2a',
-      shadowOffset: { width: 0, height: 12 },
-      shadowOpacity: 0.08,
-      shadowRadius: 24,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.07,
+      shadowRadius: 18,
       // Android Elevation
-      elevation: 8,
+      elevation: 6,
     },
     svgOverlay: {
       position: 'absolute',
       top: 0,
       left: 0,
       width: TAB_BAR_WIDTH,
-      height: 90,
+      height: 74,
       zIndex: 15,
     },
     tabsRow: {
@@ -424,7 +424,7 @@ const getStyles = (colors: ThemeColors) =>
       bottom: 0,
       left: 0,
       right: 0,
-      height: 72,
+      height: 58,
       flexDirection: 'row',
       zIndex: 20,
     },
@@ -437,11 +437,11 @@ const getStyles = (colors: ThemeColors) =>
     },
     beadWrapper: {
       position: 'absolute',
-      bottom: 36,
+      bottom: 29,
       left: '50%',
-      marginLeft: -24,
-      width: 48,
-      height: 48,
+      marginLeft: -20,
+      width: 40,
+      height: 40,
       zIndex: 10,
     },
     glowBead: {
@@ -450,7 +450,7 @@ const getStyles = (colors: ThemeColors) =>
       left: 0,
       width: '100%',
       height: '100%',
-      borderRadius: 24,
+      borderRadius: 20,
     },
     solidBead: {
       position: 'absolute',
@@ -458,20 +458,20 @@ const getStyles = (colors: ThemeColors) =>
       left: 0,
       width: '100%',
       height: '100%',
-      borderRadius: 24,
+      borderRadius: 20,
       shadowColor: '#121c2a',
-      shadowOffset: { width: 0, height: 4 },
+      shadowOffset: { width: 0, height: 3 },
       shadowOpacity: 0.2,
-      shadowRadius: 12,
-      elevation: 6,
+      shadowRadius: 8,
+      elevation: 5,
     },
     iconContainer: {
       position: 'absolute',
-      bottom: 16,
+      bottom: 11,
       left: '50%',
-      marginLeft: -20,
-      width: 40,
-      height: 40,
+      marginLeft: -18,
+      width: 36,
+      height: 36,
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 30,
@@ -483,12 +483,12 @@ const getStyles = (colors: ThemeColors) =>
     },
     labelContainer: {
       position: 'absolute',
-      bottom: 8,
+      bottom: 4,
       alignItems: 'center',
       justifyContent: 'center',
     },
     labelText: {
-      fontSize: 11,
+      fontSize: 10,
       fontWeight: '700',
       textAlign: 'center',
     },

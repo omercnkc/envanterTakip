@@ -21,7 +21,7 @@ import { ProductFormData, productFormSchema, Category } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useInventory } from '../../context/InventoryContext';
-import { calculateWarrantyEndDate, formatDateTurkish } from '../../utils/warrantyCalculator';
+import { calculateWarrantyEndDate, formatDateTurkish, maskDateInput } from '../../utils/warrantyCalculator';
 import { mediaHelper } from '../../utils/mediaHelper';
 import { storageService } from '../../api/storageService';
 import { CategoryPickerModal } from '../../components/CategoryPickerModal';
@@ -29,6 +29,7 @@ import { MediaPickerModal } from '../../components/MediaPickerModal';
 import { BarcodeScannerModal } from '../../components/BarcodeScannerModal';
 import { TechOrbitLoader } from '../../components/TechOrbitLoader';
 import { ImageViewerModal } from '../../components/ImageViewerModal';
+import { AppCameraModal } from '../../components/AppCameraModal';
 import { getStyles } from './EditProductScreen.styles';
 
 const DURATION_OPTIONS = [
@@ -62,11 +63,61 @@ export const EditProductScreen: React.FC = () => {
   const [isUploadingInvoice, setIsUploadingInvoice] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingInitial, setLoadingInitial] = useState(!initialProduct);
+  const [appCameraVisible, setAppCameraVisible] = useState(false);
+  const [cameraTarget, setCameraTarget] = useState<'product' | 'invoice'>('product');
   const [priceInputText, setPriceInputText] = useState<string>(
     initialProduct?.purchase_price !== undefined && initialProduct?.purchase_price !== null
       ? String(initialProduct.purchase_price)
       : ''
   );
+
+  // Uygulama içi kameradan dönen fotoğrafı yükleme işlemi
+  const handleCameraCaptured = async (capturedUri: string) => {
+    if (cameraTarget === 'product') {
+      setImageUri(capturedUri);
+      setIsUploadingImage(true);
+      const userId = user?.id || '00000000-0000-0000-0000-000000000000';
+      const uploadRes = await storageService.uploadFile(
+        capturedUri,
+        'product-images',
+        userId,
+        {
+          fileName: 'camera_photo.jpg',
+          mimeType: 'image/jpeg',
+        }
+      );
+      if (uploadRes.error) {
+        Alert.alert('Yükleme Hatası', uploadRes.error);
+        setImageUri(initialProduct?.image_path || null);
+        setValue('image_path', initialProduct?.image_path || null);
+      } else if (uploadRes.publicUrl) {
+        setImageUri(uploadRes.publicUrl);
+        setValue('image_path', uploadRes.publicUrl);
+      }
+      setIsUploadingImage(false);
+    } else {
+      setInvoiceName('camera_invoice.jpg');
+      setIsUploadingInvoice(true);
+      const userId = user?.id || '00000000-0000-0000-0000-000000000000';
+      const uploadRes = await storageService.uploadFile(
+        capturedUri,
+        'invoices',
+        userId,
+        {
+          fileName: 'camera_invoice.jpg',
+          mimeType: 'image/jpeg',
+        }
+      );
+      if (uploadRes.error) {
+        Alert.alert('Yükleme Hatası', uploadRes.error);
+        setInvoiceName(initialProduct?.invoice_path ? 'Mevcut_Fatura_Belgesi' : null);
+        setValue('invoice_path', initialProduct?.invoice_path || null);
+      } else if (uploadRes.publicUrl) {
+        setValue('invoice_path', uploadRes.publicUrl);
+      }
+      setIsUploadingInvoice(false);
+    }
+  };
 
   const handlePriceChange = (text: string, onChangeForm: (val: number | undefined) => void) => {
     // Negatif işareti (-) ve harfleri tamamen engelle
@@ -542,6 +593,7 @@ export const EditProductScreen: React.FC = () => {
                       value={value || ''}
                       onChangeText={onChange}
                       onBlur={onBlur}
+                      maxLength={35}
                     />
                     <TouchableOpacity
                       style={styles.scanButton}
@@ -586,10 +638,13 @@ export const EditProductScreen: React.FC = () => {
                         placeholder="GG/AA/YYYY"
                         placeholderTextColor={colors.outline}
                         value={value || ''}
+                        keyboardType="number-pad"
+                        maxLength={10}
                         onChangeText={(text) => {
-                          onChange(text);
+                          const formatted = maskDateInput(text, value || '');
+                          onChange(formatted);
                           const calculated = calculateWarrantyEndDate(
-                            text,
+                            formatted,
                             selectedDuration
                           );
                           if (calculated) setValue('warranty_end_date', calculated);
@@ -726,7 +781,9 @@ export const EditProductScreen: React.FC = () => {
                       placeholder="GG/AA/YYYY"
                       placeholderTextColor={colors.outline}
                       value={value || ''}
-                      onChangeText={onChange}
+                      keyboardType="number-pad"
+                      maxLength={10}
+                      onChangeText={(text) => onChange(maskDateInput(text, value || ''))}
                       onBlur={onBlur}
                     />
                   </View>
@@ -849,7 +906,10 @@ export const EditProductScreen: React.FC = () => {
       <MediaPickerModal
         visible={photoPickerVisible}
         onClose={() => setPhotoPickerVisible(false)}
-        onSelectCamera={() => handlePickProductImage('camera')}
+        onSelectCamera={() => {
+          setCameraTarget('product');
+          setAppCameraVisible(true);
+        }}
         onSelectGallery={() => handlePickProductImage('gallery')}
         title="Ürün Fotoğrafı Değiştir"
         subtitle="Kamera ile çekin veya galerinizden seçin"
@@ -859,7 +919,10 @@ export const EditProductScreen: React.FC = () => {
       <MediaPickerModal
         visible={invoicePickerVisible}
         onClose={() => setInvoicePickerVisible(false)}
-        onSelectCamera={() => handlePickInvoice('camera')}
+        onSelectCamera={() => {
+          setCameraTarget('invoice');
+          setAppCameraVisible(true);
+        }}
         onSelectGallery={() => handlePickInvoice('gallery')}
         onSelectDocument={() => handlePickInvoice('document')}
         includeDocumentOption={true}
@@ -885,6 +948,19 @@ export const EditProductScreen: React.FC = () => {
         imageUrl={imageUri}
         title={watch('name') || 'Ürün Fotoğrafı'}
         onClose={() => setImageViewerOpen(false)}
+      />
+
+      {/* Uygulama İçi Güvenli Kamera Modalı (Android Çökmesini %100 Önler) */}
+      <AppCameraModal
+        visible={appCameraVisible}
+        onClose={() => setAppCameraVisible(false)}
+        onCapture={handleCameraCaptured}
+        title={cameraTarget === 'product' ? 'Ürün Fotoğrafı Çek' : 'Fatura Fotoğrafı Çek'}
+        subtitle={
+          cameraTarget === 'product'
+            ? 'Cihazınızı çerçevenin ortasına hizalayın'
+            : 'Faturayı düz bir zeminde net şekilde çekin'
+        }
       />
     </SafeAreaView>
   );
