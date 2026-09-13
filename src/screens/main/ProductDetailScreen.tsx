@@ -27,12 +27,13 @@ import {
   Download,
   ExternalLink,
   Package,
+  Maximize2,
 } from 'lucide-react-native';
 
 import { Product } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import { useInventory } from '../../context/InventoryContext';
-import { TechOrbitLoader } from '../../components';
+import { TechOrbitLoader, ImageViewerModal } from '../../components';
 import {
   formatDateTurkish,
   formatCurrency,
@@ -48,6 +49,7 @@ export const ProductDetailScreen: React.FC = () => {
   const { getProduct, deleteProduct } = useInventory();
   const [product, setProduct] = useState<Product | null>(initialProduct || null);
   const [loading, setLoading] = useState(!initialProduct);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
 
   const { colors } = useTheme();
   const styles = useMemo(() => getStyles(colors), [colors]);
@@ -146,15 +148,29 @@ export const ProductDetailScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Görsel Hero Bölümü */}
-        <View style={styles.heroImageContainer}>
+        <TouchableOpacity
+          style={styles.heroImageContainer}
+          activeOpacity={product.image_path ? 0.85 : 1}
+          onPress={() => {
+            if (product.image_path) {
+              setImageViewerOpen(true);
+            }
+          }}
+          disabled={!product.image_path}
+        >
           {product.image_path ? (
-            <Image source={{ uri: product.image_path }} style={styles.heroImage} resizeMode="cover" />
+            <>
+              <Image source={{ uri: product.image_path }} style={styles.heroImage} resizeMode="cover" />
+              <View style={styles.zoomBadge}>
+                <Maximize2 size={16} color="#ffffff" />
+              </View>
+            </>
           ) : (
             <View style={styles.heroPlaceholder}>
               <Package size={64} color={colors.outline} />
             </View>
           )}
-        </View>
+        </TouchableOpacity>
 
         {/* Ürün Adı & Garanti Durumu */}
         <View style={styles.titleSection}>
@@ -300,6 +316,14 @@ export const ProductDetailScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Büyük Fotoğraf Önizleme Modalı */}
+      <ImageViewerModal
+        visible={imageViewerOpen}
+        imageUrl={product.image_path}
+        title={product.name}
+        onClose={() => setImageViewerOpen(false)}
+      />
     </SafeAreaView>
   );
 };

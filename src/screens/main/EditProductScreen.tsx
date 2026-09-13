@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronDown, ArrowLeft, Camera, Image as ImageIcon, Upload, X, ScanBarcode } from 'lucide-react-native';
+import { ChevronDown, ArrowLeft, Camera, Image as ImageIcon, Upload, X, ScanBarcode, Maximize2 } from 'lucide-react-native';
 
 import { ProductFormData, productFormSchema, Category } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
@@ -28,6 +28,7 @@ import { CategoryPickerModal } from '../../components/CategoryPickerModal';
 import { MediaPickerModal } from '../../components/MediaPickerModal';
 import { BarcodeScannerModal } from '../../components/BarcodeScannerModal';
 import { TechOrbitLoader } from '../../components/TechOrbitLoader';
+import { ImageViewerModal } from '../../components/ImageViewerModal';
 import { getStyles } from './EditProductScreen.styles';
 
 const DURATION_OPTIONS = [
@@ -52,6 +53,7 @@ export const EditProductScreen: React.FC = () => {
   const [photoPickerVisible, setPhotoPickerVisible] = useState(false);
   const [invoicePickerVisible, setInvoicePickerVisible] = useState(false);
   const [barcodeScannerVisible, setBarcodeScannerVisible] = useState(false);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedDuration, setSelectedDuration] = useState<number>(24);
   const [imageUri, setImageUri] = useState<string | null>(initialProduct?.image_path || null);
@@ -365,7 +367,16 @@ export const EditProductScreen: React.FC = () => {
               </View>
             ) : imageUri ? (
               <View style={styles.imagePreviewContainer}>
-                <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+                <TouchableOpacity
+                  style={styles.imagePreviewClickable}
+                  onPress={() => setImageViewerOpen(true)}
+                  activeOpacity={0.85}
+                >
+                  <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+                  <View style={styles.zoomBadge}>
+                    <Maximize2 size={14} color="#ffffff" />
+                  </View>
+                </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.removeImageButton}
                   onPress={() => {
@@ -373,6 +384,7 @@ export const EditProductScreen: React.FC = () => {
                     setValue('image_path', null);
                   }}
                   activeOpacity={0.7}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
                   <X size={16} color={colors.onError} />
                 </TouchableOpacity>
@@ -865,6 +877,14 @@ export const EditProductScreen: React.FC = () => {
             shouldDirty: true,
           });
         }}
+      />
+
+      {/* Büyük Fotoğraf Önizleme Modalı */}
+      <ImageViewerModal
+        visible={imageViewerOpen}
+        imageUrl={imageUri}
+        title={watch('name') || 'Ürün Fotoğrafı'}
+        onClose={() => setImageViewerOpen(false)}
       />
     </SafeAreaView>
   );

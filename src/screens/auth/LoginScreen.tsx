@@ -17,7 +17,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mail, Lock, Eye, EyeOff, Sparkles } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, Sparkles, Fingerprint } from 'lucide-react-native';
 
 import { AuthStackParamList, LoginFormData, loginSchema } from '../../types';
 import { COLORS } from '../../constants';
@@ -25,6 +25,7 @@ import { useAuth } from '../../context/AuthContext';
 import { GoogleIcon } from '../../components/GoogleIcon';
 import { AnimatedLock, LockAnimState, LockStatusType } from '../../components/AnimatedLock';
 import { getSavedCredentials, clearSavedCredentials, saveCredentials } from '../../utils/credentialHelper';
+import { biometricHelper, BiometricCheckResult } from '../../utils/biometricHelper';
 import { styles } from './LoginScreen.styles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
@@ -36,6 +37,8 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
   const [hasSavedCredential, setHasSavedCredential] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [biometricInfo, setBiometricInfo] = useState<BiometricCheckResult | null>(null);
   const [animState, setAnimState] = useState<LockAnimState>('idle');
   const [statusType, setStatusType] = useState<LockStatusType>('idle');
 
@@ -116,11 +119,19 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     React.useCallback(() => {
       let isMounted = true;
       const loadSaved = async () => {
-        const saved = await getSavedCredentials();
-        if (isMounted && saved && saved.email && saved.password) {
-          setValue('email', saved.email, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
-          setValue('password', saved.password, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
-          setHasSavedCredential(true);
+        const [saved, bioEnabled, bioInfo] = await Promise.all([
+          getSavedCredentials(),
+          biometricHelper.isEnabled(),
+          biometricHelper.checkBiometrics(),
+        ]);
+        if (isMounted) {
+          setBiometricEnabled(bioEnabled);
+          setBiometricInfo(bioInfo);
+          if (saved && saved.email && saved.password) {
+            setValue('email', saved.email, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+            setValue('password', saved.password, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+            setHasSavedCredential(true);
+          }
         }
       };
       loadSaved();
@@ -129,6 +140,17 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       };
     }, [setValue])
   );
+
+  const handleBiometricLogin = async () => {
+    const saved = await getSavedCredentials();
+    if (!saved || !saved.email || !saved.password) {
+      return;
+    }
+    const res = await biometricHelper.authenticate('Safe Envanter Girişi');
+    if (res.success) {
+      onSubmit({ email: saved.email, password: saved.password });
+    }
+  };
 
   const handleClearSavedCredentials = async () => {
     await clearSavedCredentials();
@@ -158,8 +180,11 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       } else {
         setStatusType('success');
         setAnimState('unlock');
-        // Giriş başarılı olunca bilgileri yerel hafızada güncel tut
-        await saveCredentials(data.email, data.password, false);
+        // Giriş başarılı olunca bilgileri yerel hafızada güncel tut ve biyometrik kilidi tazele
+        await Promise.all([
+          saveCredentials(data.email, data.password, false),
+          biometricHelper.recordUnlock(),
+        ]);
       }
     } catch {
       setServerError('Giriş yapılırken beklenmedik bir hata oluştu.');
@@ -393,6 +418,23 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 </Text>
               )}
             </TouchableOpacity>
+
+            {/* Biyometrik ile Giriş Yap Butonu */}
+            {hasSavedCredential && biometricEnabled && (
+              <TouchableOpacity
+                style={styles.biometricButton}
+                onPress={handleBiometricLogin}
+                disabled={isSubmitting}
+                activeOpacity={0.8}
+              >
+                <Fingerprint size={20} color={COLORS.primary} />
+                <Text style={styles.biometricButtonText}>
+                  {biometricInfo?.biometricTypeName
+                    ? `${biometricInfo.biometricTypeName} ile Hızlı Giriş`
+                    : 'Biyometrik Giriş Yap'}
+                </Text>
+              </TouchableOpacity>
+            )}
 
             {/* Ayırıcı */}
             <View style={styles.dividerRow}>

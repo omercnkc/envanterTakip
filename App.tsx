@@ -14,6 +14,7 @@ import {
   requestNotificationPermissions,
 } from './src/utils/notificationHelper';
 import { DARK_COLORS, LIGHT_COLORS } from './src/constants/colors';
+import { BiometricLockOverlay } from './src/components';
 
 /**
  * Temalar arası geçişte gözü yormayan pürüzsüz dissolve geçişi sağlar
@@ -91,6 +92,7 @@ const AppContent: React.FC = () => {
       <RootNavigator />
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <ThemeTransitionOverlay />
+      <BiometricLockOverlay />
     </NavigationContainer>
   );
 };
