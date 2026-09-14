@@ -34,7 +34,7 @@ import { Product } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import { useInventory } from '../../context/InventoryContext';
 import { useAlert } from '../../context/AlertContext';
-import { TechOrbitLoader, ImageViewerModal } from '../../components';
+import { TechOrbitLoader, ImageViewerModal, ProductQrModal } from '../../components';
 import {
   formatDateTurkish,
   formatCurrency,
@@ -52,6 +52,7 @@ export const ProductDetailScreen: React.FC = () => {
   const [product, setProduct] = useState<Product | null>(initialProduct || null);
   const [loading, setLoading] = useState(!initialProduct);
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [qrModalOpen, setQrModalOpen] = useState(false);
 
   const { colors } = useTheme();
   const styles = useMemo(() => getStyles(colors), [colors]);
@@ -337,6 +338,31 @@ export const ProductDetailScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
+        {/* Dijital Ürün Etiketi (QR Kod) Bölümü */}
+        <View style={styles.qrSection}>
+          <Text style={styles.sectionTitle}>Dijital Ürün Etiketi</Text>
+          <TouchableOpacity
+            style={styles.qrCard}
+            onPress={() => setQrModalOpen(true)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.qrCardLeft}>
+              <View style={styles.qrCardIconBox}>
+                <QrCode size={22} color={colors.primary} />
+              </View>
+              <View style={styles.qrCardTextBox}>
+                <Text style={styles.qrCardTitle}>Cihaz QR Etiketi</Text>
+                <Text style={styles.qrCardSubtitle} numberOfLines={1}>
+                  Çıktı alıp cihaza yapıştırın, kamerayla hızlıca açın
+                </Text>
+              </View>
+            </View>
+            <View style={styles.qrActionBadge}>
+              <Text style={styles.qrActionBadgeText}>Görüntüle & Yazdır</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+
         {/* Aksiyon Butonları (Düzenle / Sil) */}
         <View style={styles.actionButtonsRow}>
           <TouchableOpacity style={styles.editButton} onPress={handleEdit} activeOpacity={0.8}>
@@ -347,6 +373,13 @@ export const ProductDetailScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Dijital Ürün Etiketi & Yazdırma Modalı */}
+      <ProductQrModal
+        visible={qrModalOpen}
+        product={product}
+        onClose={() => setQrModalOpen(false)}
+      />
 
       {/* Büyük Fotoğraf Önizleme Modalı */}
       <ImageViewerModal

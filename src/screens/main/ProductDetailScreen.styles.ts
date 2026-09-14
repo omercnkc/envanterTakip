@@ -219,6 +219,62 @@ export const getStyles = (colors: ThemeColors) => StyleSheet.create({
     backgroundColor: colors.primaryContainer + '15',
   },
 
+  // QR Label Section
+  qrSection: {
+    gap: SPACING.sm,
+    marginTop: 4,
+  },
+  qrCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: RADIUS.lg,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: colors.surfaceContainerHigh,
+    ...SHADOWS.sm,
+  },
+  qrCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  qrCardIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.default,
+    backgroundColor: colors.primaryContainer + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  qrCardTextBox: {
+    flex: 1,
+  },
+  qrCardTitle: {
+    ...TYPOGRAPHY.bodyMd,
+    fontWeight: '600',
+    color: colors.onBackground,
+  },
+  qrCardSubtitle: {
+    ...TYPOGRAPHY.bodySm,
+    fontSize: 11,
+    color: colors.onSurfaceVariant,
+    marginTop: 2,
+  },
+  qrActionBadge: {
+    backgroundColor: colors.primary + '15',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.full,
+  },
+  qrActionBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+
   // Action Buttons
   actionButtonsRow: {
     flexDirection: 'row',

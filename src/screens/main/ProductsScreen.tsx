@@ -11,14 +11,16 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { Search, X, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { Search, X, SlidersHorizontal, ChevronLeft, ChevronRight, QrCode } from 'lucide-react-native';
 
 import { Product } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import { useInventory } from '../../context/InventoryContext';
+import { useAlert } from '../../context/AlertContext';
 import { ProductCard } from '../../components/ProductCard';
 import { EmptyState } from '../../components/EmptyState';
 import { FilterModal } from '../../components/FilterModal';
+import { BarcodeScannerModal } from '../../components/BarcodeScannerModal';
 import { TechOrbitLoader } from '../../components/TechOrbitLoader';
 import { getStyles } from './ProductsScreen.styles';
 
@@ -36,6 +38,8 @@ export const ProductsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const {
     products,
+    allProducts,
+    getProduct,
     isLoading,
     isRefreshing,
     refreshProducts,
@@ -43,14 +47,66 @@ export const ProductsScreen: React.FC = () => {
     setFilterOptions,
     resetFilters,
   } = useInventory();
+  const { showSuccess, showAlert } = useAlert();
 
   const { colors } = useTheme();
   const styles = useMemo(() => getStyles(colors), [colors]);
 
   const [searchText, setSearchText] = useState('');
   const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [page, setPage] = useState(1);
   const flatListRef = React.useRef<FlatList<any>>(null);
+
+  const handleQrScan = async (scannedData: string) => {
+    let targetId = scannedData.trim();
+    if (targetId.includes('product/')) {
+      targetId = targetId.split('product/')[1].split('?')[0].split('/')[0];
+    } else if (targetId.startsWith('ENVANTER:')) {
+      targetId = targetId.replace('ENVANTER:', '').trim();
+    }
+
+    // 1. Önce allProducts içinde ID veya Seri No ile ara
+    const found = allProducts.find(
+      (p) =>
+        p.id === targetId ||
+        (p.serial_number && p.serial_number.toLowerCase() === scannedData.toLowerCase())
+    );
+
+    if (found) {
+      showSuccess(`"${found.name}" etiketi okundu.`);
+      navigation.navigate('ProductDetail', {
+        productId: found.id,
+        initialProduct: found,
+      });
+      return;
+    }
+
+    // 2. Uzak sunucudan kontrol et (ID ise)
+    if (targetId.includes('-')) {
+      const res = await getProduct(targetId);
+      if (res) {
+        showSuccess(`"${res.name}" etiketi okundu.`);
+        navigation.navigate('ProductDetail', {
+          productId: res.id,
+          initialProduct: res,
+        });
+        return;
+      }
+    }
+
+    // 3. Eşleşme yoksa kullanıcıya seçenek sun
+    showAlert({
+      type: 'info',
+      title: 'Ürün Bulunamadı',
+      message: `"${scannedData}" kodlu etiket envanterinizdeki herhangi bir ürünle eşleşmedi. Bu kodla yeni bir ürün kaydetmek ister misiniz?`,
+      confirmText: 'Ürün Ekle',
+      cancelText: 'Vazgeç',
+      onConfirm: () => {
+        navigation.navigate('AddTab');
+      },
+    });
+  };
 
   // Arama metni değiştiğinde 1. sayfaya sıfırla
   const handleSearchChange = (text: string) => {
@@ -130,13 +186,21 @@ export const ProductsScreen: React.FC = () => {
             onChangeText={handleSearchChange}
             autoCapitalize="none"
           />
-          {searchText.length > 0 && (
+          {searchText.length > 0 ? (
             <TouchableOpacity
               style={styles.clearSearchButton}
               onPress={() => handleSearchChange('')}
               activeOpacity={0.7}
             >
               <X size={16} color={colors.outline} />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.clearSearchButton}
+              onPress={() => setScannerOpen(true)}
+              activeOpacity={0.7}
+            >
+              <QrCode size={18} color={colors.primary} />
             </TouchableOpacity>
           )}
         </View>
@@ -400,6 +464,13 @@ export const ProductsScreen: React.FC = () => {
           setSearchText('');
           setPage(1);
         }}
+      />
+
+      {/* QR Kod / Barkod Tarayıcı Modalı */}
+      <BarcodeScannerModal
+        visible={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onScan={handleQrScan}
       />
     </SafeAreaView>
   );

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -17,23 +17,79 @@ import {
   Bell,
   ChevronRight,
   ShieldCheck,
+  QrCode,
 } from 'lucide-react-native';
 
 import { Product } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useInventory } from '../../context/InventoryContext';
+import { useAlert } from '../../context/AlertContext';
 import { ProductCard } from '../../components/ProductCard';
 import { EmptyState } from '../../components/EmptyState';
+import { BarcodeScannerModal } from '../../components/BarcodeScannerModal';
 import { calculateWarrantyStatus } from '../../utils/warrantyCalculator';
 import { getStyles } from './HomeScreen.styles';
 
 export const HomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { profile, user } = useAuth();
-  const { allProducts, stats, refreshProducts, isRefreshing } = useInventory();
+  const { allProducts, stats, refreshProducts, isRefreshing, getProduct } = useInventory();
+  const { showSuccess, showAlert } = useAlert();
   const { colors } = useTheme();
   const styles = useMemo(() => getStyles(colors), [colors]);
+
+  const [scannerOpen, setScannerOpen] = useState(false);
+
+  const handleQrScan = async (scannedData: string) => {
+    let targetId = scannedData.trim();
+    if (targetId.includes('product/')) {
+      targetId = targetId.split('product/')[1].split('?')[0].split('/')[0];
+    } else if (targetId.startsWith('ENVANTER:')) {
+      targetId = targetId.replace('ENVANTER:', '').trim();
+    }
+
+    // 1. Önce allProducts içinde ID veya Seri No ile ara
+    const found = allProducts.find(
+      (p) =>
+        p.id === targetId ||
+        (p.serial_number && p.serial_number.toLowerCase() === scannedData.toLowerCase())
+    );
+
+    if (found) {
+      showSuccess(`"${found.name}" etiketi okundu.`);
+      navigation.navigate('ProductDetail', {
+        productId: found.id,
+        initialProduct: found,
+      });
+      return;
+    }
+
+    // 2. Uzak sunucudan kontrol et (ID ise)
+    if (targetId.includes('-')) {
+      const res = await getProduct(targetId);
+      if (res) {
+        showSuccess(`"${res.name}" etiketi okundu.`);
+        navigation.navigate('ProductDetail', {
+          productId: res.id,
+          initialProduct: res,
+        });
+        return;
+      }
+    }
+
+    // 3. Eşleşme yoksa kullanıcıya seçenek sun
+    showAlert({
+      type: 'info',
+      title: 'Ürün Bulunamadı',
+      message: `"${scannedData}" kodlu etiket envanterinizdeki herhangi bir ürünle eşleşmedi. Bu kodla yeni bir ürün kaydetmek ister misiniz?`,
+      confirmText: 'Ürün Ekle',
+      cancelText: 'Vazgeç',
+      onConfirm: () => {
+        navigation.navigate('AddTab');
+      },
+    });
+  };
 
   const rawName = profile?.full_name || user?.email?.split('@')[0] || 'Misafir';
   const firstName = rawName.trim().split(/\s+/)[0] || rawName;
@@ -136,6 +192,13 @@ export const HomeScreen: React.FC = () => {
           </View>
 
           <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => setScannerOpen(true)}
+              activeOpacity={0.7}
+            >
+              <QrCode size={18} color={colors.primary} />
+            </TouchableOpacity>
             <TouchableOpacity
               style={styles.iconButton}
               onPress={() => navigation.navigate('Notifications')}
@@ -370,6 +433,13 @@ export const HomeScreen: React.FC = () => {
           />
         )}
       </ScrollView>
+
+      {/* QR Kod / Barkod Tarayıcı Modalı */}
+      <BarcodeScannerModal
+        visible={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onScan={handleQrScan}
+      />
     </SafeAreaView>
   );
 };

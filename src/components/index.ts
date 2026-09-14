@@ -19,3 +19,4 @@ export * from './AppCameraModal';
 export * from './AppToast';
 export * from './AppAlertModal';
 export * from './AppCallout';
+export * from './ProductQrModal';

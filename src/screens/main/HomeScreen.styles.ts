@@ -60,6 +60,9 @@ export const getStyles = (colors: ThemeColors) => StyleSheet.create({
     fontSize: 12,
   },
   headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     alignSelf: 'flex-start',
     marginTop: 4,
     marginRight: -2,
