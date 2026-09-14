@@ -356,6 +356,7 @@ export const HomeScreen: React.FC = () => {
                 key={p.id}
                 product={p}
                 showPercentageGauge={true}
+                showFavoriteButton={false}
                 onPress={() => handleProductPress(p)}
               />
             ))}

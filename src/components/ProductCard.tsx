@@ -32,6 +32,7 @@ interface ProductCardProps {
   product: Product;
   onPress: () => void;
   showPercentageGauge?: boolean;
+  showFavoriteButton?: boolean;
 }
 
 const getCategoryIcon = (iconName?: string | null, size = 26, color = '#4648d4') => {
@@ -60,7 +61,7 @@ const getCategoryIcon = (iconName?: string | null, size = 26, color = '#4648d4')
 };
 
 export const ProductCard: React.FC<ProductCardProps> = React.memo(
-  ({ product, onPress, showPercentageGauge = false }) => {
+  ({ product, onPress, showPercentageGauge = false, showFavoriteButton = true }) => {
     const { colors } = useTheme();
     const styles = useMemo(() => getStyles(colors), [colors]);
     const { isFavorite, toggleFavorite } = useInventory();
@@ -131,33 +132,35 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(
           </View>
         </View>
 
-        {/* Sağ Bölüm: Favori Butonu + Yüzde Çemberi veya Durum Rozeti */}
-        <View style={styles.rightSection}>
-          <TouchableOpacity
-            style={[styles.favoriteButton, isFav && styles.favoriteButtonActive]}
-            onPress={handleFavoritePress}
-            activeOpacity={0.65}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Heart
-              size={15}
-              color={isFav ? '#ef4444' : colors.outline}
-              fill={isFav ? '#ef4444' : 'transparent'}
-            />
-          </TouchableOpacity>
+        {/* Sağ Bölüm: Favori Butonu (Opsiyonel) + Yüzde Çemberi veya Durum Rozeti */}
+        <View style={[styles.rightSection, !showFavoriteButton && styles.rightSectionCentered]}>
+          {showFavoriteButton && (
+            <TouchableOpacity
+              style={[styles.favoriteButton, isFav && styles.favoriteButtonActive]}
+              onPress={handleFavoritePress}
+              activeOpacity={0.65}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Heart
+                size={15}
+                color={isFav ? '#ef4444' : colors.outline}
+                fill={isFav ? '#ef4444' : 'transparent'}
+              />
+            </TouchableOpacity>
+          )}
 
           {showPercentageGauge ? (
             <View style={styles.gaugeContainer}>
               <CircularProgress
-                size={36}
+                size={showFavoriteButton ? 36 : 40}
                 strokeWidth={3}
                 percentage={percentage}
                 color={statusInfo.color}
                 backgroundColor={colors.surfaceContainer}
                 centerText={`%${percentage}`}
-                textStyle={{ fontSize: 9, fontWeight: '700' }}
+                textStyle={{ fontSize: showFavoriteButton ? 9 : 10, fontWeight: '700' }}
               />
-              <ChevronRight size={15} color={colors.outline} style={styles.chevron} />
+              <ChevronRight size={showFavoriteButton ? 15 : 16} color={colors.outline} style={styles.chevron} />
             </View>
           ) : (
             <View style={styles.statusBadgeWrapper}>

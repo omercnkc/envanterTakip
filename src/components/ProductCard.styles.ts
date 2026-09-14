@@ -77,6 +77,11 @@ export const getStyles = (colors: ThemeColors) =>
       minHeight: 56,
       paddingVertical: 1,
     },
+    rightSectionCentered: {
+      justifyContent: 'center',
+      minHeight: 0,
+      paddingVertical: 0,
+    },
     favoriteButton: {
       width: 28,
       height: 28,
