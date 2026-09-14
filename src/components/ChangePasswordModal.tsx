@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
   Animated,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
@@ -20,6 +19,7 @@ import { useSwipeDownToClose } from '../hooks/useSwipeDownToClose';
 
 import { COLORS } from '../constants';
 import { useAuth } from '../context/AuthContext';
+import { useAlert } from '../context/AlertContext';
 import { changePasswordSchema, ChangePasswordFormData } from '../types';
 import { styles } from './ChangePasswordModal.styles';
 
@@ -33,6 +33,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   onClose,
 }) => {
   const { updatePassword } = useAuth();
+  const { showSuccess, showError } = useAlert();
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -72,16 +73,16 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
     try {
       const result = await updatePassword(data.password);
       if (!result.success) {
-        Alert.alert('Şifre Güncellenemedi', result.error || 'Bir hata oluştu.');
+        showError(result.error || 'Bir hata oluştu.', 'Şifre Güncellenemedi');
         return;
       }
-      Alert.alert(
-        'Şifre Güncellendi',
-        'Şifreniz başarıyla değiştirildi. Yeni şifreniz sonraki girişlerinizde geçerli olacaktır.'
+      showSuccess(
+        'Şifreniz başarıyla değiştirildi. Yeni şifreniz sonraki girişlerinizde geçerli olacaktır.',
+        'Şifre Güncellendi'
       );
       onClose();
     } catch {
-      Alert.alert('Hata', 'Şifre güncellenirken beklenmedik bir hata oluştu.');
+      showError('Şifre güncellenirken beklenmedik bir hata oluştu.', 'Hata');
     } finally {
       setSubmitting(false);
     }

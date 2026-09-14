@@ -14,7 +14,8 @@ import {
   requestNotificationPermissions,
 } from './src/utils/notificationHelper';
 import { DARK_COLORS, LIGHT_COLORS } from './src/constants/colors';
-import { BiometricLockOverlay } from './src/components';
+import { BiometricLockOverlay, AppToast, AppAlertModal } from './src/components';
+import { AlertProvider } from './src/context/AlertContext';
 
 /**
  * Temalar arası geçişte gözü yormayan pürüzsüz dissolve geçişi sağlar
@@ -93,6 +94,8 @@ const AppContent: React.FC = () => {
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <ThemeTransitionOverlay />
       <BiometricLockOverlay />
+      <AppToast />
+      <AppAlertModal />
     </NavigationContainer>
   );
 };
@@ -129,11 +132,13 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <AuthProvider>
-          <InventoryProvider>
-            <AppContent />
-          </InventoryProvider>
-        </AuthProvider>
+        <AlertProvider>
+          <AuthProvider>
+            <InventoryProvider>
+              <AppContent />
+            </InventoryProvider>
+          </AuthProvider>
+        </AlertProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

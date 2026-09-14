@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   ActivityIndicator,
-  Alert,
   Animated,
 } from 'react-native';
 import { FileSpreadsheet, FileCode, Share2, X } from 'lucide-react-native';
@@ -15,6 +14,7 @@ import { useSwipeDownToClose } from '../hooks/useSwipeDownToClose';
 
 import { COLORS } from '../constants';
 import { useInventory } from '../context/InventoryContext';
+import { useAlert } from '../context/AlertContext';
 import { exportService } from '../api/exportService';
 import { styles } from './ExportDataModal.styles';
 
@@ -28,6 +28,7 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
   onClose,
 }) => {
   const { products } = useInventory();
+  const { showWarning, showError, showSuccess } = useAlert();
   const [selectedFormat, setSelectedFormat] = useState<'csv' | 'json'>('csv');
   const [loading, setLoading] = useState(false);
 
@@ -40,9 +41,9 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
 
   const handleExport = async () => {
     if (productCount === 0) {
-      Alert.alert(
-        'Kayıtlı Ürün Yok',
-        'Dışa aktarmak için en az 1 ürün kaydınızın bulunması gerekir. Lütfen önce ürün ekleyin.'
+      showWarning(
+        'Dışa aktarmak için en az 1 ürün kaydınızın bulunması gerekir. Lütfen önce ürün ekleyin.',
+        'Kayıtlı Ürün Yok'
       );
       return;
     }
@@ -55,13 +56,14 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
       });
 
       if (!result.success) {
-        Alert.alert('Dışa Aktarma Başarısız', result.error || 'Bir sorun oluştu.');
+        showError(result.error || 'Bir sorun oluştu.', 'Dışa Aktarma Başarısız');
         return;
       }
 
+      showSuccess('Envanter verisi başarıyla dışa aktarıldı.', 'Başarılı');
       onClose();
     } catch {
-      Alert.alert('Hata', 'Dosya oluşturulurken beklenmedik bir hata meydana geldi.');
+      showError('Dosya oluşturulurken beklenmedik bir hata meydana geldi.', 'Hata');
     } finally {
       setLoading(false);
     }

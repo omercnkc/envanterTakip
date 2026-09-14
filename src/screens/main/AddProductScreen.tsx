@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -28,6 +27,7 @@ import { ProductFormData, productFormSchema, Category } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useInventory } from '../../context/InventoryContext';
+import { useAlert } from '../../context/AlertContext';
 import { calculateWarrantyEndDate, formatDateTurkish, maskDateInput } from '../../utils/warrantyCalculator';
 import { mediaHelper } from '../../utils/mediaHelper';
 import { storageService } from '../../api/storageService';
@@ -50,6 +50,7 @@ export const AddProductScreen: React.FC = () => {
   const { user } = useAuth();
   const { addProduct, categories } = useInventory();
   const { colors } = useTheme();
+  const { showSuccess, showError, showWarning } = useAlert();
   const styles = useMemo(() => getStyles(colors), [colors]);
 
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
@@ -83,7 +84,7 @@ export const AddProductScreen: React.FC = () => {
         }
       );
       if (uploadRes.error) {
-        Alert.alert('Yükleme Hatası', uploadRes.error);
+        showError(uploadRes.error, 'Yükleme Hatası');
         setImageUri(null);
         setValue('image_path', null);
       } else if (uploadRes.publicUrl) {
@@ -105,7 +106,7 @@ export const AddProductScreen: React.FC = () => {
         }
       );
       if (uploadRes.error) {
-        Alert.alert('Yükleme Hatası', uploadRes.error);
+        showError(uploadRes.error, 'Yükleme Hatası');
         setInvoiceName(null);
         setValue('invoice_path', null);
       } else if (uploadRes.publicUrl) {
@@ -222,7 +223,7 @@ export const AddProductScreen: React.FC = () => {
       );
 
       if (uploadRes.error) {
-        Alert.alert('Yükleme Hatası', uploadRes.error);
+        showError(uploadRes.error, 'Yükleme Hatası');
         setImageUri(null);
         setValue('image_path', null);
       } else if (uploadRes.publicUrl) {
@@ -230,7 +231,7 @@ export const AddProductScreen: React.FC = () => {
         setValue('image_path', uploadRes.publicUrl);
       }
     } catch {
-      Alert.alert('Hata', 'Fotoğraf yüklenirken beklenmeyen bir hata oluştu.');
+      showError('Fotoğraf yüklenirken beklenmeyen bir hata oluştu.', 'Hata');
       setImageUri(null);
       setValue('image_path', null);
     } finally {
@@ -268,14 +269,14 @@ export const AddProductScreen: React.FC = () => {
       );
 
       if (uploadRes.error) {
-        Alert.alert('Yükleme Hatası', uploadRes.error);
+        showError(uploadRes.error, 'Yükleme Hatası');
         setInvoiceName(null);
         setValue('invoice_path', null);
       } else if (uploadRes.publicUrl) {
         setValue('invoice_path', uploadRes.publicUrl, { shouldValidate: true });
       }
     } catch {
-      Alert.alert('Hata', 'Fatura yüklenirken beklenmeyen bir hata oluştu.');
+      showError('Fatura yüklenirken beklenmeyen bir hata oluştu.', 'Hata');
       setInvoiceName(null);
       setValue('invoice_path', null);
     } finally {
@@ -288,25 +289,19 @@ export const AddProductScreen: React.FC = () => {
       setIsSubmitting(true);
       const res = await addProduct(data);
       if (!res.success) {
-        Alert.alert('Hata', res.error || 'Ürün kaydedilirken bir hata oluştu.');
+        showError(res.error || 'Ürün kaydedilirken bir hata oluştu.', 'Hata');
         return;
       }
 
-      Alert.alert('Başarılı', 'Ürün envanterinize başarıyla eklendi.', [
-        {
-          text: 'Tamam',
-          onPress: () => {
-            reset();
-            setPriceInputText('');
-            setImageUri(null);
-            setInvoiceName(null);
-            setSelectedCategory(null);
-            navigation.navigate('ProductsTab');
-          },
-        },
-      ]);
+      showSuccess('Ürün envanterinize başarıyla eklendi.', 'Başarılı');
+      reset();
+      setPriceInputText('');
+      setImageUri(null);
+      setInvoiceName(null);
+      setSelectedCategory(null);
+      navigation.navigate('ProductsTab');
     } catch {
-      Alert.alert('Hata', 'Ürün kaydedilemedi. Lütfen tekrar deneyin.');
+      showError('Ürün kaydedilemedi. Lütfen tekrar deneyin.', 'Hata');
     } finally {
       setIsSubmitting(false);
     }
@@ -316,9 +311,9 @@ export const AddProductScreen: React.FC = () => {
     const errorKeys = Object.keys(formErrors);
     if (errorKeys.length > 0) {
       const firstError = formErrors[errorKeys[0]]?.message;
-      Alert.alert(
-        'Delil & Zorunlu Alanlar Eksik',
-        firstError || 'Lütfen seri numarası, fatura ve satın alma bilgilerini eksiksiz doldurun.'
+      showWarning(
+        firstError || 'Lütfen seri numarası, fatura ve satın alma bilgilerini eksiksiz doldurun.',
+        'Eksik Alanlar'
       );
     }
   };

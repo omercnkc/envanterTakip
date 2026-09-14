@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
   Animated,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
@@ -20,6 +19,7 @@ import { useSwipeDownToClose } from '../hooks/useSwipeDownToClose';
 
 import { COLORS } from '../constants';
 import { useAuth } from '../context/AuthContext';
+import { useAlert } from '../context/AlertContext';
 import { updateProfileSchema, UpdateProfileFormData } from '../types';
 import { styles } from './EditProfileModal.styles';
 
@@ -33,6 +33,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   onClose,
 }) => {
   const { profile, user, updateProfile } = useAuth();
+  const { showSuccess, showError } = useAlert();
   const [submitting, setSubmitting] = useState(false);
 
   const { panHandlers, translateY, handleClose } = useSwipeDownToClose({
@@ -70,13 +71,13 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     try {
       const result = await updateProfile(data.fullName);
       if (!result.success) {
-        Alert.alert('Profil Güncellenemedi', result.error || 'Bir hata oluştu.');
+        showError(result.error || 'Bir hata oluştu.', 'Profil Güncellenemedi');
         return;
       }
-      Alert.alert('Başarılı', 'Profil bilgileriniz başarıyla güncellendi.');
+      showSuccess('Profil bilgileriniz başarıyla güncellendi.', 'Başarılı');
       onClose();
     } catch {
-      Alert.alert('Hata', 'Profil güncellenirken beklenmedik bir hata oluştu.');
+      showError('Profil güncellenirken beklenmedik bir hata oluştu.', 'Hata');
     } finally {
       setSubmitting(false);
     }

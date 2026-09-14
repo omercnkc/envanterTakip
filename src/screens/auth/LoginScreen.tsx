@@ -24,6 +24,7 @@ import { COLORS } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
 import { GoogleIcon } from '../../components/GoogleIcon';
 import { AnimatedLock, LockAnimState, LockStatusType } from '../../components/AnimatedLock';
+import { AppCallout } from '../../components/AppCallout';
 import { getSavedCredentials, clearSavedCredentials, saveCredentials } from '../../utils/credentialHelper';
 import { biometricHelper, BiometricCheckResult } from '../../utils/biometricHelper';
 import { styles } from './LoginScreen.styles';
@@ -265,9 +266,12 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
             )}
 
             {serverError && (
-              <View style={styles.serverErrorBox}>
-                <Text style={styles.serverErrorText}>{serverError}</Text>
-              </View>
+              <AppCallout
+                type="error"
+                message={serverError}
+                onClose={() => setServerError(null)}
+                style={{ marginBottom: 16 }}
+              />
             )}
 
             {hasSavedCredential && (

@@ -19,6 +19,7 @@ import { Mail, ArrowLeft } from 'lucide-react-native';
 import { AuthStackParamList, ForgotPasswordFormData, forgotPasswordSchema } from '../../types';
 import { COLORS } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
+import { AppCallout } from '../../components/AppCallout';
 import { styles } from './ForgotPasswordScreen.styles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'ForgotPassword'>;
@@ -97,15 +98,22 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation, route }) => 
           {/* Form Kartı */}
           <View style={styles.card}>
             {serverError && (
-              <View style={styles.serverErrorBox}>
-                <Text style={styles.serverErrorText}>{serverError}</Text>
-              </View>
+              <AppCallout
+                type="error"
+                message={serverError}
+                onClose={() => setServerError(null)}
+                style={{ marginBottom: 16 }}
+              />
             )}
 
             {successMessage && (
-              <View style={styles.successBox}>
-                <Text style={styles.successText}>{successMessage}</Text>
-              </View>
+              <AppCallout
+                type="success"
+                title="E-posta Gönderildi"
+                message={successMessage}
+                onClose={() => setSuccessMessage(null)}
+                style={{ marginBottom: 16 }}
+              />
             )}
 
             {/* E-posta */}

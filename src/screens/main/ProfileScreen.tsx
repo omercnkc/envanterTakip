@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Alert,
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,6 +21,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useInventory } from '../../context/InventoryContext';
+import { useAlert } from '../../context/AlertContext';
 import { EditProfileModal, ExportDataModal } from '../../components';
 import { getStyles } from './ProfileScreen.styles';
 
@@ -30,6 +30,7 @@ export const ProfileScreen: React.FC = () => {
   const { profile, user, signOut } = useAuth();
   const { colors } = useTheme();
   const { stats } = useInventory();
+  const { showAlert } = useAlert();
 
   const styles = useMemo(() => getStyles(colors), [colors]);
 
@@ -41,28 +42,35 @@ export const ProfileScreen: React.FC = () => {
   const userInitials = (displayName[0] || 'K').toUpperCase();
 
   const handleLogout = () => {
-    Alert.alert('Çıkış Yap', 'Hesabınızdan çıkış yapmak istediğinize emin misiniz?', [
-      { text: 'İptal', style: 'cancel' },
-      {
-        text: 'Çıkış Yap',
-        style: 'destructive',
-        onPress: () => signOut(),
-      },
-    ]);
+    showAlert({
+      type: 'danger',
+      title: 'Çıkış Yap',
+      message: 'Hesabınızdan çıkış yapmak istediğinize emin misiniz?',
+      confirmText: 'Çıkış Yap',
+      cancelText: 'Vazgeç',
+      destructive: true,
+      onConfirm: () => signOut(),
+    });
   };
 
   const handleHelp = () => {
-    Alert.alert(
-      'Yardım & Destek',
-      'Sorularınız veya geri bildirimleriniz için support@safeenvanter.com adresinden bize ulaşabilirsiniz.'
-    );
+    showAlert({
+      type: 'info',
+      title: 'Yardım & Destek',
+      message: 'Sorularınız veya geri bildirimleriniz için support@safeenvanter.com adresinden bize ulaşabilirsiniz.',
+      showCancel: false,
+      confirmText: 'Anladım',
+    });
   };
 
   const handleAbout = () => {
-    Alert.alert(
-      'Safe Envanter',
-      'Versiyon 1.0.0\n\nEvdeki varlıklarınızı ve garanti sürelerinizi güvenle takip edebileceğiniz modern envanter yönetim platformu.'
-    );
+    showAlert({
+      type: 'info',
+      title: 'Safe Envanter',
+      message: 'Versiyon 1.0.0\n\nEvdeki varlıklarınızı ve garanti sürelerinizi güvenle takip edebileceğiniz modern envanter yönetim platformu.',
+      showCancel: false,
+      confirmText: 'Kapat',
+    });
   };
 
   return (

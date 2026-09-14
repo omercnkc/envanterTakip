@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   FlatList,
   RefreshControl,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,6 +22,7 @@ import {
 
 import { useTheme } from '../../context/ThemeContext';
 import { useInventory } from '../../context/InventoryContext';
+import { useAlert } from '../../context/AlertContext';
 import { calculateWarrantyStatus, formatDateTurkish } from '../../utils/warrantyCalculator';
 import { sendTestNotification } from '../../utils/notificationHelper';
 import { EmptyState } from '../../components/EmptyState';
@@ -51,6 +51,7 @@ export const NotificationsScreen: React.FC = () => {
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const [isSendingTest, setIsSendingTest] = useState(false);
   const { colors } = useTheme();
+  const { showSuccess, showError, showAlert } = useAlert();
   const styles = useMemo(() => getStyles(colors), [colors]);
 
   // Kalıcı okundu ve silindi kimliklerini yükle
@@ -79,15 +80,14 @@ export const NotificationsScreen: React.FC = () => {
     try {
       setIsSendingTest(true);
       await sendTestNotification();
-      Alert.alert(
-        '🔔 Bildirim Planlandı',
-        'Test bildirimi başarıyla oluşturuldu. 2 saniye içinde telefonunuzun bildirim çubuğunda görünecektir.',
-        [{ text: 'Harika' }]
+      showSuccess(
+        'Test bildirimi başarıyla planlandı. 2 saniye içinde bildirim çubuğunda görünecektir.',
+        'Bildirim Planlandı'
       );
     } catch {
-      Alert.alert(
-        'Bildirim Gönderilemedi',
-        'Lütfen telefon ayarlarından uygulama bildirim izinlerini etkinleştirdiğinizden emin olun.'
+      showError(
+        'Lütfen telefon ayarlarından uygulama bildirim izinlerini etkinleştirdiğinizden emin olun.',
+        'Bildirim Gönderilemedi'
       );
     } finally {
       setIsSendingTest(false);
@@ -213,27 +213,25 @@ export const NotificationsScreen: React.FC = () => {
   // Tüm Bildirimleri Sil (Onay İstemli)
   const handleClearAll = () => {
     if (notifications.length === 0) return;
-    Alert.alert(
-      'Bildirimleri Sil',
-      'Mevcut tüm bildirimleri silmek istediğinizden emin misiniz?',
-      [
-        { text: 'Vazgeç', style: 'cancel' },
-        {
-          text: 'Tümünü Sil',
-          style: 'destructive',
-          onPress: async () => {
-            const allIds = notifications.map((n) => n.id);
-            const updated = new Set([...deletedIds, ...allIds]);
-            setDeletedIds(updated);
-            try {
-              await AsyncStorage.setItem(DELETED_NOTIFICATIONS_KEY, JSON.stringify([...updated]));
-            } catch (err) {
-              console.warn('Silme kaydedilemedi:', err);
-            }
-          },
-        },
-      ]
-    );
+    showAlert({
+      type: 'danger',
+      title: 'Bildirimleri Sil',
+      message: 'Mevcut tüm bildirimleri silmek istediğinizden emin misiniz?',
+      confirmText: 'Tümünü Sil',
+      cancelText: 'Vazgeç',
+      destructive: true,
+      onConfirm: async () => {
+        const allIds = notifications.map((n) => n.id);
+        const updated = new Set([...deletedIds, ...allIds]);
+        setDeletedIds(updated);
+        try {
+          await AsyncStorage.setItem(DELETED_NOTIFICATIONS_KEY, JSON.stringify([...updated]));
+          showSuccess('Tüm bildirimler temizlendi.');
+        } catch (err) {
+          console.warn('Silme kaydedilemedi:', err);
+        }
+      },
+    });
   };
 
   const getIcon = (type: NotificationItem['type']) => {

@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  Alert,
   ActivityIndicator,
   Linking,
 } from 'react-native';
@@ -33,6 +32,7 @@ import {
 import { Product } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import { useInventory } from '../../context/InventoryContext';
+import { useAlert } from '../../context/AlertContext';
 import { TechOrbitLoader, ImageViewerModal } from '../../components';
 import {
   formatDateTurkish,
@@ -47,6 +47,7 @@ export const ProductDetailScreen: React.FC = () => {
   const { productId, initialProduct } = route.params || {};
 
   const { getProduct, deleteProduct } = useInventory();
+  const { showAlert, showSuccess, showError, showInfo } = useAlert();
   const [product, setProduct] = useState<Product | null>(initialProduct || null);
   const [loading, setLoading] = useState(!initialProduct);
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
@@ -70,26 +71,24 @@ export const ProductDetailScreen: React.FC = () => {
   );
 
   const handleDelete = () => {
-    Alert.alert(
-      'Ürünü Sil',
-      `"${product?.name}" ürününü envanterinizden silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
-      [
-        { text: 'Vazgeç', style: 'cancel' },
-        {
-          text: 'Sil',
-          style: 'destructive',
-          onPress: async () => {
-            if (!product?.id) return;
-            const res = await deleteProduct(product.id);
-            if (res.success) {
-              navigation.goBack();
-            } else {
-              Alert.alert('Hata', res.error || 'Ürün silinirken bir hata oluştu.');
-            }
-          },
-        },
-      ]
-    );
+    showAlert({
+      type: 'danger',
+      title: 'Ürünü Sil',
+      message: `"${product?.name}" ürününü envanterinizden silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
+      confirmText: 'Sil',
+      cancelText: 'Vazgeç',
+      destructive: true,
+      onConfirm: async () => {
+        if (!product?.id) return;
+        const res = await deleteProduct(product.id);
+        if (res.success) {
+          showSuccess('Ürün envanterden silindi.');
+          navigation.goBack();
+        } else {
+          showError(res.error || 'Ürün silinirken bir hata oluştu.');
+        }
+      },
+    });
   };
 
   const handleEdit = () => {
@@ -106,7 +105,7 @@ export const ProductDetailScreen: React.FC = () => {
         await Linking.openURL(product.invoice_path);
       }
     } catch {
-      Alert.alert('Fatura Belgesi', `Dosya adresi: ${product.invoice_path}`);
+      showInfo(`Dosya adresi: ${product.invoice_path}`, 'Fatura Belgesi');
     }
   };
 

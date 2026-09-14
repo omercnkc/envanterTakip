@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -32,6 +31,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useInventory } from '../../context/InventoryContext';
+import { useAlert } from '../../context/AlertContext';
 import { cacheHelper } from '../../utils/cacheHelper';
 import {
   biometricHelper,
@@ -61,6 +61,7 @@ export const SettingsScreen: React.FC = () => {
   const { user, profile, signOut } = useAuth();
   const { theme, setTheme, colors, systemColorScheme } = useTheme();
   const { products } = useInventory();
+  const { showAlert, showSuccess, showError, showWarning, showInfo } = useAlert();
 
   const styles = useMemo(() => getStyles(colors), [colors]);
   const isDark = theme === 'dark' || (theme === 'system' && systemColorScheme === 'dark');
@@ -171,12 +172,12 @@ export const SettingsScreen: React.FC = () => {
       await AsyncStorage.setItem(STORAGE_KEYS.WARRANTY_REMINDERS, String(value));
       if (!value) {
         await cancelAllWarrantyNotifications();
-        Alert.alert('Bildirimler Kapatıldı', 'Garanti hatırlatıcı yerel bildirimleri iptal edildi.');
+        showInfo('Garanti hatırlatıcı yerel bildirimleri iptal edildi.', 'Bildirimler Kapatıldı');
       } else {
         await syncAllWarrantyNotifications(products);
-        Alert.alert(
-          'Bildirimler Açıldı',
-          'Garanti süreleri yaklaşan ürünleriniz için hatırlatıcılar başarıyla planlandı.'
+        showSuccess(
+          'Garanti süreleri yaklaşan ürünleriniz için hatırlatıcılar başarıyla planlandı.',
+          'Bildirimler Açıldı'
         );
       }
     } catch (err) {
@@ -197,16 +198,16 @@ export const SettingsScreen: React.FC = () => {
     if (value) {
       const check = await biometricHelper.checkBiometrics();
       if (!check.hasHardware) {
-        Alert.alert(
-          'Desteklenmiyor',
-          'Cihazınızda biyometrik kimlik doğrulama (Face ID / Parmak İzi) donanımı bulunamadı.'
+        showWarning(
+          'Cihazınızda biyometrik kimlik doğrulama (Face ID / Parmak İzi) donanımı bulunamadı.',
+          'Desteklenmiyor'
         );
         return;
       }
       if (!check.isEnrolled) {
-        Alert.alert(
-          'Kayıt Bulunamadı',
-          'Cihazınızda kayıtlı Face ID veya Parmak İzi bulunamadı. Lütfen önce cihazınızın sistem ayarlarından biyometrik kilit tanımlayın.'
+        showWarning(
+          'Cihazınızda kayıtlı Face ID veya Parmak İzi bulunamadı. Lütfen cihaz ayarlarınızdan biyometri ekleyin.',
+          'Kayıt Bulunamadı'
         );
         return;
       }
@@ -217,9 +218,9 @@ export const SettingsScreen: React.FC = () => {
       if (authRes.success) {
         await biometricHelper.setEnabled(true);
         setBiometricEnabled(true);
-        Alert.alert(
-          'Biyometrik Kilit Aktif',
-          `Safe Envanter artık ${check.biometricTypeName} ile korunuyor. Uygulama açılışlarında sizden doğrulama istenecektir.`
+        showSuccess(
+          `Safe Envanter artık ${check.biometricTypeName} ile korunuyor.`,
+          'Biyometrik Kilit Aktif'
         );
       }
     } else {
@@ -229,7 +230,7 @@ export const SettingsScreen: React.FC = () => {
       if (authRes.success) {
         await biometricHelper.setEnabled(false);
         setBiometricEnabled(false);
-        Alert.alert('Biyometrik Kilit Kapatıldı', 'Uygulama açılış kilidi devre dışı bırakıldı.');
+        showInfo('Uygulama açılış kilidi devre dışı bırakıldı.', 'Biyometrik Kilit Kapatıldı');
       }
     }
   };
@@ -242,61 +243,55 @@ export const SettingsScreen: React.FC = () => {
     const { sizeInBytes, fileCount } = await cacheHelper.getCacheSize();
     const formattedSize = cacheHelper.formatBytes(sizeInBytes);
 
-    Alert.alert(
-      'Önbelleği Temizle',
-      `Geçici dosya önbelleği (${fileCount} dosya, ${formattedSize}) silinsin mi?`,
-      [
-        { text: 'Vazgeç', style: 'cancel' },
-        {
-          text: 'Temizle',
-          style: 'destructive',
-          onPress: async () => {
-            const result = await cacheHelper.clearCache();
-            if (result.success) {
-              Alert.alert(
-                'Önbellek Temizlendi',
-                `${result.deletedCount} adet geçici dosya (${cacheHelper.formatBytes(
-                  result.freedBytes
-                )}) başarıyla silindi.`
-              );
-            } else {
-              Alert.alert('Hata', 'Önbellek temizlenirken bir sorun oluştu.');
-            }
-          },
-        },
-      ]
-    );
+    showAlert({
+      type: 'warning',
+      title: 'Önbelleği Temizle',
+      message: `Geçici dosya önbelleği (${fileCount} dosya, ${formattedSize}) silinsin mi?`,
+      confirmText: 'Temizle',
+      cancelText: 'Vazgeç',
+      onConfirm: async () => {
+        const result = await cacheHelper.clearCache();
+        if (result.success) {
+          showSuccess(
+            `${result.deletedCount} adet geçici dosya (${cacheHelper.formatBytes(
+              result.freedBytes
+            )}) silindi.`,
+            'Önbellek Temizlendi'
+          );
+        } else {
+          showError('Önbellek temizlenirken bir sorun oluştu.', 'Hata');
+        }
+      },
+    });
   };
 
   const handleLogout = () => {
-    Alert.alert('Oturumu Kapat', 'Hesabınızdan çıkış yapmak istediğinize emin misiniz?', [
-      { text: 'Vazgeç', style: 'cancel' },
-      {
-        text: 'Çıkış Yap',
-        style: 'destructive',
-        onPress: async () => {
-          await signOut();
-        },
+    showAlert({
+      type: 'danger',
+      title: 'Oturumu Kapat',
+      message: 'Hesabınızdan çıkış yapmak istediğinize emin misiniz?',
+      confirmText: 'Çıkış Yap',
+      cancelText: 'Vazgeç',
+      destructive: true,
+      onConfirm: async () => {
+        await signOut();
       },
-    ]);
+    });
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
-      'Hesabı Kalıcı Olarak Sil',
-      'Hesabınızı ve kayıtlı tüm ürün, garanti ve fatura verilerinizi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
-      [
-        { text: 'Vazgeç', style: 'cancel' },
-        {
-          text: 'Hesabımı Sil',
-          style: 'destructive',
-          onPress: async () => {
-            await signOut();
-            Alert.alert('Bilgi', 'Hesabınız başarıyla kapatıldı.');
-          },
-        },
-      ]
-    );
+    showAlert({
+      type: 'danger',
+      title: 'Hesabı Kalıcı Olarak Sil',
+      message: 'Hesabınızı ve kayıtlı tüm ürün, garanti ve fatura verilerinizi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
+      confirmText: 'Hesabımı Sil',
+      cancelText: 'Vazgeç',
+      destructive: true,
+      onConfirm: async () => {
+        await signOut();
+        showSuccess('Hesabınız başarıyla kapatıldı.', 'Bilgi');
+      },
+    });
   };
 
   return (
@@ -539,7 +534,7 @@ export const SettingsScreen: React.FC = () => {
             <TouchableOpacity
               style={[styles.cardRow, styles.cardRowNoBorder]}
               onPress={() =>
-                Alert.alert('Dil Seçimi', 'Şu anda sadece Türkçe dili desteklenmektedir.')
+                showInfo('Şu anda sadece Türkçe dili desteklenmektedir.', 'Dil Seçimi')
               }
               activeOpacity={0.7}
             >

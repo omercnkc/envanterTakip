@@ -3,10 +3,11 @@
  * Expo ImagePicker ve Expo DocumentPicker izin ve seçim işlemlerini yönetir.
  */
 
-import { Alert, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { biometricHelper } from './biometricHelper';
+import { alertService } from '../context/AlertContext';
 
 export interface PickMediaResult {
   uri: string | null;
@@ -25,9 +26,9 @@ export const mediaHelper = {
     const { status, canAskAgain } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
       if (canAskAgain) {
-        Alert.alert(
-          'Kamera İzni Gerekli',
-          'Ürün veya fatura fotoğrafı çekebilmek için uygulamanın kameraya erişmesine izin vermelisiniz.'
+        alertService.showWarning(
+          'Ürün veya fatura fotoğrafı çekebilmek için uygulamanın kameraya erişmesine izin vermelisiniz.',
+          'Kamera İzni Gerekli'
         );
       }
       return false;
@@ -42,9 +43,9 @@ export const mediaHelper = {
     const { status, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       if (canAskAgain) {
-        Alert.alert(
-          'Galeri İzni Gerekli',
-          'Fotoğraf veya fatura seçebilmek için uygulamanın galerinize erişmesine izin vermelisiniz.'
+        alertService.showWarning(
+          'Fotoğraf veya fatura seçebilmek için uygulamanın galerinize erişmesine izin vermelisiniz.',
+          'Galeri İzni Gerekli'
         );
       }
       return false;

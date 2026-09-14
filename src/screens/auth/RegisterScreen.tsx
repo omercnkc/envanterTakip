@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   Image,
   Animated,
   Easing,
@@ -32,7 +31,9 @@ import {
 import { AuthStackParamList, RegisterFormData, registerSchema } from '../../types';
 import { COLORS } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
+import { useAlert } from '../../context/AlertContext';
 import { GoogleIcon } from '../../components/GoogleIcon';
+import { AppCallout } from '../../components/AppCallout';
 import { checkPasswordStrength, generateStrongPassword } from '../../utils/passwordHelper';
 import { saveCredentials } from '../../utils/credentialHelper';
 import { styles } from './RegisterScreen.styles';
@@ -41,6 +42,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
 export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const { signUp, signInWithGoogle } = useAuth();
+  const { showAlert } = useAlert();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -149,27 +151,21 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
     setShowPassword(true);
     setShowConfirmPassword(true);
 
-    Alert.alert(
-      'Şifre Kaydedilsin mi?',
-      'Önerilen güçlü şifre bu cihaza kaydedilsin mi? Bir sonraki girişinizde e-posta ve şifreniz otomatik doldurulacaktır.',
-      [
-        {
-          text: 'Hayır',
-          style: 'cancel',
-        },
-        {
-          text: 'Evet, Kaydet',
-          onPress: async () => {
-            setSaveOnRegister(true);
-            setIsCredentialSaved(true);
-            const currentEmail = watch('email');
-            if (currentEmail && currentEmail.trim().length > 0) {
-              await saveCredentials(currentEmail, generated, true);
-            }
-          },
-        },
-      ]
-    );
+    showAlert({
+      type: 'info',
+      title: 'Şifre Kaydedilsin mi?',
+      message: 'Önerilen güçlü şifre bu cihaza kaydedilsin mi? Bir sonraki girişinizde e-posta ve şifreniz otomatik doldurulacaktır.',
+      confirmText: 'Evet, Kaydet',
+      cancelText: 'Hayır',
+      onConfirm: async () => {
+        setSaveOnRegister(true);
+        setIsCredentialSaved(true);
+        const currentEmail = watch('email');
+        if (currentEmail && currentEmail.trim().length > 0) {
+          await saveCredentials(currentEmail, generated, true);
+        }
+      },
+    });
   };
 
   const onInvalid = () => {
@@ -185,16 +181,14 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
         if (saveOnRegister || isCredentialSaved) {
           await saveCredentials(data.email, data.password, true);
         }
-        Alert.alert(
-          'Kayıt Başarılı',
-          'Hesabınız oluşturuldu. Lütfen e-postanızı kontrol ederek hesabınızı doğrulayın veya doğrudan giriş yapın.',
-          [
-            {
-              text: 'Giriş Yap',
-              onPress: () => navigation.navigate('Login'),
-            },
-          ]
-        );
+        showAlert({
+          type: 'success',
+          title: 'Kayıt Başarılı',
+          message: 'Hesabınız oluşturuldu. Lütfen e-postanızı kontrol ederek hesabınızı doğrulayın veya doğrudan giriş yapın.',
+          confirmText: 'Giriş Yap',
+          showCancel: false,
+          onConfirm: () => navigation.navigate('Login'),
+        });
       } else if (result.error) {
         setServerError(result.error);
         triggerShake();
@@ -256,9 +250,12 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
             ]}
           >
             {serverError && (
-              <View style={styles.serverErrorBox}>
-                <Text style={styles.serverErrorText}>{serverError}</Text>
-              </View>
+              <AppCallout
+                type="error"
+                message={serverError}
+                onClose={() => setServerError(null)}
+                style={{ marginBottom: 16 }}
+              />
             )}
 
             {/* Ad Soyad */}
