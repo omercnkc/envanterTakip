@@ -23,3 +23,4 @@ export * from './ProductQrModal';
 export * from './MaintenanceModal';
 export * from './FinancialAnalyticsModal';
 export * from './CategoryDistributionChart';
+export * from './WidgetPreviewModal';

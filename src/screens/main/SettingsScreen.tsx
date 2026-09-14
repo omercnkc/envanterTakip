@@ -26,6 +26,7 @@ import {
   Shield,
   Pencil,
   Clock,
+  LayoutGrid,
 } from 'lucide-react-native';
 
 import { useAuth } from '../../context/AuthContext';
@@ -48,6 +49,7 @@ import {
   ChangePasswordModal,
   ExportDataModal,
   ThemeSegmentedControl,
+  WidgetPreviewModal,
 } from '../../components';
 import { getStyles } from './SettingsScreen.styles';
 
@@ -69,6 +71,7 @@ export const SettingsScreen: React.FC = () => {
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [widgetPreviewOpen, setWidgetPreviewOpen] = useState(false);
 
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [biometricTimeout, setBiometricTimeout] = useState<BiometricTimeout>('immediately');
@@ -530,6 +533,24 @@ export const SettingsScreen: React.FC = () => {
               )}
             </View>
 
+            {/* Ana Ekran Widget'ı */}
+            <TouchableOpacity
+              style={styles.cardRow}
+              onPress={() => setWidgetPreviewOpen(true)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.rowLeftContainer}>
+                <View style={[styles.iconTile, { backgroundColor: colors.primary + '18' }]}>
+                  <LayoutGrid size={18} color={colors.primary} />
+                </View>
+                <View style={styles.rowTexts}>
+                  <Text style={styles.rowLabel}>Ana Ekran Widget'ı</Text>
+                  <Text style={styles.rowSubtitle}>Canlı garanti panosu & önizleme</Text>
+                </View>
+              </View>
+              <ChevronRight size={16} color={colors.outline} />
+            </TouchableOpacity>
+
             {/* Uygulama Dili */}
             <TouchableOpacity
               style={[styles.cardRow, styles.cardRowNoBorder]}
@@ -667,6 +688,12 @@ export const SettingsScreen: React.FC = () => {
       <ExportDataModal
         visible={exportModalOpen}
         onClose={() => setExportModalOpen(false)}
+      />
+
+      {/* Ana Ekran Widget Önizleme & Kurulum Modalı */}
+      <WidgetPreviewModal
+        visible={widgetPreviewOpen}
+        onClose={() => setWidgetPreviewOpen(false)}
       />
     </SafeAreaView>
   );

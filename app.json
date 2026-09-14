@@ -56,6 +56,23 @@
           "icon": "./assets/icon.png",
           "color": "#4648d4"
         }
+      ],
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "WarrantyWidget",
+              "label": "Garanti Takip",
+              "minWidth": "160dp",
+              "minHeight": "100dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 2,
+              "description": "En yakın garanti bitiş tarihini ve aktif eşya sayısını canlı gösterir.",
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
       ]
     ],
     "extra": {

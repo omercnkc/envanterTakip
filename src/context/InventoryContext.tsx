@@ -23,6 +23,7 @@ import {
   cancelWarrantyNotifications,
   syncAllWarrantyNotifications,
 } from '../utils/notificationHelper';
+import { syncWidgetData } from '../services/widgetSyncService';
 import { useAuth } from './AuthContext';
 
 interface InventoryContextType {
@@ -176,6 +177,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
 
       setAllProducts(allItems);
       syncAllWarrantyNotifications(allItems);
+      syncWidgetData(allItems);
 
       // 4. Filtre seçenekleri aktifse ProductsScreen için listeyi hazırla
       if (filterOptions.warrantyStatus === 'favorites') {
