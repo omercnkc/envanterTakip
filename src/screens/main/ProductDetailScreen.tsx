@@ -28,13 +28,26 @@ import {
   ExternalLink,
   Package,
   Maximize2,
+  Wrench,
+  CheckCircle2,
+  Clock,
+  Plus,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  Repeat,
 } from 'lucide-react-native';
 
-import { Product } from '../../types';
+import { Product, MaintenanceRecord } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import { useInventory } from '../../context/InventoryContext';
 import { useAlert } from '../../context/AlertContext';
-import { TechOrbitLoader, ImageViewerModal, ProductQrModal } from '../../components';
+import { TechOrbitLoader, ImageViewerModal, ProductQrModal, MaintenanceModal } from '../../components';
+import { maintenanceService } from '../../api/maintenanceService';
+import {
+  scheduleMaintenanceNotifications,
+  cancelMaintenanceNotifications,
+} from '../../utils/notificationHelper';
 import {
   formatDateTurkish,
   formatCurrency,
@@ -53,6 +66,9 @@ export const ProductDetailScreen: React.FC = () => {
   const [loading, setLoading] = useState(!initialProduct);
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [maintenanceModalOpen, setMaintenanceModalOpen] = useState(false);
+  const [maintenanceRecords, setMaintenanceRecords] = useState<MaintenanceRecord[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
 
   const { colors } = useTheme();
   const styles = useMemo(() => getStyles(colors), [colors]);
@@ -80,11 +96,72 @@ export const ProductDetailScreen: React.FC = () => {
     setLoading(false);
   }, [productId, getProduct]);
 
+  const loadMaintenance = useCallback(async () => {
+    if (!productId) return;
+    const res = await maintenanceService.getByProductId(productId);
+    if (res.data) {
+      setMaintenanceRecords(res.data);
+    }
+  }, [productId]);
+
   useFocusEffect(
     useCallback(() => {
       loadProduct();
-    }, [loadProduct])
+      loadMaintenance();
+    }, [loadProduct, loadMaintenance])
   );
+
+  const handleCompleteMaintenance = (record: MaintenanceRecord) => {
+    showAlert({
+      type: 'success',
+      title: 'Bakımı Tamamla',
+      message: `"${record.title}" bakımının yapıldığını onaylıyor musunuz?${
+        record.interval_months
+          ? ` Otomatik olarak ${record.interval_months} ay sonrasına yeni bir periyodik bakım açılacaktır.`
+          : ''
+      }`,
+      confirmText: 'Tamamlandı Olarak Kaydet',
+      cancelText: 'Vazgeç',
+      onConfirm: async () => {
+        const res = await maintenanceService.complete(record.id, true);
+        if (res.data) {
+          await cancelMaintenanceNotifications(record.id);
+          if (res.nextRecord && product) {
+            await scheduleMaintenanceNotifications(res.nextRecord, product.name);
+            showSuccess(
+              `Bakım tamamlandı! Bir sonraki bakım: ${formatDateTurkish(res.nextRecord.maintenance_date)}`
+            );
+          } else {
+            showSuccess('Bakım tamamlandı olarak kaydedildi.');
+          }
+          loadMaintenance();
+        } else {
+          showError(res.error || 'Bakım tamamlanamadı.');
+        }
+      },
+    });
+  };
+
+  const handleDeleteMaintenance = (record: MaintenanceRecord) => {
+    showAlert({
+      type: 'danger',
+      title: 'Bakım Kaydını Sil',
+      message: `"${record.title}" bakım kaydını silmek istediğinize emin misiniz?`,
+      confirmText: 'Sil',
+      cancelText: 'Vazgeç',
+      destructive: true,
+      onConfirm: async () => {
+        const res = await maintenanceService.delete(record.id);
+        if (res.success) {
+          await cancelMaintenanceNotifications(record.id);
+          showSuccess('Bakım kaydı silindi.');
+          loadMaintenance();
+        } else {
+          showError(res.error || 'Silme işlemi başarısız.');
+        }
+      },
+    });
+  };
 
   const handleDelete = () => {
     showAlert({
@@ -138,6 +215,16 @@ export const ProductDetailScreen: React.FC = () => {
   const categoryName = product.category?.name || 'Genel';
   const brandText = product.brand ? ` · ${product.brand}` : '';
   const statusInfo = calculateWarrantyStatus(product.warranty_end_date, colors);
+
+  const pendingMaintenances = useMemo(
+    () => maintenanceRecords.filter((m) => m.status === 'pending'),
+    [maintenanceRecords]
+  );
+  const completedMaintenances = useMemo(
+    () => maintenanceRecords.filter((m) => m.status === 'completed'),
+    [maintenanceRecords]
+  );
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -363,6 +450,162 @@ export const ProductDetailScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
+        {/* Bakım Takvimi & Geçmişi Bölümü */}
+        <View style={styles.maintenanceSection}>
+          <View style={styles.maintenanceHeaderRow}>
+            <Text style={styles.sectionTitle}>Bakım Takvimi & Geçmişi</Text>
+            <TouchableOpacity
+              style={styles.addMaintenanceBtn}
+              onPress={() => setMaintenanceModalOpen(true)}
+              activeOpacity={0.8}
+            >
+              <Plus size={14} color={colors.onPrimary} />
+              <Text style={styles.addMaintenanceBtnText}>Bakım Ekle</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Aktif / Bekleyen Bakımlar */}
+          {pendingMaintenances.length > 0 ? (
+            pendingMaintenances.map((item) => {
+              return (
+                <View key={item.id} style={styles.maintenanceCard}>
+                  <View style={styles.maintenanceCardTop}>
+                    <View style={styles.maintenanceLeftInfo}>
+                      <View style={styles.maintenanceBadgeRow}>
+                        <View style={styles.maintenanceDateBadge}>
+                          <Clock size={12} color={colors.primary} />
+                          <Text style={styles.maintenanceDateBadgeText}>
+                            {formatDateTurkish(item.maintenance_date)}
+                          </Text>
+                        </View>
+                        {item.interval_months ? (
+                          <View style={styles.maintenanceIntervalBadge}>
+                            <Repeat size={11} color={colors.onSurfaceVariant} />
+                            <Text style={styles.maintenanceIntervalBadgeText}>
+                              {item.interval_months === 12
+                                ? 'Yıllık Bakım'
+                                : `${item.interval_months} Ayda Bir`}
+                            </Text>
+                          </View>
+                        ) : null}
+                      </View>
+                      <Text style={styles.maintenanceTitle}>{item.title}</Text>
+                      {item.service_provider ? (
+                        <Text style={styles.maintenanceMetaText}>
+                          Servis: {item.service_provider}
+                        </Text>
+                      ) : null}
+                      {item.notes ? (
+                        <Text style={styles.maintenanceMetaText} numberOfLines={2}>
+                          {item.notes}
+                        </Text>
+                      ) : null}
+                      {item.cost ? (
+                        <Text style={styles.maintenanceMetaText}>
+                          Tahmini Tutar: {formatCurrency(item.cost)}
+                        </Text>
+                      ) : null}
+                    </View>
+                  </View>
+
+                  <View style={styles.maintenanceActionRow}>
+                    <TouchableOpacity
+                      style={styles.completeMaintenanceBtn}
+                      onPress={() => handleCompleteMaintenance(item)}
+                      activeOpacity={0.75}
+                    >
+                      <CheckCircle2 size={15} color={colors.warranty?.active || '#10b981'} />
+                      <Text style={styles.completeMaintenanceBtnText}>Bakımı Tamamla</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.deleteMaintenanceBtn}
+                      onPress={() => handleDeleteMaintenance(item)}
+                      activeOpacity={0.7}
+                    >
+                      <Trash2 size={15} color={colors.error} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })
+          ) : (
+            <View style={styles.emptyMaintenanceCard}>
+              <View style={styles.emptyMaintenanceIconBox}>
+                <Wrench size={24} color={colors.primary} />
+              </View>
+              <Text style={styles.emptyMaintenanceText}>
+                Planlanmış periyodik bakım bulunmuyor. Servis, filtre veya düzenli kontrollerinizi takip etmek için yukarıdan ekleyin.
+              </Text>
+            </View>
+          )}
+
+          {/* Tamamlanan Geçmiş Bakımlar */}
+          {completedMaintenances.length > 0 && (
+            <View style={{ marginTop: 4 }}>
+              <TouchableOpacity
+                style={styles.historyToggleRow}
+                onPress={() => setShowHistory(!showHistory)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.historyToggleText}>
+                  Tamamlanan Bakımlar ({completedMaintenances.length})
+                </Text>
+                {showHistory ? (
+                  <ChevronUp size={16} color={colors.onSurfaceVariant} />
+                ) : (
+                  <ChevronDown size={16} color={colors.onSurfaceVariant} />
+                )}
+              </TouchableOpacity>
+
+              {showHistory &&
+                completedMaintenances.map((item) => (
+                  <View
+                    key={item.id}
+                    style={[styles.maintenanceCard, styles.maintenanceCardCompleted, { marginTop: 6 }]}
+                  >
+                    <View style={styles.maintenanceCardTop}>
+                      <View style={styles.maintenanceLeftInfo}>
+                        <View style={styles.maintenanceBadgeRow}>
+                          <View
+                            style={[
+                              styles.maintenanceDateBadge,
+                              { backgroundColor: (colors.warranty?.active || '#10b981') + '20' },
+                            ]}
+                          >
+                            <CheckCircle2 size={12} color={colors.warranty?.active || '#10b981'} />
+                            <Text
+                              style={[
+                                styles.maintenanceDateBadgeText,
+                                { color: colors.warranty?.active || '#10b981' },
+                              ]}
+                            >
+                              Yapıldı: {formatDateTurkish(item.completed_at || item.maintenance_date)}
+                            </Text>
+                          </View>
+                        </View>
+                        <Text style={styles.maintenanceTitle}>{item.title}</Text>
+                        {item.service_provider ? (
+                          <Text style={styles.maintenanceMetaText}>Servis: {item.service_provider}</Text>
+                        ) : null}
+                        {item.cost ? (
+                          <Text style={styles.maintenanceMetaText}>Maliyet: {formatCurrency(item.cost)}</Text>
+                        ) : null}
+                      </View>
+                      <TouchableOpacity
+                        style={styles.deleteMaintenanceBtn}
+                        onPress={() => handleDeleteMaintenance(item)}
+                        activeOpacity={0.7}
+                      >
+                        <Trash2 size={14} color={colors.outline} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+            </View>
+          )}
+        </View>
+
         {/* Aksiyon Butonları (Düzenle / Sil) */}
         <View style={styles.actionButtonsRow}>
           <TouchableOpacity style={styles.editButton} onPress={handleEdit} activeOpacity={0.8}>
@@ -379,6 +622,14 @@ export const ProductDetailScreen: React.FC = () => {
         visible={qrModalOpen}
         product={product}
         onClose={() => setQrModalOpen(false)}
+      />
+
+      {/* Bakım Ekleme Modalı */}
+      <MaintenanceModal
+        visible={maintenanceModalOpen}
+        product={product}
+        onClose={() => setMaintenanceModalOpen(false)}
+        onCreated={loadMaintenance}
       />
 
       {/* Büyük Fotoğraf Önizleme Modalı */}

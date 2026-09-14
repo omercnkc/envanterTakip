@@ -153,3 +153,46 @@ CREATE POLICY "Giriş yapmış kullanıcı kendi görselini güncelleyebilir/sil
     auth.role() = 'authenticated' AND
     bucket_id IN ('product-images', 'invoices')
   );
+
+-- 7. MAINTENANCE_RECORDS TABLOSU (Periyodik Servis & Filtre Takibi)
+CREATE TABLE IF NOT EXISTS public.maintenance_records (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  maintenance_date DATE NOT NULL,
+  interval_months INTEGER DEFAULT NULL,
+  cost NUMERIC(12, 2) DEFAULT 0 CHECK (cost >= 0),
+  service_provider TEXT,
+  notes TEXT,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'completed')),
+  completed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- İndeksler
+CREATE INDEX IF NOT EXISTS idx_maintenance_product_id ON public.maintenance_records(product_id);
+CREATE INDEX IF NOT EXISTS idx_maintenance_user_id ON public.maintenance_records(user_id);
+CREATE INDEX IF NOT EXISTS idx_maintenance_date ON public.maintenance_records(maintenance_date);
+CREATE INDEX IF NOT EXISTS idx_maintenance_status ON public.maintenance_records(status);
+
+-- RLS Politikaları
+ALTER TABLE public.maintenance_records ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Kullanıcı yalnızca kendi bakım kayıtlarını görebilir"
+  ON public.maintenance_records FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Kullanıcı yalnızca kendi adına bakım kaydı ekleyebilir"
+  ON public.maintenance_records FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Kullanıcı kendi bakım kayıtlarını güncelleyebilir"
+  ON public.maintenance_records FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Kullanıcı kendi bakım kayıtlarını silebilir"
+  ON public.maintenance_records FOR DELETE
+  USING (auth.uid() = user_id);
+

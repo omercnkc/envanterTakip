@@ -1,0 +1,233 @@
+import { StyleSheet, Dimensions } from 'react-native';
+import { RADIUS, SPACING, TYPOGRAPHY } from '../constants';
+import { ThemeColors } from '../constants/colors';
+
+const { height } = Dimensions.get('window');
+
+export const getStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.65)',
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      backgroundColor: colors.surfaceContainerLowest,
+      borderTopLeftRadius: RADIUS.xl,
+      borderTopRightRadius: RADIUS.xl,
+      maxHeight: height * 0.88,
+      paddingTop: SPACING.sm,
+      paddingHorizontal: SPACING.lg,
+      paddingBottom: SPACING.xl,
+      borderTopWidth: 1,
+      borderColor: colors.surfaceContainerHigh,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: -6 },
+      shadowOpacity: 0.25,
+      shadowRadius: 16,
+      elevation: 20,
+    },
+    handleBar: {
+      width: 44,
+      height: 5,
+      borderRadius: 3,
+      backgroundColor: colors.outlineVariant || '#94a3b8',
+      alignSelf: 'center',
+      marginBottom: SPACING.sm,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingBottom: SPACING.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceContainerHigh,
+      marginBottom: SPACING.md,
+    },
+    headerLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    iconBadge: {
+      width: 40,
+      height: 40,
+      borderRadius: RADIUS.md,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.onBackground,
+    },
+    headerSubtitle: {
+      fontSize: 12,
+      color: colors.onSurfaceVariant,
+      marginTop: 2,
+    },
+    closeButton: {
+      width: 32,
+      height: 32,
+      borderRadius: RADIUS.full,
+      backgroundColor: colors.surfaceContainerHigh,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    scrollContent: {
+      paddingBottom: SPACING.lg,
+    },
+    sectionLabel: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.onSurfaceVariant,
+      textTransform: 'uppercase',
+      letterSpacing: 0.6,
+      marginBottom: 8,
+      marginTop: 10,
+    },
+    templatesScroll: {
+      paddingBottom: 6,
+      gap: 8,
+    },
+    templateChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 7,
+      paddingHorizontal: 12,
+      borderRadius: RADIUS.full,
+      backgroundColor: colors.surfaceContainerLow,
+      borderWidth: 1,
+      borderColor: colors.surfaceContainerHigh,
+    },
+    templateChipActive: {
+      backgroundColor: colors.primaryContainer,
+      borderColor: colors.primary,
+    },
+    templateChipText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.onSurfaceVariant,
+    },
+    templateChipTextActive: {
+      color: colors.primary,
+      fontWeight: '700',
+    },
+    fieldGroup: {
+      marginBottom: SPACING.md,
+    },
+    inputLabel: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.onBackground,
+      marginBottom: 6,
+    },
+    inputBox: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.surfaceContainerLow,
+      borderWidth: 1,
+      borderColor: colors.surfaceContainerHigh,
+      borderRadius: RADIUS.md,
+      paddingHorizontal: 12,
+      height: 46,
+      gap: 10,
+    },
+    inputBoxFocused: {
+      borderColor: colors.primary,
+      backgroundColor: colors.surfaceContainerLowest,
+    },
+    inputBoxError: {
+      borderColor: colors.error,
+      backgroundColor: colors.errorContainer ? colors.errorContainer + '18' : '#fee2e2',
+    },
+    textInput: {
+      flex: 1,
+      fontSize: 14,
+      color: colors.onBackground,
+      paddingVertical: 0,
+    },
+    helperText: {
+      fontSize: 11,
+      color: colors.onSurfaceVariant,
+      marginTop: 4,
+    },
+    errorText: {
+      fontSize: 11,
+      color: colors.error,
+      marginTop: 4,
+      fontWeight: '600',
+    },
+    requiredStar: {
+      color: colors.error,
+      fontWeight: '700',
+    },
+    intervalsRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    intervalChip: {
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      borderRadius: RADIUS.md,
+      backgroundColor: colors.surfaceContainerLow,
+      borderWidth: 1,
+      borderColor: colors.surfaceContainerHigh,
+    },
+    intervalChipSelected: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    intervalChipText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.onSurfaceVariant,
+    },
+    intervalChipTextSelected: {
+      color: colors.onPrimary,
+      fontWeight: '700',
+    },
+    twoColRow: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    halfCol: {
+      flex: 1,
+    },
+    notesInput: {
+      height: 72,
+      alignItems: 'flex-start',
+      paddingVertical: 8,
+    },
+    submitButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: colors.primary,
+      borderRadius: RADIUS.lg,
+      height: 48,
+      marginTop: SPACING.sm,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    submitButtonDisabled: {
+      opacity: 0.6,
+    },
+    submitButtonText: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.onPrimary,
+    },
+  });

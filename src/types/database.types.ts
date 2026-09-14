@@ -52,3 +52,31 @@ export interface WarrantyCalculationResult {
   color: string;
   bgColor: string;
 }
+
+export type MaintenanceStatus = 'pending' | 'completed';
+
+export interface MaintenanceRecord {
+  id: string;
+  product_id: string;
+  user_id: string;
+  title: string;
+  maintenance_date: string;
+  interval_months?: number | null;
+  cost?: number | null;
+  service_provider?: string | null;
+  notes?: string | null;
+  status: MaintenanceStatus;
+  completed_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface MaintenanceFormData {
+  title: string;
+  maintenance_date: string;
+  interval_months?: number | null;
+  cost?: number | null;
+  service_provider?: string | null;
+  notes?: string | null;
+}
+

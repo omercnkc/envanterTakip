@@ -6,7 +6,7 @@
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
-import { Product } from '../types';
+import { Product, MaintenanceRecord } from '../types';
 import { parseAnyDate } from './warrantyCalculator';
 import { supabase, isSupabaseConfigured } from '../api/supabase';
 
@@ -330,5 +330,114 @@ export async function syncPushTokenWithSupabase(userId: string): Promise<boolean
     return false;
   }
 }
+
+/**
+ * Bakım kaydı için 7 gün ve 1 gün kala yerel bildirimler planlar
+ */
+export async function scheduleMaintenanceNotifications(
+  record: MaintenanceRecord,
+  productName: string
+): Promise<void> {
+  if (!record.maintenance_date || record.status === 'completed') {
+    return;
+  }
+
+  // Önce eski hatırlatıcıları temizle
+  await cancelMaintenanceNotifications(record.id);
+
+  const parsedDate = parseAnyDate(record.maintenance_date);
+  if (!parsedDate) return;
+
+  const targetDate = new Date(
+    parsedDate.getFullYear(),
+    parsedDate.getMonth(),
+    parsedDate.getDate(),
+    10,
+    0,
+    0
+  );
+
+  const now = Date.now();
+  const milestones = [
+    {
+      days: 7,
+      idSuffix: '7d',
+      title: '🔧 Yaklaşan Bakım Hatırlatması',
+      body: `${productName} için planlanan "${record.title}" bakım zamanına 7 gün kaldı.`,
+    },
+    {
+      days: 1,
+      idSuffix: '1d',
+      title: '⚠️ Bakım Zamanı Yarın!',
+      body: `${productName} için "${record.title}" bakım tarihi yarın!`,
+    },
+  ];
+
+  for (const item of milestones) {
+    const triggerDate = new Date(targetDate.getTime() - item.days * 24 * 60 * 60 * 1000);
+
+    if (triggerDate.getTime() > now) {
+      try {
+        await Notifications.scheduleNotificationAsync({
+          identifier: `maintenance-${record.id}-${item.idSuffix}`,
+          content: {
+            title: item.title,
+            body: item.body,
+            data: {
+              productId: record.product_id,
+              recordId: record.id,
+              type: 'maintenance_alert',
+            },
+            sound: 'default',
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date: triggerDate,
+            channelId: NOTIFICATION_CHANNEL_ID,
+          },
+        });
+      } catch (err) {
+        console.warn(`Bakım bildirimi zamanlanamadı (${record.title}):`, err);
+      }
+    }
+  }
+}
+
+/**
+ * Belirli bir bakım kaydına ait planlanmış bildirimleri iptal eder
+ */
+export async function cancelMaintenanceNotifications(recordId: string): Promise<void> {
+  try {
+    const targetIds = [
+      `maintenance-${recordId}-7d`,
+      `maintenance-${recordId}-1d`,
+    ];
+
+    await Promise.all(
+      targetIds.map(async (id) => {
+        try {
+          await Notifications.cancelScheduledNotificationAsync(id);
+        } catch {
+          // Yut
+        }
+      })
+    );
+
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    for (const item of scheduled) {
+      const data = item.content?.data as Record<string, any> | undefined;
+      if (data?.recordId === recordId || item.identifier.startsWith(`maintenance-${recordId}-`)) {
+        try {
+          await Notifications.cancelScheduledNotificationAsync(item.identifier);
+        } catch {
+          // Yut
+        }
+      }
+    }
+  } catch (err) {
+    console.warn(`Bakım bildirimleri iptal edilirken hata (${recordId}):`, err);
+  }
+}
+
 
 
