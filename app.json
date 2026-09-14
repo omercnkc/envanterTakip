@@ -13,7 +13,12 @@
       "backgroundColor": "#f8f9ff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Ürün barkodu, seri numarası ve fatura fotoğraflarını çekebilmeniz için kamera erişimi gerekiyor.",
+        "NSPhotoLibraryUsageDescription": "Ürün ve fatura fotoğraflarını seçebilmeniz için galeri erişimi gerekiyor.",
+        "NSPhotoLibraryAddUsageDescription": "Rapor ve faturaları cihazınıza kaydedebilmeniz için izin gerekiyor."
+      }
     },
     "android": {
       "adaptiveIcon": {

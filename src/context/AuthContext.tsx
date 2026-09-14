@@ -20,7 +20,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   resetPassword: (data: ForgotPasswordFormData) => Promise<{ success: boolean; error?: string }>;
-  updateProfile: (fullName: string) => Promise<{ success: boolean; error?: string }>;
+  updateProfile: (fullName: string, avatarUrl?: string | null) => Promise<{ success: boolean; error?: string }>;
   updatePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
   refreshProfile: () => Promise<void>;
 }
@@ -160,11 +160,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return { success: true };
   };
 
-  const updateProfile = async (fullName: string) => {
+  const updateProfile = async (fullName: string, avatarUrl?: string | null) => {
     if (!user?.id) {
       return { success: false, error: 'Oturum açmış kullanıcı bulunamadı.' };
     }
-    const response = await authService.updateProfile(user.id, fullName);
+    const response = await authService.updateProfile(user.id, fullName, avatarUrl);
     if (response.error) {
       return { success: false, error: response.error };
     }

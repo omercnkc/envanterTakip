@@ -26,6 +26,7 @@ import {
 } from 'lucide-react-native';
 
 import { COLORS } from '../constants';
+import { permissionHelper } from '../utils/permissionHelper';
 import {
   styles,
   SCAN_BOX_HEIGHT,
@@ -131,7 +132,10 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
         <TouchableOpacity
           style={styles.permissionButton}
-          onPress={requestPermission}
+          onPress={async () => {
+            await permissionHelper.requestPermissionWithModal('camera');
+            requestPermission();
+          }}
           activeOpacity={0.8}
         >
           <Text style={styles.permissionButtonText}>Kamera İzni Ver</Text>

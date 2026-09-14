@@ -13,14 +13,16 @@ import {
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { User, Mail, Lock, X } from 'lucide-react-native';
+import { User, Mail, Lock, X, Camera } from 'lucide-react-native';
+import { Image } from 'react-native';
 import { useSwipeDownToClose } from '../hooks/useSwipeDownToClose';
-
 
 import { COLORS } from '../constants';
 import { useAuth } from '../context/AuthContext';
 import { useAlert } from '../context/AlertContext';
+import { mediaHelper } from '../utils/mediaHelper';
 import { updateProfileSchema, UpdateProfileFormData } from '../types';
+import { MediaPickerModal } from './MediaPickerModal';
 import { styles } from './EditProfileModal.styles';
 
 interface EditProfileModalProps {
@@ -35,15 +37,15 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const { profile, user, updateProfile } = useAuth();
   const { showSuccess, showError } = useAlert();
   const [submitting, setSubmitting] = useState(false);
+  const [avatarUri, setAvatarUri] = useState<string | null>(profile?.avatar_url || null);
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
 
   const { panHandlers, translateY, handleClose } = useSwipeDownToClose({
     onClose,
     visible,
   });
 
-
   const initialFullName = profile?.full_name || '';
-
 
   const {
     control,
@@ -57,19 +59,38 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     },
   });
 
-  // Modal her açıldığında mevcut profil ismiyle doldur
+  // Modal her açıldığında mevcut profil verisiyle doldur
   useEffect(() => {
     if (visible) {
       reset({
         fullName: profile?.full_name || '',
       });
+      setAvatarUri(profile?.avatar_url || null);
     }
   }, [visible, profile, reset]);
+
+  const handlePickAvatar = () => {
+    setMediaPickerOpen(true);
+  };
+
+  const handleSelectCamera = async () => {
+    const res = await mediaHelper.pickFromCamera();
+    if (!res.canceled && res.uri) {
+      setAvatarUri(res.uri);
+    }
+  };
+
+  const handleSelectGallery = async () => {
+    const res = await mediaHelper.pickFromGallery();
+    if (!res.canceled && res.uri) {
+      setAvatarUri(res.uri);
+    }
+  };
 
   const onSubmit = async (data: UpdateProfileFormData) => {
     setSubmitting(true);
     try {
-      const result = await updateProfile(data.fullName);
+      const result = await updateProfile(data.fullName, avatarUri);
       if (!result.success) {
         showError(result.error || 'Bir hata oluştu.', 'Profil Güncellenemedi');
         return;
@@ -84,6 +105,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   };
 
   const userEmail = profile?.email || user?.email || '';
+  const displayName = profile?.full_name || user?.email?.split('@')[0] || 'K';
+  const userInitials = (displayName[0] || 'K').toUpperCase();
 
   return (
     <Modal
@@ -118,6 +141,30 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           </View>
 
           <Text style={styles.subtitle}>Hesap bilgilerinizi güncelleyin</Text>
+
+          {/* Profil Fotoğrafı Seçici */}
+          <View style={styles.avatarPickerContainer}>
+            <TouchableOpacity
+              style={styles.avatarWrapper}
+              onPress={handlePickAvatar}
+              disabled={submitting}
+              activeOpacity={0.8}
+            >
+              <View style={styles.avatarBox}>
+                {avatarUri ? (
+                  <Image source={{ uri: avatarUri }} style={styles.avatarImage} resizeMode="cover" />
+                ) : (
+                  <Text style={styles.avatarInitials}>{userInitials}</Text>
+                )}
+              </View>
+              <View style={styles.avatarCameraBadge}>
+                <Camera size={14} color={COLORS.onPrimary} />
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handlePickAvatar} disabled={submitting}>
+              <Text style={styles.avatarHintText}>Fotoğrafı Değiştir</Text>
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.form}>
             {/* Ad Soyad Alanı */}
@@ -197,7 +244,16 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           </View>
         </Animated.View>
       </KeyboardAvoidingView>
-    </Modal>
 
+      {/* Profil Fotoğrafı Seçici Modal */}
+      <MediaPickerModal
+        visible={mediaPickerOpen}
+        onClose={() => setMediaPickerOpen(false)}
+        title="Profil Fotoğrafı Seç"
+        subtitle="Fotoğraf çekin veya galerinizden seçin"
+        onSelectCamera={handleSelectCamera}
+        onSelectGallery={handleSelectGallery}
+      />
+    </Modal>
   );
 };

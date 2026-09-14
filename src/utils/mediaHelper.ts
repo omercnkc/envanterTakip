@@ -8,6 +8,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { biometricHelper } from './biometricHelper';
 import { alertService } from '../context/AlertContext';
+import { permissionHelper } from './permissionHelper';
 
 export interface PickMediaResult {
   uri: string | null;
@@ -20,37 +21,17 @@ export interface PickMediaResult {
 
 export const mediaHelper = {
   /**
-   * Kamera iznini kontrol eder ve gerekirse talep eder.
+   * Kamera iznini modern Türkçe modal ile kontrol eder ve gerekirse talep eder.
    */
   async requestCameraPermission(): Promise<boolean> {
-    const { status, canAskAgain } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      if (canAskAgain) {
-        alertService.showWarning(
-          'Ürün veya fatura fotoğrafı çekebilmek için uygulamanın kameraya erişmesine izin vermelisiniz.',
-          'Kamera İzni Gerekli'
-        );
-      }
-      return false;
-    }
-    return true;
+    return await permissionHelper.requestPermissionWithModal('camera');
   },
 
   /**
-   * Galeri / Medya Kütüphanesi iznini kontrol eder.
+   * Galeri / Medya Kütüphanesi iznini modern Türkçe modal ile kontrol eder.
    */
   async requestMediaLibraryPermission(): Promise<boolean> {
-    const { status, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      if (canAskAgain) {
-        alertService.showWarning(
-          'Fotoğraf veya fatura seçebilmek için uygulamanın galerinize erişmesine izin vermelisiniz.',
-          'Galeri İzni Gerekli'
-        );
-      }
-      return false;
-    }
-    return true;
+    return await permissionHelper.requestPermissionWithModal('media_library');
   },
 
   /**

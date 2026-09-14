@@ -14,8 +14,9 @@ import {
   requestNotificationPermissions,
 } from './src/utils/notificationHelper';
 import { DARK_COLORS, LIGHT_COLORS } from './src/constants/colors';
-import { BiometricLockOverlay, AppToast, AppAlertModal } from './src/components';
+import { BiometricLockOverlay, AppToast, AppAlertModal, PermissionModal } from './src/components';
 import { AlertProvider } from './src/context/AlertContext';
+import { permissionHelper, PermissionPromptConfig } from './src/utils/permissionHelper';
 
 /**
  * Temalar arası geçişte gözü yormayan pürüzsüz dissolve geçişi sağlar
@@ -70,6 +71,35 @@ const ThemeTransitionOverlay: React.FC = () => {
 
 const AppContent: React.FC = () => {
   const { isDark, colors } = useTheme();
+  const [permissionConfig, setPermissionConfig] = useState<PermissionPromptConfig | null>(null);
+  const permissionCallbackRef = useRef<((granted: boolean) => void) | null>(null);
+
+  useEffect(() => {
+    permissionHelper.setListener((config, callback) => {
+      setPermissionConfig(config);
+      permissionCallbackRef.current = callback || null;
+    });
+
+    return () => {
+      permissionHelper.setListener(null);
+    };
+  }, []);
+
+  const handleAllowPermission = () => {
+    setPermissionConfig(null);
+    if (permissionCallbackRef.current) {
+      permissionCallbackRef.current(true);
+      permissionCallbackRef.current = null;
+    }
+  };
+
+  const handleDismissPermission = () => {
+    setPermissionConfig(null);
+    if (permissionCallbackRef.current) {
+      permissionCallbackRef.current(false);
+      permissionCallbackRef.current = null;
+    }
+  };
 
   const navigationTheme = useMemo(() => {
     const baseTheme = isDark ? DarkTheme : DefaultTheme;
@@ -96,15 +126,19 @@ const AppContent: React.FC = () => {
       <BiometricLockOverlay />
       <AppToast />
       <AppAlertModal />
+      <PermissionModal
+        config={permissionConfig}
+        onAllow={handleAllowPermission}
+        onDismiss={handleDismissPermission}
+      />
     </NavigationContainer>
   );
 };
 
 export default function App() {
   useEffect(() => {
-    // 1. Bildirim izinlerini ve Android kanalını kur
+    // 1. Android bildirim kanalını kur
     setupNotificationChannel();
-    requestNotificationPermissions();
 
     // 2. Uygulama kapalıyken bildirime tıklanarak açıldıysa (Cold Start)
     Notifications.getLastNotificationResponseAsync().then((response) => {

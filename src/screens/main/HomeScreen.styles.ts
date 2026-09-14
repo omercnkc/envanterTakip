@@ -36,6 +36,12 @@ export const getStyles = (colors: ThemeColors) => StyleSheet.create({
     borderColor: colors.outlineVariant + '40',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: RADIUS.full,
   },
   avatarText: {
     ...TYPOGRAPHY.labelMd,

@@ -24,3 +24,6 @@ export * from './MaintenanceModal';
 export * from './FinancialAnalyticsModal';
 export * from './CategoryDistributionChart';
 export * from './WidgetPreviewModal';
+export * from './LegalModal';
+export * from './ImportDataModal';
+export * from './PermissionModal';

@@ -38,82 +38,125 @@ export const getStyles = (colors: ThemeColors) =>
       gap: SPACING.stackLg,
     },
 
-    // Hero Profil Kartı
-    profileHeroCard: {
+    // Kompakt Hesap Kartı (Artık Profil'i kopyalamayan şık tek satır)
+    compactAccountCard: {
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'space-between',
       backgroundColor: colors.surfaceContainerLowest,
-      borderRadius: RADIUS.xl,
+      borderRadius: RADIUS.lg,
       borderWidth: 1,
       borderColor: colors.surfaceContainerHigh,
-      padding: 16,
+      padding: 14,
       ...SHADOWS.sm,
     },
-    profileAvatarBox: {
-      width: 52,
-      height: 52,
-      borderRadius: 26,
-      backgroundColor: colors.primary,
+    compactAccountLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      flex: 1,
+    },
+    compactAvatarBox: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.primaryContainer,
       alignItems: 'center',
       justifyContent: 'center',
-      marginRight: 14,
-      shadowColor: colors.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.25,
-      shadowRadius: 6,
-      elevation: 4,
+      borderWidth: 1.5,
+      borderColor: colors.primary,
+      overflow: 'hidden',
     },
-    profileAvatarText: {
-      fontSize: 20,
+    compactAvatarImage: {
+      width: '100%',
+      height: '100%',
+      borderRadius: 22,
+    },
+    compactAvatarText: {
+      fontSize: 18,
       fontWeight: '700',
-      color: colors.onPrimary,
-      letterSpacing: 0.5,
+      color: colors.onPrimaryContainer,
     },
-    profileInfo: {
+    compactAccountInfo: {
       flex: 1,
-      justifyContent: 'center',
     },
-    profileName: {
-      fontSize: 16,
+    compactAccountName: {
+      fontSize: 15,
       fontWeight: '700',
       color: colors.onSurface,
-      letterSpacing: -0.2,
     },
-    profileEmail: {
-      fontSize: 13,
+    compactAccountEmail: {
+      fontSize: 12,
       color: colors.onSurfaceVariant,
       marginTop: 2,
     },
-    profileStatusRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      marginTop: 5,
-    },
-    statusIndicatorDot: {
-      width: 7,
-      height: 7,
-      borderRadius: 3.5,
-      backgroundColor: '#10B981',
-    },
-    statusIndicatorText: {
-      fontSize: 11,
-      fontWeight: '600',
-      color: '#10B981',
-    },
-    profileEditPill: {
+    compactEditPill: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
-      paddingHorizontal: 12,
-      paddingVertical: 7,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
       borderRadius: RADIUS.full,
+      backgroundColor: colors.primaryFixed,
+    },
+    compactEditText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.primary,
+    },
+
+    // Tercihler ve Hap Seçiciler (Pills)
+    preferenceBlock: {
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceContainerHigh,
+      gap: 10,
+    },
+    preferenceBlockNoBorder: {
+      borderBottomWidth: 0,
+    },
+    preferenceHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    preferenceTitle: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.onSurface,
+    },
+    preferenceSubtitle: {
+      fontSize: 11.5,
+      color: colors.onSurfaceVariant,
+    },
+    pillsRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    pill: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: RADIUS.md,
+      borderWidth: 1.5,
+      borderColor: colors.surfaceContainerHigh,
+      backgroundColor: colors.surfaceContainerLowest,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    pillActive: {
+      borderColor: colors.primary,
       backgroundColor: colors.primaryContainer,
     },
-    profileEditText: {
+    pillText: {
       fontSize: 12,
       fontWeight: '600',
+      color: colors.onSurfaceVariant,
+    },
+    pillTextActive: {
       color: colors.onPrimaryContainer,
+      fontWeight: '700',
     },
 
     // Bölümler ve Başlıklar

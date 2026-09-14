@@ -203,11 +203,15 @@ export const normalizeToISODate = (dateStr: string | null | undefined): string |
 };
 
 /**
- * Para birimini Türk Lirası olarak formatlar (örn: ₺24.999).
+ * Para birimini belirtilen veya varsayılan sembol ile formatlar (örn: ₺24.999 veya $1,200).
  */
-export const formatCurrency = (amount: number | null | undefined): string => {
-  if (amount === undefined || amount === null) return '₺0';
-  return `₺${amount.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}`;
+export const formatCurrency = (
+  amount: number | null | undefined,
+  symbol?: string
+): string => {
+  const activeSymbol = symbol !== undefined ? symbol : '₺';
+  if (amount === undefined || amount === null) return `${activeSymbol}0`;
+  return `${activeSymbol}${amount.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}`;
 };
 
 /**

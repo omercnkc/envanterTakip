@@ -199,7 +199,15 @@ export const HomeScreen: React.FC = () => {
               onPress={() => navigation.navigate('ProfileTab')}
               activeOpacity={0.7}
             >
-              <Text style={styles.avatarText}>{userInitials}</Text>
+              {profile?.avatar_url ? (
+                <Image
+                  source={{ uri: profile.avatar_url }}
+                  style={styles.avatarImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Text style={styles.avatarText}>{userInitials}</Text>
+              )}
             </TouchableOpacity>
 
             <View style={styles.greetingTextContainer}>

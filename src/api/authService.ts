@@ -5,6 +5,7 @@
 
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { LoginFormData, RegisterFormData, ForgotPasswordFormData, Profile } from '../types';
 import { formatAppError } from '../utils/errorHandler';
@@ -237,14 +238,35 @@ export const authService = {
 
   /**
    * Kullanıcının profil bilgilerini getirir.
+  /**
+   * Kullanıcı profil bilgilerini getirir.
    */
   async getProfile(userId: string): Promise<{ data: Profile | null; error: string | null }> {
     if (!isSupabaseConfigured()) {
+      try {
+        const stored = await AsyncStorage.getItem('@safe_envanter_mock_profile');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          return {
+            data: {
+              id: userId,
+              full_name: parsed.full_name || 'Demo Kullanıcı',
+              email: 'demo@ornek.com',
+              avatar_url: parsed.avatar_url || null,
+              created_at: new Date().toISOString(),
+            },
+            error: null,
+          };
+        }
+      } catch {
+        // yut
+      }
       return {
         data: {
           id: userId,
           full_name: 'Demo Kullanıcı',
           email: 'demo@ornek.com',
+          avatar_url: null,
           created_at: new Date().toISOString(),
         },
         error: null,
@@ -269,23 +291,44 @@ export const authService = {
   },
 
   /**
-   * Kullanıcı profil bilgilerini (Ad Soyad) günceller.
+   * Kullanıcı profil bilgilerini (Ad Soyad ve Profil Fotoğrafı) günceller.
    */
-  async updateProfile(userId: string, fullName: string): Promise<{ error: string | null }> {
+  async updateProfile(
+    userId: string,
+    fullName: string,
+    avatarUrl?: string | null
+  ): Promise<{ error: string | null }> {
     const cleanFullName = fullName.trim();
 
     if (!isSupabaseConfigured()) {
+      try {
+        const existing = await AsyncStorage.getItem('@safe_envanter_mock_profile');
+        const parsed = existing ? JSON.parse(existing) : {};
+        const updated = {
+          ...parsed,
+          full_name: cleanFullName,
+          avatar_url: avatarUrl !== undefined ? avatarUrl : parsed.avatar_url,
+        };
+        await AsyncStorage.setItem('@safe_envanter_mock_profile', JSON.stringify(updated));
+      } catch (err) {
+        console.warn('Mock profil kaydedilemedi:', err);
+      }
       return { error: null };
     }
 
     try {
       // 1. profiles tablosunu güncelle
+      const updatePayload: any = {
+        full_name: cleanFullName,
+        updated_at: new Date().toISOString(),
+      };
+      if (avatarUrl !== undefined) {
+        updatePayload.avatar_url = avatarUrl;
+      }
+
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({
-          full_name: cleanFullName,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updatePayload)
         .eq('id', userId);
 
       if (profileError) {
@@ -297,6 +340,7 @@ export const authService = {
         await supabase.auth.updateUser({
           data: {
             full_name: cleanFullName,
+            ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
           },
         });
       } catch {

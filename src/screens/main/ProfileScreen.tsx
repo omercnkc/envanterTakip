@@ -5,59 +5,122 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system/legacy';
 import {
   Settings,
   HelpCircle,
   Info,
-  LogOut,
   ChevronRight,
   Pencil,
-  Download,
+  FileText,
+  ShieldCheck,
+  TrendingUp,
+  Sparkles,
+  Share2,
 } from 'lucide-react-native';
 
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useInventory } from '../../context/InventoryContext';
 import { useAlert } from '../../context/AlertContext';
-import { EditProfileModal, ExportDataModal } from '../../components';
+import { EditProfileModal, LegalModal, ImageViewerModal } from '../../components';
+import {
+  calculateFinancialAnalytics,
+  generateInsuranceReportHtml,
+} from '../../utils/financialCalculator';
+import { formatCurrency } from '../../utils/warrantyCalculator';
 import { getStyles } from './ProfileScreen.styles';
 
 export const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-  const { profile, user, signOut } = useAuth();
+  const { profile, user } = useAuth();
   const { colors } = useTheme();
-  const { stats } = useInventory();
-  const { showAlert } = useAlert();
+  const { stats, products } = useInventory();
+  const { showAlert, showError, showSuccess } = useAlert();
 
   const styles = useMemo(() => getStyles(colors), [colors]);
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
-  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [legalModalOpen, setLegalModalOpen] = useState(false);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Kullanıcı';
-  const email = profile?.email || user?.email || 'kullanici@example.com';
+  const email = profile?.email || user?.email || 'kullanici@safeenvanter.com';
   const userInitials = (displayName[0] || 'K').toUpperCase();
+  const avatarUrl = profile?.avatar_url;
 
-  const handleLogout = () => {
-    showAlert({
-      type: 'danger',
-      title: 'Çıkış Yap',
-      message: 'Hesabınızdan çıkış yapmak istediğinize emin misiniz?',
-      confirmText: 'Çıkış Yap',
-      cancelText: 'Vazgeç',
-      destructive: true,
-      onConfirm: () => signOut(),
-    });
+  // Finansal analitiği hesapla
+  const analytics = useMemo(() => {
+    return calculateFinancialAnalytics(products);
+  }, [products]);
+
+  // Garanti Koruma Skoru (Aktif / Toplam)
+  const healthScore = useMemo(() => {
+    if (!stats.total || stats.total === 0) return 100;
+    return Math.round((stats.active / stats.total) * 100);
+  }, [stats.total, stats.active]);
+
+  const healthScoreLabel = useMemo(() => {
+    if (healthScore >= 80) return 'Mükemmel Koruma';
+    if (healthScore >= 50) return 'İyi Seviye Koruma';
+    return 'Garantisi Bitenler Var';
+  }, [healthScore]);
+
+  // Doğrudan Resmi PDF Sigorta Raporu Oluştur & Paylaş
+  const handleGeneratePdfReport = async () => {
+    if (products.length === 0) {
+      showAlert({
+        type: 'info',
+        title: 'Envanter Boş',
+        message: 'Rapor oluşturabilmek için önce birkaç ürün eklemelisiniz.',
+        confirmText: 'Tamam',
+        showCancel: false,
+      });
+      return;
+    }
+
+    try {
+      setIsGeneratingPdf(true);
+      const html = generateInsuranceReportHtml(products, analytics);
+      const { uri, base64 } = await Print.printToFileAsync({
+        html,
+        base64: true,
+      });
+
+      let shareUri = uri;
+      if (base64 && FileSystem.cacheDirectory) {
+        const safePath = `${FileSystem.cacheDirectory}safe_envanter_sigorta_raporu_${Date.now()}.pdf`;
+        await FileSystem.writeAsStringAsync(safePath, base64, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        shareUri = safePath;
+      }
+
+      await Sharing.shareAsync(shareUri, {
+        mimeType: 'application/pdf',
+        dialogTitle: 'Ev Envanter & Sigorta Raporu',
+        UTI: 'com.adobe.pdf',
+      });
+    } catch (err) {
+      console.warn('PDF paylaşım hatası:', err);
+      showError('PDF raporu oluşturulurken bir sorun meydana geldi.', 'Hata');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   const handleHelp = () => {
     showAlert({
       type: 'info',
       title: 'Yardım & Destek',
-      message: 'Sorularınız veya geri bildirimleriniz için support@safeenvanter.com adresinden bize ulaşabilirsiniz.',
+      message: 'Sorularınız, önerileriniz veya geri bildirimleriniz için support@safeenvanter.com adresinden bize 7/24 ulaşabilirsiniz.',
       showCancel: false,
       confirmText: 'Anladım',
     });
@@ -67,7 +130,7 @@ export const ProfileScreen: React.FC = () => {
     showAlert({
       type: 'info',
       title: 'Safe Envanter',
-      message: 'Versiyon 1.0.0\n\nEvdeki varlıklarınızı ve garanti sürelerinizi güvenle takip edebileceğiniz modern envanter yönetim platformu.',
+      message: 'Versiyon 1.0.0\n\nEvdeki tüm maddi varlıklarınızı, garanti sürelerinizi ve bakım takvimlerinizi güvenle yönetebileceğiniz modern dijital envanter platformu.',
       showCancel: false,
       confirmText: 'Kapat',
     });
@@ -81,11 +144,25 @@ export const ProfileScreen: React.FC = () => {
       >
         <Text style={styles.headerTitle}>Profil</Text>
 
-        {/* Profil Kullanıcı Kartı */}
+        {/* 1. Profil Kullanıcı Kartı (Fotoğraflı veya Monogram) */}
         <View style={styles.userCard}>
-          <View style={styles.avatarBox}>
-            <Text style={styles.avatarInitials}>{userInitials}</Text>
-          </View>
+          <TouchableOpacity
+            style={styles.avatarBox}
+            onPress={() => {
+              if (avatarUrl) {
+                setImageViewerOpen(true);
+              } else {
+                setEditProfileOpen(true);
+              }
+            }}
+            activeOpacity={0.8}
+          >
+            {avatarUrl ? (
+              <Image source={{ uri: avatarUrl }} style={styles.avatarImage} resizeMode="cover" />
+            ) : (
+              <Text style={styles.avatarInitials}>{userInitials}</Text>
+            )}
+          </TouchableOpacity>
           <View style={styles.userInfo}>
             <Text style={styles.userName}>{displayName}</Text>
             <Text style={styles.userEmail}>{email}</Text>
@@ -100,48 +177,61 @@ export const ProfileScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* 3'lü İstatistik Izgarası */}
-        <View style={styles.statsGrid}>
-          {/* Stat 1: Toplam Ürün */}
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Toplam Ürün</Text>
-            <Text style={[styles.statValue, { color: colors.primary }]}>
-              {stats.total}
-            </Text>
+        {/* 2. Envanter Güvence & Garanti Koruma Skoru */}
+        <View style={styles.healthCard}>
+          <View style={styles.healthHeaderRow}>
+            <View style={styles.healthLeft}>
+              <ShieldCheck size={18} color="#10B981" />
+              <Text style={styles.healthTitle}>Garanti Güvence Skoru</Text>
+            </View>
+            <View style={styles.healthScoreBadge}>
+              <Sparkles size={12} color="#059669" />
+              <Text style={styles.healthScoreText}>%{healthScore}</Text>
+            </View>
           </View>
 
-          {/* Stat 2: Aktif Garanti */}
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Aktif Garanti</Text>
-            <Text style={[styles.statValue, { color: colors.tertiary }]}>
-              {stats.active}
-            </Text>
+          <View style={styles.healthProgressBarTrack}>
+            <View
+              style={[
+                styles.healthProgressBarFill,
+                { width: `${healthScore}%` },
+                healthScore < 50 && { backgroundColor: colors.error },
+              ]}
+            />
           </View>
 
-          {/* Stat 3: Yakında Bitecek */}
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Yakında Bitecek</Text>
-            <Text style={[styles.statValue, { color: colors.error }]}>
-              {stats.expiringSoon}
-            </Text>
-          </View>
+          <Text style={styles.healthHintText}>
+            {healthScoreLabel} • {stats.active} aktif garanti koruması
+          </Text>
         </View>
 
-        {/* Menü Listesi */}
-        <View style={styles.menuCard}>
-          {/* Verileri Dışa Aktar */}
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => setExportModalOpen(true)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.menuItemLeft}>
-              <Download size={20} color={colors.primary} />
-              <Text style={styles.menuItemLabel}>Verileri Dışa Aktar (CSV/JSON)</Text>
+        {/* 3. Hızlı Eylem: Sigorta & Taşınma Raporu Al (A4 PDF) */}
+        <TouchableOpacity
+          style={styles.pdfReportCard}
+          onPress={handleGeneratePdfReport}
+          activeOpacity={0.8}
+          disabled={isGeneratingPdf}
+        >
+          <View style={styles.pdfReportLeft}>
+            <View style={styles.pdfIconCircle}>
+              {isGeneratingPdf ? (
+                <ActivityIndicator size="small" color={colors.onPrimary} />
+              ) : (
+                <FileText size={20} color={colors.onPrimary} />
+              )}
             </View>
-            <ChevronRight size={18} color={colors.outline} />
-          </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.pdfReportTitle}>Resmi Envanter & Sigorta Raporu</Text>
+              <Text style={styles.pdfReportSubtitle}>
+                A4 formatında imzalı PDF beyan dökümü oluşturun ve paylaşın
+              </Text>
+            </View>
+          </View>
+          <Share2 size={18} color={colors.primary} />
+        </TouchableOpacity>
 
+        {/* 6. Menü Listesi (Sadeleştirilmiş ve Ayarlar ile Ayrıştırılmış) */}
+        <View style={styles.menuCard}>
           {/* Ayarlar */}
           <TouchableOpacity
             style={styles.menuItem}
@@ -149,8 +239,25 @@ export const ProfileScreen: React.FC = () => {
             activeOpacity={0.7}
           >
             <View style={styles.menuItemLeft}>
-              <Settings size={20} color={colors.outline} />
-              <Text style={styles.menuItemLabel}>Ayarlar</Text>
+              <View style={styles.menuItemIconBox}>
+                <Settings size={18} color={colors.primary} />
+              </View>
+              <Text style={styles.menuItemLabel}>Uygulama & Güvenlik Ayarları</Text>
+            </View>
+            <ChevronRight size={18} color={colors.outline} />
+          </TouchableOpacity>
+
+          {/* Gizlilik & KVKK */}
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => setLegalModalOpen(true)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.menuItemLeft}>
+              <View style={styles.menuItemIconBox}>
+                <ShieldCheck size={18} color={colors.tertiary} />
+              </View>
+              <Text style={styles.menuItemLabel}>Gizlilik Politikası & KVKK</Text>
             </View>
             <ChevronRight size={18} color={colors.outline} />
           </TouchableOpacity>
@@ -162,7 +269,9 @@ export const ProfileScreen: React.FC = () => {
             activeOpacity={0.7}
           >
             <View style={styles.menuItemLeft}>
-              <HelpCircle size={20} color={colors.outline} />
+              <View style={styles.menuItemIconBox}>
+                <HelpCircle size={18} color={colors.outline} />
+              </View>
               <Text style={styles.menuItemLabel}>Yardım & Destek</Text>
             </View>
             <ChevronRight size={18} color={colors.outline} />
@@ -175,22 +284,14 @@ export const ProfileScreen: React.FC = () => {
             activeOpacity={0.7}
           >
             <View style={styles.menuItemLeft}>
-              <Info size={20} color={colors.outline} />
-              <Text style={styles.menuItemLabel}>Hakkında</Text>
+              <View style={styles.menuItemIconBox}>
+                <Info size={18} color={colors.outline} />
+              </View>
+              <Text style={styles.menuItemLabel}>Safe Envanter Hakkında</Text>
             </View>
             <ChevronRight size={18} color={colors.outline} />
           </TouchableOpacity>
         </View>
-
-        {/* Çıkış Yap Butonu */}
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={handleLogout}
-          activeOpacity={0.8}
-        >
-          <LogOut size={18} color={colors.error} />
-          <Text style={styles.logoutButtonText}>Çıkış Yap</Text>
-        </TouchableOpacity>
 
         {/* Uygulama Marka & Versiyon Alanı */}
         <View style={styles.appBrandingContainer}>
@@ -200,7 +301,7 @@ export const ProfileScreen: React.FC = () => {
             resizeMode="cover"
           />
           <Text style={styles.appBrandingTitle}>Safe Envanter</Text>
-          <Text style={styles.appBrandingVersion}>v1.0.0 • Garanti & Varlık Yönetimi</Text>
+          <Text style={styles.appBrandingVersion}>v1.0.0 • Varlık & Garanti Yönetimi</Text>
         </View>
       </ScrollView>
 
@@ -210,10 +311,18 @@ export const ProfileScreen: React.FC = () => {
         onClose={() => setEditProfileOpen(false)}
       />
 
-      {/* Verileri Dışa Aktar Modalı */}
-      <ExportDataModal
-        visible={exportModalOpen}
-        onClose={() => setExportModalOpen(false)}
+      {/* Yasal Bilgiler Modalı */}
+      <LegalModal
+        visible={legalModalOpen}
+        onClose={() => setLegalModalOpen(false)}
+      />
+
+      {/* Profil Fotoğrafı Tam Ekran Önizleme Modalı */}
+      <ImageViewerModal
+        visible={imageViewerOpen}
+        imageUrl={avatarUrl}
+        title={displayName}
+        onClose={() => setImageViewerOpen(false)}
       />
     </SafeAreaView>
   );
