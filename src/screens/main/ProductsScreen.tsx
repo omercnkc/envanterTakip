@@ -233,7 +233,8 @@ export const ProductsScreen: React.FC = () => {
             renderItem={({ item }) => (
               <ProductCard
                 product={item}
-                showPercentageGauge={false}
+                showPercentageGauge={true}
+                showFavoriteButton={false}
                 onPress={() => handleProductPress(item)}
               />
             )}
