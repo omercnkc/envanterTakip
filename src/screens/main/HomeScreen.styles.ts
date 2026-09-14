@@ -201,6 +201,73 @@ export const getStyles = (colors: ThemeColors) => StyleSheet.create({
   },
 
 
+  // Financial Bento Card
+  financialBentoCard: {
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: RADIUS.xl,
+    paddingVertical: 13,
+    paddingHorizontal: 15,
+    borderWidth: 1,
+    borderColor: colors.surfaceContainerHigh,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    ...SHADOWS.sm,
+  },
+  financialLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  financialIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: RADIUS.md,
+    backgroundColor: colors.primary + '18',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  financialLabelGroup: {
+    flex: 1,
+  },
+  financialTitle: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.onSurfaceVariant,
+    marginBottom: 1,
+  },
+  financialValue: {
+    fontSize: 19,
+    fontWeight: '800',
+    color: colors.onBackground,
+    letterSpacing: -0.3,
+  },
+  financialSubValue: {
+    fontSize: 10.5,
+    color: colors.onSurfaceVariant,
+    marginTop: 2,
+  },
+  financialActionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.full,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  financialActionBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.onPrimary,
+  },
+
   // 4-Column Stats Grid
   statsGrid: {
     flexDirection: 'row',

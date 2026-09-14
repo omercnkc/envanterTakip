@@ -11,6 +11,7 @@ import {
 import QRCode from 'react-native-qrcode-svg';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system/legacy';
 import { QrCode, Printer, Share2, X, Info } from 'lucide-react-native';
 
 import { Product } from '../types';
@@ -175,14 +176,27 @@ export const ProductQrModal: React.FC<ProductQrModalProps> = ({
     try {
       setIsProcessing(true);
       const html = generateLabelHtml();
-      const { uri } = await Print.printToFileAsync({ html });
-      await Sharing.shareAsync(uri, {
+      const { uri, base64 } = await Print.printToFileAsync({
+        html,
+        base64: true,
+      });
+
+      let targetUri = uri;
+      if (base64) {
+        const filename = `etiket_${product.id}_${Date.now()}.pdf`;
+        targetUri = `${FileSystem.cacheDirectory}${filename}`;
+        await FileSystem.writeAsStringAsync(targetUri, base64, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+      }
+
+      await Sharing.shareAsync(targetUri, {
         UTI: '.pdf',
         mimeType: 'application/pdf',
         dialogTitle: `${product.name} - Dijital Garanti Etiketi`,
       });
     } catch (err: any) {
-      if (err?.message?.includes('cancelled')) return;
+      if (err?.message?.includes('cancelled') || err?.message?.includes('dismissed')) return;
       showError('Etiket paylaşılırken bir sorun oluştu.');
     } finally {
       setIsProcessing(false);

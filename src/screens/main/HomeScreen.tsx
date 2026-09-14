@@ -18,6 +18,7 @@ import {
   ChevronRight,
   ShieldCheck,
   QrCode,
+  TrendingUp,
 } from 'lucide-react-native';
 
 import { Product } from '../../types';
@@ -28,7 +29,9 @@ import { useAlert } from '../../context/AlertContext';
 import { ProductCard } from '../../components/ProductCard';
 import { EmptyState } from '../../components/EmptyState';
 import { BarcodeScannerModal } from '../../components/BarcodeScannerModal';
-import { calculateWarrantyStatus } from '../../utils/warrantyCalculator';
+import { FinancialAnalyticsModal } from '../../components/FinancialAnalyticsModal';
+import { calculateWarrantyStatus, formatCurrency } from '../../utils/warrantyCalculator';
+import { calculateFinancialAnalytics } from '../../utils/financialCalculator';
 import { getStyles } from './HomeScreen.styles';
 
 export const HomeScreen: React.FC = () => {
@@ -40,6 +43,8 @@ export const HomeScreen: React.FC = () => {
   const styles = useMemo(() => getStyles(colors), [colors]);
 
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [financialModalOpen, setFinancialModalOpen] = useState(false);
+  const financialStats = useMemo(() => calculateFinancialAnalytics(allProducts), [allProducts]);
 
   const handleQrScan = async (scannedData: string) => {
     let targetId = scannedData.trim();
@@ -323,6 +328,34 @@ export const HomeScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
+        {/* Maddi Envanter & Finans Özeti Kartı */}
+        <TouchableOpacity
+          style={styles.financialBentoCard}
+          onPress={() => setFinancialModalOpen(true)}
+          activeOpacity={0.8}
+        >
+          <View style={styles.financialLeft}>
+            <View style={styles.financialIconBox}>
+              <TrendingUp size={20} color={colors.primary} />
+            </View>
+            <View style={styles.financialLabelGroup}>
+              <Text style={styles.financialTitle}>Maddi Envanter Değeri</Text>
+              <Text style={styles.financialValue}>
+                {formatCurrency(financialStats.totalValue)}
+              </Text>
+              <Text style={styles.financialSubValue}>
+                {financialStats.pricedCount > 0
+                  ? `${financialStats.pricedCount} kayıtlı eşya · Ort: ${formatCurrency(financialStats.averageValue)}`
+                  : 'Fiyat bilgisi girilmemiş'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.financialActionBadge}>
+            <Text style={styles.financialActionBadgeText}>Analiz</Text>
+            <ChevronRight size={13} color={colors.onPrimary} />
+          </View>
+        </TouchableOpacity>
 
         {/* 4'lü İstatistik Izgarası (Salt Bilgi Kartları - Click Event'siz) */}
         <View style={styles.statsGrid}>
@@ -439,6 +472,13 @@ export const HomeScreen: React.FC = () => {
         visible={scannerOpen}
         onClose={() => setScannerOpen(false)}
         onScan={handleQrScan}
+      />
+
+      {/* Finansal Envanter Analizi Modalı */}
+      <FinancialAnalyticsModal
+        visible={financialModalOpen}
+        onClose={() => setFinancialModalOpen(false)}
+        onSelectProduct={(p) => handleProductPress(p)}
       />
     </SafeAreaView>
   );

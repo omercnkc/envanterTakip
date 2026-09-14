@@ -1,0 +1,392 @@
+import { StyleSheet, Dimensions } from 'react-native';
+import { RADIUS, SPACING, TYPOGRAPHY, SHADOWS } from '../constants';
+import { ThemeColors } from '../constants/colors';
+
+const { height, width } = Dimensions.get('window');
+
+export const getStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.65)',
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      backgroundColor: colors.surfaceContainerLowest,
+      borderTopLeftRadius: RADIUS.xl,
+      borderTopRightRadius: RADIUS.xl,
+      maxHeight: height * 0.90,
+      paddingTop: SPACING.sm,
+      paddingHorizontal: SPACING.lg,
+      paddingBottom: SPACING.xl,
+      borderTopWidth: 1,
+      borderColor: colors.surfaceContainerHigh,
+      ...SHADOWS.lg,
+    },
+    handleBar: {
+      width: 44,
+      height: 5,
+      borderRadius: 3,
+      backgroundColor: colors.outlineVariant || '#94a3b8',
+      alignSelf: 'center',
+      marginBottom: SPACING.sm,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingBottom: SPACING.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceContainerHigh,
+      marginBottom: SPACING.md,
+    },
+    headerLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    iconBadge: {
+      width: 40,
+      height: 40,
+      borderRadius: RADIUS.md,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.onBackground,
+    },
+    headerSubtitle: {
+      fontSize: 12,
+      color: colors.onSurfaceVariant,
+      marginTop: 2,
+    },
+    closeButton: {
+      width: 32,
+      height: 32,
+      borderRadius: RADIUS.full,
+      backgroundColor: colors.surfaceContainerHigh,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    scrollContent: {
+      paddingBottom: SPACING.xl,
+    },
+
+    // Wealth Hero Card
+    heroWealthCard: {
+      backgroundColor: colors.primary,
+      borderRadius: RADIUS.xl,
+      padding: 18,
+      marginBottom: SPACING.md,
+      overflow: 'hidden',
+      position: 'relative',
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.25,
+      shadowRadius: 12,
+      elevation: 6,
+    },
+    heroBadgeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 10,
+    },
+    heroTag: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingHorizontal: 9,
+      paddingVertical: 4,
+      borderRadius: RADIUS.full,
+      backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    },
+    heroTagText: {
+      fontSize: 10.5,
+      fontWeight: '800',
+      color: '#ffffff',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    heroItemCountText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: 'rgba(255, 255, 255, 0.9)',
+    },
+    heroTotalLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: 'rgba(255, 255, 255, 0.85)',
+      marginBottom: 2,
+    },
+    heroTotalValue: {
+      fontSize: 32,
+      fontWeight: '800',
+      color: '#ffffff',
+      letterSpacing: -0.5,
+    },
+    heroFooterNote: {
+      fontSize: 11,
+      color: 'rgba(255, 255, 255, 0.8)',
+      marginTop: 8,
+      lineHeight: 16,
+    },
+
+    // 3'lü Metrik Izgarası
+    metricsGrid: {
+      flexDirection: 'row',
+      gap: 10,
+      marginBottom: SPACING.lg,
+    },
+    metricCard: {
+      flex: 1,
+      backgroundColor: colors.surfaceContainerLowest,
+      borderRadius: RADIUS.lg,
+      borderWidth: 1,
+      borderColor: colors.surfaceContainerHigh,
+      padding: 12,
+      gap: 4,
+      alignItems: 'center',
+      ...SHADOWS.sm,
+    },
+    metricIconBox: {
+      width: 30,
+      height: 30,
+      borderRadius: RADIUS.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 2,
+    },
+    metricValue: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.onBackground,
+      textAlign: 'center',
+    },
+    metricLabel: {
+      fontSize: 10,
+      fontWeight: '600',
+      color: colors.onSurfaceVariant,
+      textAlign: 'center',
+      lineHeight: 13,
+    },
+
+    // Section Titles
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 10,
+      marginTop: 4,
+    },
+    sectionTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    sectionTitle: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.onBackground,
+    },
+    sectionBadge: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: colors.primary,
+      backgroundColor: colors.primary + '18',
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: RADIUS.full,
+    },
+
+    // Top Expensive Items
+    topItemsContainer: {
+      gap: 8,
+      marginBottom: SPACING.lg,
+    },
+    topItemCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: colors.surfaceContainerLowest,
+      borderRadius: RADIUS.lg,
+      borderWidth: 1,
+      borderColor: colors.surfaceContainerHigh,
+      padding: 12,
+      ...SHADOWS.sm,
+    },
+    topItemLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      flex: 1,
+    },
+    rankBadge: {
+      width: 28,
+      height: 28,
+      borderRadius: RADIUS.full,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    rankBadgeText: {
+      fontSize: 13,
+      fontWeight: '800',
+    },
+    topItemThumb: {
+      width: 42,
+      height: 42,
+      borderRadius: RADIUS.md,
+      backgroundColor: colors.surfaceContainerLow,
+    },
+    topItemThumbPlaceholder: {
+      width: 42,
+      height: 42,
+      borderRadius: RADIUS.md,
+      backgroundColor: colors.surfaceContainerLow,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: colors.surfaceContainerHigh,
+    },
+    topItemInfo: {
+      flex: 1,
+    },
+    topItemName: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.onBackground,
+    },
+    topItemMeta: {
+      fontSize: 11,
+      color: colors.onSurfaceVariant,
+      marginTop: 2,
+    },
+    topItemRight: {
+      alignItems: 'flex-end',
+      paddingLeft: 8,
+    },
+    topItemPrice: {
+      fontSize: 14,
+      fontWeight: '800',
+      color: colors.onBackground,
+    },
+    topItemShare: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.primary,
+      marginTop: 2,
+    },
+
+    // Category Breakdown (Grafik & Barlar)
+    categorySection: {
+      backgroundColor: colors.surfaceContainerLowest,
+      borderRadius: RADIUS.xl,
+      borderWidth: 1,
+      borderColor: colors.surfaceContainerHigh,
+      padding: 14,
+      gap: 12,
+      marginBottom: SPACING.lg,
+      ...SHADOWS.sm,
+    },
+    categoryRow: {
+      gap: 5,
+    },
+    categoryInfoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    categoryNameGroup: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    categoryNameText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.onBackground,
+    },
+    categoryCountBadge: {
+      fontSize: 10,
+      color: colors.onSurfaceVariant,
+    },
+    categoryAmountText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.onBackground,
+    },
+    progressBarBg: {
+      height: 7,
+      borderRadius: 4,
+      backgroundColor: colors.surfaceContainerHigh,
+      overflow: 'hidden',
+    },
+    progressBarFill: {
+      height: '100%',
+      borderRadius: 4,
+      backgroundColor: colors.primary,
+    },
+
+    // Export & Action Buttons
+    actionsContainer: {
+      gap: 10,
+      marginTop: SPACING.xs,
+    },
+    sharePdfButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: colors.primary,
+      borderRadius: RADIUS.lg,
+      height: 50,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.25,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    sharePdfButtonText: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.onPrimary,
+    },
+    printButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: colors.surfaceContainerLow,
+      borderWidth: 1,
+      borderColor: colors.surfaceContainerHigh,
+      borderRadius: RADIUS.lg,
+      height: 46,
+    },
+    printButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.onSurface,
+    },
+    shareButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: colors.primary,
+      borderRadius: RADIUS.lg,
+      height: 50,
+    },
+    shareButtonText: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.onPrimary,
+    },
+  });
