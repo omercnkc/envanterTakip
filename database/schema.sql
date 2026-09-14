@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   full_name TEXT,
   email TEXT NOT NULL,
   avatar_url TEXT,
+  expo_push_token TEXT,
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );

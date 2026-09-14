@@ -4,9 +4,11 @@
  */
 
 import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { Product } from '../types';
 import { parseAnyDate } from './warrantyCalculator';
+import { supabase, isSupabaseConfigured } from '../api/supabase';
 
 // Bildirimlerin uygulama ön plandayken de sesli ve banner olarak görünmesini sağla
 Notifications.setNotificationHandler({
@@ -268,4 +270,65 @@ export async function cancelAllWarrantyNotifications(): Promise<void> {
     console.warn('Tüm bildirimler iptal edilirken hata oluştu:', err);
   }
 }
+
+/**
+ * Cihaz için benzersiz Expo Push Token alır (Cloud Push)
+ */
+export async function getExpoPushToken(): Promise<string | null> {
+  try {
+    const hasPermission = await requestNotificationPermissions();
+    if (!hasPermission) {
+      return null;
+    }
+
+    const projectId =
+      Constants.expoConfig?.extra?.eas?.projectId ??
+      Constants.easConfig?.projectId ??
+      'bae48a5a-9e08-41f5-91c2-69be86c0e923';
+
+    const tokenResponse = await Notifications.getExpoPushTokenAsync({
+      projectId,
+    });
+
+    return tokenResponse.data;
+  } catch (error) {
+    console.warn('Expo Push Token alınamadı:', error);
+    return null;
+  }
+}
+
+/**
+ * Kullanıcının Push Token'ını Supabase profiles tablosuna kaydeder / günceller
+ */
+export async function syncPushTokenWithSupabase(userId: string): Promise<boolean> {
+  if (!isSupabaseConfigured() || !userId || !userId.includes('-')) {
+    return false;
+  }
+
+  try {
+    const token = await getExpoPushToken();
+    if (!token) {
+      return false;
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        expo_push_token: token,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId);
+
+    if (error) {
+      console.warn('Push token Supabase profiles tablosuna kaydedilemedi:', error.message);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.warn('syncPushTokenWithSupabase hatası:', err);
+    return false;
+  }
+}
+
 

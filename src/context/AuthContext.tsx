@@ -8,6 +8,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../api/supabase';
 import { authService } from '../api/authService';
 import { Profile, LoginFormData, RegisterFormData, ForgotPasswordFormData } from '../types';
+import { syncPushTokenWithSupabase } from '../utils/notificationHelper';
 
 interface AuthContextType {
   user: User | null;
@@ -38,6 +39,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (data) {
       setProfile(data);
     }
+    // Arka planda Expo Push Token senkronizasyonunu başlat (Cloud push)
+    syncPushTokenWithSupabase(userId).catch(() => {});
   };
 
   useEffect(() => {

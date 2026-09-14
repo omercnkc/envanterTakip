@@ -49,7 +49,19 @@
           "cameraPermission": "Ürün ve fatura fotoğrafları çekebilmek için kamera erişim izni gerekiyor."
         }
       ],
-      "expo-sharing"
-    ]
+      "expo-sharing",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#4648d4"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "bae48a5a-9e08-41f5-91c2-69be86c0e923"
+      }
+    }
   }
 }
