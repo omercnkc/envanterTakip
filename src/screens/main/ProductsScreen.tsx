@@ -8,10 +8,12 @@ import {
   ScrollView,
   RefreshControl,
   ActivityIndicator,
+  Modal,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { Search, X, SlidersHorizontal, ChevronLeft, ChevronRight, QrCode } from 'lucide-react-native';
+import { Search, X, SlidersHorizontal, ChevronLeft, ChevronRight, QrCode, PieChart } from 'lucide-react-native';
 
 import { Product } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
@@ -22,6 +24,7 @@ import { EmptyState } from '../../components/EmptyState';
 import { FilterModal } from '../../components/FilterModal';
 import { BarcodeScannerModal } from '../../components/BarcodeScannerModal';
 import { TechOrbitLoader } from '../../components/TechOrbitLoader';
+import { CategoryDistributionChart } from '../../components/CategoryDistributionChart';
 import { getStyles } from './ProductsScreen.styles';
 
 const ITEMS_PER_PAGE = 5;
@@ -54,6 +57,7 @@ export const ProductsScreen: React.FC = () => {
 
   const [searchText, setSearchText] = useState('');
   const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [chartModalVisible, setChartModalVisible] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [page, setPage] = useState(1);
   const flatListRef = React.useRef<FlatList<any>>(null);
@@ -172,6 +176,14 @@ export const ProductsScreen: React.FC = () => {
       {/* Üst Başlık */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Ürünler</Text>
+        <TouchableOpacity
+          style={styles.chartHeaderBtn}
+          onPress={() => setChartModalVisible(true)}
+          activeOpacity={0.75}
+        >
+          <PieChart size={15} color={colors.primary} />
+          <Text style={styles.chartHeaderBtnText}>Kategori Dağılımı</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.container}>
@@ -472,6 +484,38 @@ export const ProductsScreen: React.FC = () => {
         onClose={() => setScannerOpen(false)}
         onScan={handleQrScan}
       />
+
+      {/* Kategori Dağılım Grafiği Modalı */}
+      <Modal
+        visible={chartModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setChartModalVisible(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setChartModalVisible(false)}>
+          <View style={styles.chartModalOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={styles.chartModalContent}>
+                <View style={styles.chartModalHandle} />
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  <CategoryDistributionChart
+                    products={allProducts}
+                    initialMode="count"
+                    onCategoryFilter={(catId) => {
+                      setChartModalVisible(false);
+                      const num = Number(catId);
+                      if (!isNaN(num) && num > 0) {
+                        setPage(1);
+                        setFilterOptions((prev) => ({ ...prev, categoryId: num }));
+                      }
+                    }}
+                  />
+                </ScrollView>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </SafeAreaView>
   );
 };

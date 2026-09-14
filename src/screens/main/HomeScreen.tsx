@@ -37,7 +37,14 @@ import { getStyles } from './HomeScreen.styles';
 export const HomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { profile, user } = useAuth();
-  const { allProducts, stats, refreshProducts, isRefreshing, getProduct } = useInventory();
+  const {
+    allProducts,
+    stats,
+    refreshProducts,
+    isRefreshing,
+    getProduct,
+    setFilterOptions,
+  } = useInventory();
   const { showSuccess, showAlert } = useAlert();
   const { colors } = useTheme();
   const styles = useMemo(() => getStyles(colors), [colors]);
@@ -45,6 +52,15 @@ export const HomeScreen: React.FC = () => {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [financialModalOpen, setFinancialModalOpen] = useState(false);
   const financialStats = useMemo(() => calculateFinancialAnalytics(allProducts), [allProducts]);
+
+  const handleFilterCategoryFromModal = (categoryId: string) => {
+    setFinancialModalOpen(false);
+    const catNum = Number(categoryId);
+    if (!isNaN(catNum) && catNum > 0) {
+      setFilterOptions((prev) => ({ ...prev, categoryId: catNum }));
+    }
+    navigation.navigate('ProductsTab');
+  };
 
   const handleQrScan = async (scannedData: string) => {
     let targetId = scannedData.trim();
@@ -479,6 +495,7 @@ export const HomeScreen: React.FC = () => {
         visible={financialModalOpen}
         onClose={() => setFinancialModalOpen(false)}
         onSelectProduct={(p) => handleProductPress(p)}
+        onFilterCategory={handleFilterCategoryFromModal}
       />
     </SafeAreaView>
   );

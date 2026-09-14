@@ -34,12 +34,14 @@ import {
   calculateFinancialAnalytics,
   generateInsuranceReportHtml,
 } from '../utils/financialCalculator';
+import { CategoryDistributionChart } from './CategoryDistributionChart';
 import { getStyles } from './FinancialAnalyticsModal.styles';
 
 interface FinancialAnalyticsModalProps {
   visible: boolean;
   onClose: () => void;
   onSelectProduct?: (product: Product) => void;
+  onFilterCategory?: (categoryId: string, categoryName: string) => void;
 }
 
 const RANK_CONFIGS = [
@@ -52,6 +54,7 @@ export const FinancialAnalyticsModal: React.FC<FinancialAnalyticsModalProps> = (
   visible,
   onClose,
   onSelectProduct,
+  onFilterCategory,
 }) => {
   const { colors } = useTheme();
   const { allProducts } = useInventory();
@@ -316,48 +319,17 @@ export const FinancialAnalyticsModal: React.FC<FinancialAnalyticsModalProps> = (
                   </View>
                 )}
 
-                {/* Kategori Bazlı Harcama Dağılımı (Grafik / İlerleme Barları) */}
-                <View style={styles.sectionHeader}>
-                  <View style={styles.sectionTitleRow}>
-                    <PieChart size={18} color={colors.primary} />
-                    <Text style={styles.sectionTitle}>Kategori Bazlı Harcama Dağılımı</Text>
-                  </View>
-                </View>
-
-                <View style={styles.categorySection}>
-                  {analytics.categoryBreakdown.filter((c) => c.totalCost > 0).length > 0 ? (
-                    analytics.categoryBreakdown
-                      .filter((c) => c.totalCost > 0)
-                      .map((cat) => (
-                        <View key={cat.categoryId} style={styles.categoryRow}>
-                          <View style={styles.categoryInfoRow}>
-                            <View style={styles.categoryNameGroup}>
-                              <Text style={styles.categoryNameText}>{cat.categoryName}</Text>
-                              <Text style={styles.categoryCountBadge}>
-                                ({cat.productCount} ürün)
-                              </Text>
-                            </View>
-                            <Text style={styles.categoryAmountText}>
-                              {formatCurrency(cat.totalCost)} (%{cat.percentage})
-                            </Text>
-                          </View>
-                          {/* İlerleme Çubuğu */}
-                          <View style={styles.progressBarBg}>
-                            <View
-                              style={[
-                                styles.progressBarFill,
-                                { width: `${Math.max(4, cat.percentage)}%` },
-                              ]}
-                            />
-                          </View>
-                        </View>
-                      ))
-                  ) : (
-                    <Text style={{ fontSize: 13, color: colors.onSurfaceVariant, textAlign: 'center' }}>
-                      Kategorilere ait fiyatlı harcama kaydı bulunmuyor.
-                    </Text>
-                  )}
-                </View>
+                {/* Kategori Bazlı Donut / Halka Grafik Dağılımı */}
+                <CategoryDistributionChart
+                  products={allProducts}
+                  initialMode="value"
+                  onCategoryFilter={(catId, catName) => {
+                    onClose();
+                    if (onFilterCategory) {
+                      onFilterCategory(catId, catName);
+                    }
+                  }}
+                />
 
                 {/* Sigorta & Taşınma Raporu PDF Paylaş ve Yazdır Butonları */}
                 <View style={styles.actionsContainer}>

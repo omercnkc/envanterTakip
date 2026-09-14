@@ -469,3 +469,113 @@ export function generateInsuranceReportHtml(
   `;
 }
 
+export const CATEGORY_CHART_COLORS = [
+  '#4f46e5', // Indigo
+  '#06b6d4', // Cyan
+  '#10b981', // Emerald
+  '#f59e0b', // Amber
+  '#ec4899', // Pink
+  '#8b5cf6', // Violet
+  '#3b82f6', // Blue
+  '#f97316', // Orange
+  '#14b8a6', // Teal
+  '#64748b', // Slate
+];
+
+export interface CategoryPieChartItem {
+  categoryId: string;
+  categoryName: string;
+  value: number;
+  color: string;
+  focused?: boolean;
+  productCount: number;
+  totalCost: number;
+  percentage: number;
+  text?: string;
+}
+
+/**
+ * Hem ürün adedine hem de harcama tutarına göre Donut/Pie Chart için veri hazırlar
+ */
+export function getCategoryChartData(
+  products: Product[],
+  mode: 'count' | 'value',
+  selectedCategoryId?: string | null
+): {
+  chartData: CategoryPieChartItem[];
+  totalValue: number;
+  totalCount: number;
+} {
+  const map = new Map<string, {
+    name: string;
+    count: number;
+    totalCost: number;
+  }>();
+
+  let grandTotalValue = 0;
+  let grandTotalCount = products.length;
+
+  products.forEach((p) => {
+    const catId = p.category_id ? String(p.category_id) : 'other';
+    const catName = p.category?.name || 'Genel / Diğer';
+    const price = p.purchase_price || 0;
+
+    grandTotalValue += price;
+
+    const existing = map.get(catId) || {
+      name: catName,
+      count: 0,
+      totalCost: 0,
+    };
+
+    existing.count += 1;
+    existing.totalCost += price;
+    map.set(catId, existing);
+  });
+
+  const rawItems = Array.from(map.entries()).map(([catId, data]) => {
+    const isCountMode = mode === 'count';
+    const val = isCountMode ? data.count : data.totalCost;
+    const totalRef = isCountMode ? grandTotalCount : grandTotalValue;
+    const percentage = totalRef > 0 ? Math.round((val / totalRef) * 100) : 0;
+
+    return {
+      categoryId: catId,
+      categoryName: data.name,
+      value: Math.max(0.01, val), // 0 olanlar grafikte çökmesin diye minik taban
+      rawVal: val,
+      productCount: data.count,
+      totalCost: data.totalCost,
+      percentage,
+    };
+  });
+
+  // Değere göre çoktan aza sırala
+  rawItems.sort((a, b) => b.rawVal - a.rawVal);
+
+  const chartData: CategoryPieChartItem[] = rawItems
+    .filter((item) => (mode === 'value' ? item.rawVal > 0 : item.productCount > 0))
+    .map((item, index) => {
+      const color = CATEGORY_CHART_COLORS[index % CATEGORY_CHART_COLORS.length];
+      const isFocused = Boolean(selectedCategoryId && selectedCategoryId === item.categoryId);
+
+      return {
+        categoryId: item.categoryId,
+        categoryName: item.categoryName,
+        value: item.value,
+        color,
+        focused: isFocused,
+        productCount: item.productCount,
+        totalCost: item.totalCost,
+        percentage: item.percentage,
+        text: `${item.percentage}%`,
+      };
+    });
+
+  return {
+    chartData,
+    totalValue: grandTotalValue,
+    totalCount: grandTotalCount,
+  };
+}
+
