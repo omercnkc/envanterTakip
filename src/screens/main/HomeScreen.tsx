@@ -31,7 +31,7 @@ import { getStyles } from './HomeScreen.styles';
 export const HomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { profile, user } = useAuth();
-  const { products, stats, refreshProducts, isRefreshing } = useInventory();
+  const { allProducts, stats, refreshProducts, isRefreshing } = useInventory();
   const { colors } = useTheme();
   const styles = useMemo(() => getStyles(colors), [colors]);
 
@@ -39,14 +39,14 @@ export const HomeScreen: React.FC = () => {
   const firstName = rawName.trim().split(/\s+/)[0] || rawName;
   const userInitials = (firstName[0] || 'U').toUpperCase();
 
-  // Sıradaki / En yakın garanti bitişine sahip ürünü hesapla
+  // Sıradaki / En yakın garanti bitişine sahip ürünü hesapla (Tüm ürünler arasından, filtreden bağımsız)
   const closestWarrantyInfo = useMemo(() => {
-    if (!products || products.length === 0) {
+    if (!allProducts || allProducts.length === 0) {
       return { type: 'empty' as const, product: null, daysRemaining: null };
     }
 
     // Aktif veya süresi yaklaşan ürünleri filtrele
-    const activeProductsWithDays = products
+    const activeProductsWithDays = allProducts
       .map((p) => {
         const status = calculateWarrantyStatus(p.warranty_end_date, colors);
         return {
@@ -76,14 +76,10 @@ export const HomeScreen: React.FC = () => {
       product: nearest.product,
       daysRemaining: nearest.daysRemaining,
     };
-  }, [products, colors]);
+  }, [allProducts, colors]);
 
-  // Yaklaşan garantili ve son eklenen ürünler (Ana sayfada tam sığması için max 3 kart)
-  const recentProducts = useMemo(() => products.slice(0, 3), [products]);
-
-  const handleStatCardPress = (statusFilter?: string) => {
-    navigation.navigate('ProductsTab', { filterStatus: statusFilter });
-  };
+  // Yaklaşan garantili ve son eklenen ürünler (Filtrelerden bağımsız en son eklenen 3 ürün)
+  const recentProducts = useMemo(() => allProducts.slice(0, 3), [allProducts]);
 
   const handleProductPress = useCallback(
     (product: Product) => {
@@ -265,14 +261,10 @@ export const HomeScreen: React.FC = () => {
         </View>
 
 
-        {/* 4'lü İstatistik Izgarası */}
+        {/* 4'lü İstatistik Izgarası (Salt Bilgi Kartları - Click Event'siz) */}
         <View style={styles.statsGrid}>
           {/* Stat 1: Aktif Garanti */}
-          <TouchableOpacity
-            style={styles.statCard}
-            onPress={() => handleStatCardPress('active')}
-            activeOpacity={0.7}
-          >
+          <View style={styles.statCard}>
             <View
               style={[
                 styles.statIconBox,
@@ -287,14 +279,10 @@ export const HomeScreen: React.FC = () => {
             <Text style={styles.statLabel} numberOfLines={2}>
               Aktif Garanti
             </Text>
-          </TouchableOpacity>
+          </View>
 
           {/* Stat 2: Yakında Bitecek */}
-          <TouchableOpacity
-            style={styles.statCard}
-            onPress={() => handleStatCardPress('expiring_soon')}
-            activeOpacity={0.7}
-          >
+          <View style={styles.statCard}>
             <View
               style={[
                 styles.statIconBox,
@@ -309,14 +297,10 @@ export const HomeScreen: React.FC = () => {
             <Text style={styles.statLabel} numberOfLines={2}>
               Yakında Bitecek
             </Text>
-          </TouchableOpacity>
+          </View>
 
           {/* Stat 3: Süresi Dolmuş */}
-          <TouchableOpacity
-            style={styles.statCard}
-            onPress={() => handleStatCardPress('expired')}
-            activeOpacity={0.7}
-          >
+          <View style={styles.statCard}>
             <View
               style={[
                 styles.statIconBox,
@@ -331,14 +315,10 @@ export const HomeScreen: React.FC = () => {
             <Text style={styles.statLabel} numberOfLines={2}>
               Süresi Dolmuş
             </Text>
-          </TouchableOpacity>
+          </View>
 
           {/* Stat 4: Tüm Ürünler */}
-          <TouchableOpacity
-            style={styles.statCard}
-            onPress={() => handleStatCardPress('all')}
-            activeOpacity={0.7}
-          >
+          <View style={styles.statCard}>
             <View
               style={[
                 styles.statIconBox,
@@ -353,7 +333,7 @@ export const HomeScreen: React.FC = () => {
             <Text style={styles.statLabel} numberOfLines={2}>
               Tüm Ürünler
             </Text>
-          </TouchableOpacity>
+          </View>
         </View>
 
         {/* Yaklaşan / Son Ürünler Bölümü */}

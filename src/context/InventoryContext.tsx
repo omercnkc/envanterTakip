@@ -26,6 +26,7 @@ import { useAuth } from './AuthContext';
 
 interface InventoryContextType {
   products: Product[];
+  allProducts: Product[];
   categories: Category[];
   stats: InventoryStats;
   loading: boolean;
@@ -59,6 +60,7 @@ const InventoryContext = createContext<InventoryContextType | undefined>(undefin
 
 export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user } = useAuth();
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -91,6 +93,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
   const fetchProducts = useCallback(async () => {
     // Supabase bağlıyken kullanıcı henüz giriş yapmadıysa sorgu atma
     if (isConfigured && !user?.id) {
+      setAllProducts([]);
       setProducts([]);
       setLoading(false);
       return;
@@ -99,10 +102,26 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     const currentUserId = user?.id || '00000000-0000-0000-0000-000000000000';
     try {
       setLoading(true);
-      const res = await productService.getProducts(currentUserId, filterOptions);
-      const items = res.data || [];
-      setProducts(items);
-      syncAllWarrantyNotifications(items);
+      // 1. Her zaman kullanıcının TÜM ham ürünlerini çek (İstatistikler, bildirimler ve ana sayfa için)
+      const allRes = await productService.getProducts(currentUserId, defaultFilterOptions);
+      const allItems = allRes.data || [];
+      setAllProducts(allItems);
+      syncAllWarrantyNotifications(allItems);
+
+      // 2. Filtre seçenekleri aktifse filtrelenmiş listeyi hazırla (ProductsScreen için)
+      const isFiltered =
+        (filterOptions.searchQuery && filterOptions.searchQuery.trim() !== '') ||
+        filterOptions.categoryId !== undefined ||
+        filterOptions.warrantyStatus !== 'all' ||
+        filterOptions.sortBy !== 'created_at' ||
+        filterOptions.sortOrder !== 'desc';
+
+      if (isFiltered) {
+        const filteredRes = await productService.getProducts(currentUserId, filterOptions);
+        setProducts(filteredRes.data || []);
+      } else {
+        setProducts(allItems);
+      }
     } catch {
       // Hata sessizce yakalanır
     } finally {
@@ -113,16 +132,31 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
   // Sayfa yenileme (Pull to refresh)
   const refresh = useCallback(async () => {
     if (isConfigured && !user?.id) {
+      setAllProducts([]);
       setProducts([]);
       return;
     }
     const currentUserId = user?.id || '00000000-0000-0000-0000-000000000000';
     setRefreshing(true);
     try {
-      const res = await productService.getProducts(currentUserId, filterOptions);
-      const items = res.data || [];
-      setProducts(items);
-      syncAllWarrantyNotifications(items);
+      const allRes = await productService.getProducts(currentUserId, defaultFilterOptions);
+      const allItems = allRes.data || [];
+      setAllProducts(allItems);
+      syncAllWarrantyNotifications(allItems);
+
+      const isFiltered =
+        (filterOptions.searchQuery && filterOptions.searchQuery.trim() !== '') ||
+        filterOptions.categoryId !== undefined ||
+        filterOptions.warrantyStatus !== 'all' ||
+        filterOptions.sortBy !== 'created_at' ||
+        filterOptions.sortOrder !== 'desc';
+
+      if (isFiltered) {
+        const filteredRes = await productService.getProducts(currentUserId, filterOptions);
+        setProducts(filteredRes.data || []);
+      } else {
+        setProducts(allItems);
+      }
     } finally {
       setRefreshing(false);
     }
@@ -132,14 +166,14 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     fetchProducts();
   }, [fetchProducts]);
 
-  // Dinamik İstatistikler (4'lü Sayaç)
+  // Dinamik İstatistikler (4'lü Sayaç - Filtrelerden ASLA etkilenmez, tüm envanteri yansıtır)
   const stats: InventoryStats = useMemo(() => {
-    let total = products.length;
+    let total = allProducts.length;
     let active = 0;
     let expiringSoon = 0;
     let expired = 0;
 
-    products.forEach((p) => {
+    allProducts.forEach((p) => {
       const { status } = calculateWarrantyStatus(p.warranty_end_date);
       if (status === 'active') active++;
       else if (status === 'expiring_soon') expiringSoon++;
@@ -147,7 +181,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     });
 
     return { total, active, expiringSoon, expired };
-  }, [products]);
+  }, [allProducts]);
 
   // Yeni Ürün Ekleme
   const addProduct = async (data: ProductFormData) => {
@@ -201,6 +235,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
   const value = useMemo(
     () => ({
       products,
+      allProducts,
       categories,
       stats,
       loading,
@@ -220,6 +255,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     }),
     [
       products,
+      allProducts,
       categories,
       stats,
       loading,
