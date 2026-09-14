@@ -36,6 +36,7 @@ export interface Product {
   description: string | null;
   image_path: string | null;
   invoice_path: string | null;
+  is_favorite?: boolean;
   created_at: string;
   updated_at?: string;
   

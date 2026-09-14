@@ -73,7 +73,20 @@ export const getStyles = (colors: ThemeColors) =>
     },
     rightSection: {
       alignItems: 'flex-end',
+      justifyContent: 'space-between',
+      minHeight: 56,
+      paddingVertical: 1,
+    },
+    favoriteButton: {
+      width: 28,
+      height: 28,
+      borderRadius: RADIUS.full,
+      alignItems: 'center',
       justifyContent: 'center',
+      backgroundColor: colors.surfaceContainerLow,
+    },
+    favoriteButtonActive: {
+      backgroundColor: '#ef444418',
     },
     gaugeContainer: {
       flexDirection: 'row',

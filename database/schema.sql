@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS public.products (
   description TEXT,
   image_path TEXT,
   invoice_path TEXT,
+  is_favorite BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -59,6 +60,7 @@ CREATE TABLE IF NOT EXISTS public.products (
 CREATE INDEX IF NOT EXISTS idx_products_user_id ON public.products(user_id);
 CREATE INDEX IF NOT EXISTS idx_products_category_id ON public.products(category_id);
 CREATE INDEX IF NOT EXISTS idx_products_warranty_end_date ON public.products(warranty_end_date);
+CREATE INDEX IF NOT EXISTS idx_products_is_favorite ON public.products(is_favorite);
 CREATE INDEX IF NOT EXISTS idx_products_search ON public.products USING gin(to_tsvector('turkish', coalesce(name, '') || ' ' || coalesce(brand, '') || ' ' || coalesce(model, '') || ' ' || coalesce(serial_number, '')));
 
 -- 4. OTOMATİK PROFİL OLUŞTURMA TRIGGER'I

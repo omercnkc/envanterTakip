@@ -135,6 +135,23 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                   <TouchableOpacity
                     style={[
                       styles.chip,
+                      selectedStatus === 'favorites' && styles.chipActive,
+                    ]}
+                    onPress={() => onSelectStatus('favorites')}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.chipText,
+                        selectedStatus === 'favorites' && styles.chipTextActive,
+                      ]}
+                    >
+                      ❤️ Favoriler
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.chip,
                       selectedStatus === 'active' && styles.chipActive,
                     ]}
                     onPress={() => onSelectStatus('active')}

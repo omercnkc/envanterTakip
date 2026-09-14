@@ -13,10 +13,13 @@ import {
   Package,
   Calendar,
   ChevronRight,
+  Heart,
 } from 'lucide-react-native';
 
 import { Product } from '../types';
 import { useTheme } from '../context/ThemeContext';
+import { useInventory } from '../context/InventoryContext';
+import { useAlert } from '../context/AlertContext';
 import {
   formatDateTurkish,
   calculateWarrantyStatus,
@@ -60,6 +63,20 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(
   ({ product, onPress, showPercentageGauge = false }) => {
     const { colors } = useTheme();
     const styles = useMemo(() => getStyles(colors), [colors]);
+    const { isFavorite, toggleFavorite } = useInventory();
+    const { showSuccess, showInfo } = useAlert();
+
+    const isFav = isFavorite(product.id) || product.is_favorite === true;
+
+    const handleFavoritePress = async () => {
+      const willBeFav = !isFav;
+      await toggleFavorite(product.id);
+      if (willBeFav) {
+        showSuccess('Ürün favorilere eklendi.');
+      } else {
+        showInfo('Ürün favorilerden çıkarıldı.');
+      }
+    };
 
     const categoryName = product.category?.name || 'Genel';
     const brandName = product.brand ? ` • ${product.brand}` : '';
@@ -114,20 +131,33 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(
           </View>
         </View>
 
-        {/* Sağ Bölüm: Yüzde Çemberi veya Durum Rozeti */}
+        {/* Sağ Bölüm: Favori Butonu + Yüzde Çemberi veya Durum Rozeti */}
         <View style={styles.rightSection}>
+          <TouchableOpacity
+            style={[styles.favoriteButton, isFav && styles.favoriteButtonActive]}
+            onPress={handleFavoritePress}
+            activeOpacity={0.65}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Heart
+              size={15}
+              color={isFav ? '#ef4444' : colors.outline}
+              fill={isFav ? '#ef4444' : 'transparent'}
+            />
+          </TouchableOpacity>
+
           {showPercentageGauge ? (
             <View style={styles.gaugeContainer}>
               <CircularProgress
-                size={40}
+                size={36}
                 strokeWidth={3}
                 percentage={percentage}
                 color={statusInfo.color}
                 backgroundColor={colors.surfaceContainer}
                 centerText={`%${percentage}`}
-                textStyle={{ fontSize: 10, fontWeight: '700' }}
+                textStyle={{ fontSize: 9, fontWeight: '700' }}
               />
-              <ChevronRight size={16} color={colors.outline} style={styles.chevron} />
+              <ChevronRight size={15} color={colors.outline} style={styles.chevron} />
             </View>
           ) : (
             <View style={styles.statusBadgeWrapper}>

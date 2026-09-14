@@ -14,6 +14,7 @@ import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/nativ
 import {
   ArrowLeft,
   Edit2,
+  Heart,
   Cpu,
   QrCode,
   Layers,
@@ -46,7 +47,7 @@ export const ProductDetailScreen: React.FC = () => {
   const route = useRoute<any>();
   const { productId, initialProduct } = route.params || {};
 
-  const { getProduct, deleteProduct } = useInventory();
+  const { getProduct, deleteProduct, isFavorite, toggleFavorite } = useInventory();
   const { showAlert, showSuccess, showError, showInfo } = useAlert();
   const [product, setProduct] = useState<Product | null>(initialProduct || null);
   const [loading, setLoading] = useState(!initialProduct);
@@ -54,6 +55,20 @@ export const ProductDetailScreen: React.FC = () => {
 
   const { colors } = useTheme();
   const styles = useMemo(() => getStyles(colors), [colors]);
+
+  const isFav = product?.id ? isFavorite(product.id) || product.is_favorite === true : false;
+
+  const handleFavoriteToggle = async () => {
+    if (!product?.id) return;
+    const willBeFav = !isFav;
+    await toggleFavorite(product.id);
+    setProduct((prev) => (prev ? { ...prev, is_favorite: willBeFav } : null));
+    if (willBeFav) {
+      showSuccess('Ürün favorilere eklendi.');
+    } else {
+      showInfo('Ürün favorilerden çıkarıldı.');
+    }
+  };
 
   const loadProduct = useCallback(async () => {
     if (!productId) return;
@@ -137,9 +152,26 @@ export const ProductDetailScreen: React.FC = () => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Ürün Detayı</Text>
         </View>
-        <TouchableOpacity style={styles.editIconButton} onPress={handleEdit} activeOpacity={0.7}>
-          <Edit2 size={19} color={colors.onSurfaceVariant} />
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          <TouchableOpacity
+            style={[styles.headerIconButton, isFav && styles.headerIconButtonActive]}
+            onPress={handleFavoriteToggle}
+            activeOpacity={0.7}
+          >
+            <Heart
+              size={19}
+              color={isFav ? '#ef4444' : colors.onSurfaceVariant}
+              fill={isFav ? '#ef4444' : 'transparent'}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={handleEdit}
+            activeOpacity={0.7}
+          >
+            <Edit2 size={19} color={colors.onSurfaceVariant} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView

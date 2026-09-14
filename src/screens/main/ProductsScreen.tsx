@@ -26,6 +26,7 @@ const ITEMS_PER_PAGE = 5;
 
 const QUICK_FILTER_TABS = [
   { id: 'all', label: 'Tümü' },
+  { id: 'favorites', label: '❤️ Favoriler' },
   { id: 'active', label: 'Devam Eden' },
   { id: 'expiring_soon', label: 'Yakında Bitecek' },
   { id: 'expired', label: 'Süresi Doldu' },
@@ -240,22 +241,30 @@ export const ProductsScreen: React.FC = () => {
               <View style={styles.listEmpty}>
                 <EmptyState
                   title={
-                    searchText || hasActiveFilters
+                    filterOptions.warrantyStatus === 'favorites'
+                      ? 'Henüz Favori Ürününüz Yok'
+                      : searchText || hasActiveFilters
                       ? 'Eşleşen Ürün Bulunamadı'
                       : 'Henüz ürün eklenmemiş'
                   }
                   description={
-                    searchText || hasActiveFilters
+                    filterOptions.warrantyStatus === 'favorites'
+                      ? 'Sık takip etmek istediğiniz ürünlerin kalp simgesine dokunarak favorilerinize ekleyebilirsiniz.'
+                      : searchText || hasActiveFilters
                       ? 'Arama kriterlerinizi veya filtrelerinizi değiştirerek tekrar deneyebilirsiniz.'
                       : 'Envanterinizi oluşturmak ve garantilerinizi takip etmek için ilk ürününüzü ekleyin.'
                   }
                   actionText={
-                    searchText || hasActiveFilters
+                    filterOptions.warrantyStatus === 'favorites'
+                      ? 'Tüm Ürünleri Gör'
+                      : searchText || hasActiveFilters
                       ? 'Filtreleri Temizle'
                       : 'İlk Ürünü Ekle'
                   }
                   onActionPress={() => {
-                    if (searchText || hasActiveFilters) {
+                    if (filterOptions.warrantyStatus === 'favorites') {
+                      handleSelectStatus('all');
+                    } else if (searchText || hasActiveFilters) {
                       setSearchText('');
                       setPage(1);
                       resetFilters();

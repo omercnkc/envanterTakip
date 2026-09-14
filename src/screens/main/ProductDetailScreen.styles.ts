@@ -28,6 +28,22 @@ export const getStyles = (colors: ThemeColors) => StyleSheet.create({
     color: colors.onBackground,
     fontWeight: '700',
   },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerIconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: RADIUS.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceContainerLow,
+  },
+  headerIconButtonActive: {
+    backgroundColor: '#ef444418',
+  },
   editIconButton: {
     padding: 8,
     borderRadius: RADIUS.full,

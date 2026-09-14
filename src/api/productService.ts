@@ -29,6 +29,7 @@ let mockProductsStore: Product[] = [
     description: 'Salonda TV ünitesinde kullanılıyor.',
     image_path: 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=500&auto=format&fit=crop&q=80',
     invoice_path: 'https://images.unsplash.com/photo-1554415707-9e49017a1430?w=500&auto=format&fit=crop&q=80',
+    is_favorite: false,
     created_at: '2024-04-12T10:00:00.000Z',
     category: { id: 1, name: 'Televizyon', icon: 'tv' },
   },
@@ -48,6 +49,7 @@ let mockProductsStore: Product[] = [
     description: 'Şahsi kullanım telefonu.',
     image_path: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=500&auto=format&fit=crop&q=80',
     invoice_path: 'https://images.unsplash.com/photo-1554415707-9e49017a1430?w=500&auto=format&fit=crop&q=80',
+    is_favorite: true,
     created_at: '2024-09-05T14:30:00.000Z',
     category: { id: 3, name: 'Telefon', icon: 'smartphone' },
   },
@@ -67,6 +69,7 @@ let mockProductsStore: Product[] = [
     description: 'Mutfak buzdolabı.',
     image_path: 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?w=500&auto=format&fit=crop&q=80',
     invoice_path: 'https://images.unsplash.com/photo-1554415707-9e49017a1430?w=500&auto=format&fit=crop&q=80',
+    is_favorite: false,
     created_at: '2023-11-20T11:15:00.000Z',
     category: { id: 5, name: 'Beyaz Eşya', icon: 'refrigerator' },
   },
@@ -86,6 +89,7 @@ let mockProductsStore: Product[] = [
     description: 'Dikey kablosuz süpürge.',
     image_path: 'https://images.unsplash.com/photo-1558317374-067fb5f30001?w=500&auto=format&fit=crop&q=80',
     invoice_path: 'https://images.unsplash.com/photo-1554415707-9e49017a1430?w=500&auto=format&fit=crop&q=80',
+    is_favorite: false,
     created_at: '2022-02-18T09:00:00.000Z',
     category: { id: 6, name: 'Küçük Ev Aletleri', icon: 'coffee' },
   },
@@ -117,7 +121,9 @@ export const productService = {
         filtered = filtered.filter((p) => p.category_id === options.categoryId);
       }
 
-      if (options?.warrantyStatus && options.warrantyStatus !== 'all') {
+      if (options?.warrantyStatus === 'favorites' || options?.onlyFavorites) {
+        filtered = filtered.filter((p) => p.is_favorite === true);
+      } else if (options?.warrantyStatus && options.warrantyStatus !== 'all') {
         filtered = filtered.filter((p) => {
           const calc = calculateWarrantyStatus(p.warranty_end_date);
           return calc.status === options.warrantyStatus;
@@ -143,6 +149,11 @@ export const productService = {
         query = query.eq('category_id', options.categoryId);
       }
 
+      // Favoriler Filtresi
+      if (options?.warrantyStatus === 'favorites' || options?.onlyFavorites) {
+        query = query.eq('is_favorite', true);
+      }
+
       // Arama Filtresi
       if (options?.searchQuery && options.searchQuery.trim() !== '') {
         const q = `%${options.searchQuery.trim()}%`;
@@ -163,7 +174,11 @@ export const productService = {
       let result = (data as Product[]) || [];
 
       // İstemci tarafı garanti durumu filtresi (dinamik hesaplandığı için)
-      if (options?.warrantyStatus && options.warrantyStatus !== 'all') {
+      if (
+        options?.warrantyStatus &&
+        options.warrantyStatus !== 'all' &&
+        options.warrantyStatus !== 'favorites'
+      ) {
         result = result.filter((p) => {
           const calc = calculateWarrantyStatus(p.warranty_end_date);
           return calc.status === options.warrantyStatus;
@@ -230,6 +245,7 @@ export const productService = {
         description: formData.description ? formData.description.trim() : null,
         image_path: formData.image_path || null,
         invoice_path: formData.invoice_path || null,
+        is_favorite: false,
         created_at: new Date().toISOString(),
       };
       mockProductsStore = [newProduct, ...mockProductsStore];
@@ -332,6 +348,43 @@ export const productService = {
       const { error } = await supabase
         .from('products')
         .delete()
+        .eq('id', productId);
+
+      if (error) {
+        return { success: false, error: formatAppError(error).fullMessage };
+      }
+
+      return { success: true, error: null };
+    } catch (err) {
+      return { success: false, error: formatAppError(err).fullMessage };
+    }
+  },
+
+  /**
+   * Ürünün favori durumunu günceller (Local mock veya Supabase).
+   */
+  async toggleFavorite(
+    productId: string,
+    isFavorite: boolean
+  ): Promise<{ success: boolean; error: string | null }> {
+    if (!isSupabaseConfigured()) {
+      const index = mockProductsStore.findIndex((p) => p.id === productId);
+      if (index !== -1) {
+        mockProductsStore[index] = {
+          ...mockProductsStore[index],
+          is_favorite: isFavorite,
+        };
+      }
+      return { success: true, error: null };
+    }
+
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({
+          is_favorite: isFavorite,
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', productId);
 
       if (error) {

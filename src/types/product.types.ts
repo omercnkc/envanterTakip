@@ -80,7 +80,8 @@ export type ProductFormData = z.infer<typeof productFormSchema>;
 export interface ProductFilterOptions {
   searchQuery?: string;
   categoryId?: number;
-  warrantyStatus?: 'all' | 'active' | 'expiring_soon' | 'expired';
+  warrantyStatus?: 'all' | 'active' | 'expiring_soon' | 'expired' | 'favorites';
+  onlyFavorites?: boolean;
   sortBy?: 'warranty_end_date' | 'purchase_date' | 'name' | 'created_at';
   sortOrder?: 'asc' | 'desc';
 }

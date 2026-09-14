@@ -12,6 +12,7 @@ import React, {
   useMemo,
   ReactNode,
 } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Product, Category, ProductFormData, ProductFilterOptions, InventoryStats } from '../types';
 import { productService } from '../api/productService';
 import { categoryService } from '../api/categoryService';
@@ -46,6 +47,9 @@ interface InventoryContextType {
   ) => Promise<{ success: boolean; data?: Product; error?: string }>;
   deleteProduct: (productId: string) => Promise<{ success: boolean; error?: string }>;
   getProduct: (productId: string) => Promise<Product | null>;
+  isFavorite: (productId: string) => boolean;
+  toggleFavorite: (productId: string) => Promise<{ success: boolean; isFavorite: boolean }>;
+  favoriteCount: number;
 }
 
 const defaultFilterOptions: ProductFilterOptions = {
@@ -58,11 +62,14 @@ const defaultFilterOptions: ProductFilterOptions = {
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
 
+const getFavoritesStorageKey = (uid: string) => `@safe_envanter_favorites_${uid || 'guest'}`;
+
 export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [filterOptions, setFilterOptions] = useState<ProductFilterOptions>(defaultFilterOptions);
@@ -73,6 +80,29 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
   const resetFilters = useCallback(() => {
     setFilterOptions(defaultFilterOptions);
   }, []);
+
+  // Kullanıcı değiştiğinde yerel favorileri yükle
+  useEffect(() => {
+    let isMounted = true;
+    const loadLocalFavorites = async () => {
+      try {
+        const key = getFavoritesStorageKey(userId);
+        const raw = await AsyncStorage.getItem(key);
+        if (raw && isMounted) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            setFavoriteIds(new Set(parsed));
+          }
+        }
+      } catch (e) {
+        console.warn('Favoriler yerelden yüklenemedi:', e);
+      }
+    };
+    loadLocalFavorites();
+    return () => {
+      isMounted = false;
+    };
+  }, [userId]);
 
   // Kategorileri yükle
   useEffect(() => {
@@ -89,7 +119,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     };
   }, []);
 
-  // Ürünleri çek
+  // Ürünleri çek & Yerel/Bulut favori senkronizasyonu yap
   const fetchProducts = useCallback(async () => {
     // Supabase bağlıyken kullanıcı henüz giriş yapmadıysa sorgu atma
     if (isConfigured && !user?.id) {
@@ -102,25 +132,72 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     const currentUserId = user?.id || '00000000-0000-0000-0000-000000000000';
     try {
       setLoading(true);
-      // 1. Her zaman kullanıcının TÜM ham ürünlerini çek (İstatistikler, bildirimler ve ana sayfa için)
+
+      // 1. Yerel AsyncStorage'daki favori ID'lerini al
+      let localFavList: string[] = [];
+      try {
+        const raw = await AsyncStorage.getItem(getFavoritesStorageKey(currentUserId));
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) localFavList = parsed;
+        }
+      } catch {}
+
+      // 2. Kullanıcının ham ürünlerini çek
       const allRes = await productService.getProducts(currentUserId, defaultFilterOptions);
-      const allItems = allRes.data || [];
+      const rawItems = allRes.data || [];
+
+      // 3. Buluttaki favoriler ile yereldeki favorileri BİRLEŞTİR (Local & Cloud Sync)
+      const cloudFavList = rawItems.filter((p) => p.is_favorite === true).map((p) => p.id);
+      const mergedFavSet = new Set<string>([...localFavList, ...cloudFavList]);
+      setFavoriteIds(mergedFavSet);
+
+      // Güncellenmiş listeyi yerel depolamaya yaz
+      AsyncStorage.setItem(
+        getFavoritesStorageKey(currentUserId),
+        JSON.stringify(Array.from(mergedFavSet))
+      ).catch(() => {});
+
+      // Yerelde favori olup bulutta false kalmış ürünleri arka planda buluta senkronize et
+      if (isConfigured && user?.id) {
+        localFavList.forEach((favId) => {
+          const productOnCloud = rawItems.find((p) => p.id === favId);
+          if (productOnCloud && !productOnCloud.is_favorite) {
+            productService.toggleFavorite(favId, true).catch(() => {});
+          }
+        });
+      }
+
+      // Tüm ürünleri senkronize favori durumuyla sarmala
+      const allItems = rawItems.map((p) => ({
+        ...p,
+        is_favorite: mergedFavSet.has(p.id),
+      }));
+
       setAllProducts(allItems);
       syncAllWarrantyNotifications(allItems);
 
-      // 2. Filtre seçenekleri aktifse filtrelenmiş listeyi hazırla (ProductsScreen için)
-      const isFiltered =
-        (filterOptions.searchQuery && filterOptions.searchQuery.trim() !== '') ||
-        filterOptions.categoryId !== undefined ||
-        filterOptions.warrantyStatus !== 'all' ||
-        filterOptions.sortBy !== 'created_at' ||
-        filterOptions.sortOrder !== 'desc';
-
-      if (isFiltered) {
-        const filteredRes = await productService.getProducts(currentUserId, filterOptions);
-        setProducts(filteredRes.data || []);
+      // 4. Filtre seçenekleri aktifse ProductsScreen için listeyi hazırla
+      if (filterOptions.warrantyStatus === 'favorites') {
+        setProducts(allItems.filter((p) => mergedFavSet.has(p.id)));
       } else {
-        setProducts(allItems);
+        const isFiltered =
+          (filterOptions.searchQuery && filterOptions.searchQuery.trim() !== '') ||
+          filterOptions.categoryId !== undefined ||
+          filterOptions.warrantyStatus !== 'all' ||
+          filterOptions.sortBy !== 'created_at' ||
+          filterOptions.sortOrder !== 'desc';
+
+        if (isFiltered) {
+          const filteredRes = await productService.getProducts(currentUserId, filterOptions);
+          const filteredItems = (filteredRes.data || []).map((p) => ({
+            ...p,
+            is_favorite: mergedFavSet.has(p.id),
+          }));
+          setProducts(filteredItems);
+        } else {
+          setProducts(allItems);
+        }
       }
     } catch {
       // Hata sessizce yakalanır
@@ -139,23 +216,55 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     const currentUserId = user?.id || '00000000-0000-0000-0000-000000000000';
     setRefreshing(true);
     try {
+      let localFavList: string[] = [];
+      try {
+        const raw = await AsyncStorage.getItem(getFavoritesStorageKey(currentUserId));
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) localFavList = parsed;
+        }
+      } catch {}
+
       const allRes = await productService.getProducts(currentUserId, defaultFilterOptions);
-      const allItems = allRes.data || [];
+      const rawItems = allRes.data || [];
+
+      const cloudFavList = rawItems.filter((p) => p.is_favorite === true).map((p) => p.id);
+      const mergedFavSet = new Set<string>([...localFavList, ...cloudFavList]);
+      setFavoriteIds(mergedFavSet);
+
+      AsyncStorage.setItem(
+        getFavoritesStorageKey(currentUserId),
+        JSON.stringify(Array.from(mergedFavSet))
+      ).catch(() => {});
+
+      const allItems = rawItems.map((p) => ({
+        ...p,
+        is_favorite: mergedFavSet.has(p.id),
+      }));
+
       setAllProducts(allItems);
       syncAllWarrantyNotifications(allItems);
 
-      const isFiltered =
-        (filterOptions.searchQuery && filterOptions.searchQuery.trim() !== '') ||
-        filterOptions.categoryId !== undefined ||
-        filterOptions.warrantyStatus !== 'all' ||
-        filterOptions.sortBy !== 'created_at' ||
-        filterOptions.sortOrder !== 'desc';
-
-      if (isFiltered) {
-        const filteredRes = await productService.getProducts(currentUserId, filterOptions);
-        setProducts(filteredRes.data || []);
+      if (filterOptions.warrantyStatus === 'favorites') {
+        setProducts(allItems.filter((p) => mergedFavSet.has(p.id)));
       } else {
-        setProducts(allItems);
+        const isFiltered =
+          (filterOptions.searchQuery && filterOptions.searchQuery.trim() !== '') ||
+          filterOptions.categoryId !== undefined ||
+          filterOptions.warrantyStatus !== 'all' ||
+          filterOptions.sortBy !== 'created_at' ||
+          filterOptions.sortOrder !== 'desc';
+
+        if (isFiltered) {
+          const filteredRes = await productService.getProducts(currentUserId, filterOptions);
+          const filteredItems = (filteredRes.data || []).map((p) => ({
+            ...p,
+            is_favorite: mergedFavSet.has(p.id),
+          }));
+          setProducts(filteredItems);
+        } else {
+          setProducts(allItems);
+        }
       }
     } finally {
       setRefreshing(false);
@@ -182,6 +291,63 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
 
     return { total, active, expiringSoon, expired };
   }, [allProducts]);
+
+  // Favori Kontrolü
+  const isFavorite = useCallback(
+    (productId: string): boolean => {
+      return favoriteIds.has(productId);
+    },
+    [favoriteIds]
+  );
+
+  // Favori Ekleme / Çıkarma (Yerel Optimistic UI + AsyncStorage + Supabase Bulut Senkronizasyonu)
+  const toggleFavorite = useCallback(
+    async (productId: string): Promise<{ success: boolean; isFavorite: boolean }> => {
+      const currentFav = favoriteIds.has(productId);
+      const nextFav = !currentFav;
+
+      // 1. Anında Yerel State Güncellemesi (Optimistic UI)
+      const updatedSet = new Set(favoriteIds);
+      if (nextFav) {
+        updatedSet.add(productId);
+      } else {
+        updatedSet.delete(productId);
+      }
+      setFavoriteIds(updatedSet);
+
+      setAllProducts((prev) =>
+        prev.map((p) => (p.id === productId ? { ...p, is_favorite: nextFav } : p))
+      );
+      setProducts((prev) => {
+        if (filterOptions.warrantyStatus === 'favorites' && !nextFav) {
+          return prev.filter((p) => p.id !== productId);
+        }
+        return prev.map((p) => (p.id === productId ? { ...p, is_favorite: nextFav } : p));
+      });
+
+      // 2. Yerel AsyncStorage'a kalıcı olarak kaydet
+      const currentUserId = user?.id || '00000000-0000-0000-0000-000000000000';
+      AsyncStorage.setItem(
+        getFavoritesStorageKey(currentUserId),
+        JSON.stringify(Array.from(updatedSet))
+      ).catch((err) => console.warn('Yerel favori kaydedilemedi:', err));
+
+      // 3. Bulut Senkronizasyonu (Supabase / Mock)
+      try {
+        await productService.toggleFavorite(productId, nextFav);
+      } catch (err) {
+        console.warn('Bulut favori senkronizasyon hatası:', err);
+      }
+
+      return { success: true, isFavorite: nextFav };
+    },
+    [favoriteIds, filterOptions.warrantyStatus, user?.id]
+  );
+
+  // Toplam Favori Sayısı
+  const favoriteCount = useMemo(() => {
+    return allProducts.filter((p) => favoriteIds.has(p.id) || p.is_favorite).length;
+  }, [allProducts, favoriteIds]);
 
   // Yeni Ürün Ekleme
   const addProduct = async (data: ProductFormData) => {
@@ -220,12 +386,25 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     // Planlanmış bildirimleri iptal et
     cancelWarrantyNotifications(productId);
     setProducts((prev) => prev.filter((p) => p.id !== productId));
+    setAllProducts((prev) => prev.filter((p) => p.id !== productId));
+
+    if (favoriteIds.has(productId)) {
+      const updatedSet = new Set(favoriteIds);
+      updatedSet.delete(productId);
+      setFavoriteIds(updatedSet);
+      const currentUserId = user?.id || '00000000-0000-0000-0000-000000000000';
+      AsyncStorage.setItem(
+        getFavoritesStorageKey(currentUserId),
+        JSON.stringify(Array.from(updatedSet))
+      ).catch(() => {});
+    }
+
     return { success: true };
   };
 
   // Tek Ürün Getirme
   const getProduct = async (productId: string): Promise<Product | null> => {
-    const cached = products.find((p) => p.id === productId);
+    const cached = products.find((p) => p.id === productId) || allProducts.find((p) => p.id === productId);
     if (cached) return cached;
 
     const res = await productService.getProductById(productId);
@@ -252,6 +431,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
       updateProduct,
       deleteProduct,
       getProduct,
+      isFavorite,
+      toggleFavorite,
+      favoriteCount,
     }),
     [
       products,
@@ -264,6 +446,13 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
       resetFilters,
       fetchProducts,
       refresh,
+      addProduct,
+      updateProduct,
+      deleteProduct,
+      getProduct,
+      isFavorite,
+      toggleFavorite,
+      favoriteCount,
     ]
   );
 
