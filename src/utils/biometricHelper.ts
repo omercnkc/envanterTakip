@@ -286,7 +286,7 @@ export const biometricHelper = {
    * Kullanıcıdan biyometrik doğrulama ister.
    */
   async authenticate(
-    promptMessage: string = 'Safe Envanter Doğrulaması'
+    promptMessage: string = 'Güvenli Envanter Doğrulaması'
   ): Promise<{ success: boolean; error?: string }> {
     try {
       const check = await this.checkBiometrics();

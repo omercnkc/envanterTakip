@@ -66,7 +66,7 @@ export const tr = {
 
   // Kimlik Doğrulama (Auth)
   auth: {
-    welcomeTitle: 'Safe Envanter',
+    welcomeTitle: 'Güvenli Envanter',
     welcomeSubtitle: 'Evinizdeki ve işinizdeki tüm varlıklarınızı, faturalarınızı ve garanti sürelerinizi güvenle takip edin.',
     loginTitle: 'Giriş Yap',
     loginSubtitle: 'Hesabınıza giriş yaparak envanterinizi yönetmeye devam edin.',
@@ -359,7 +359,7 @@ export const tr = {
     noBiometricEnrolled: 'Cihazınızda kayıtlı Face ID veya Parmak İzi bulunamadı. Lütfen cihaz ayarlarınızdan biyometri ekleyin.',
     biometricEnablePrompt: '{type} ile Kilidi Aktifleştir',
     biometricDisablePrompt: 'Biyometrik Kilidi Kapatmak İçin Doğrulayın',
-    biometricEnabledSuccess: 'Safe Envanter artık {type} ile korunuyor.',
+    biometricEnabledSuccess: 'Güvenli Envanter artık {type} ile korunuyor.',
     biometricDisabledSuccess: 'Uygulama açılış kilidi devre dışı bırakıldı.',
   },
 

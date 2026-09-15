@@ -956,7 +956,9 @@ export const SettingsScreen: React.FC = () => {
               {language === 'tr' ? 'Uçtan Uca Şifreli & Güvenli Yerel Depolama' : 'End-to-End Encrypted & Secure Storage'}
             </Text>
           </View>
-          <Text style={styles.footerAppVersion}>Safe Envanter v1.0.0</Text>
+          <Text style={styles.footerAppVersion}>
+            {language === 'tr' ? 'Güvenli Envanter v1.0.0' : 'Safe Inventory v1.0.0'}
+          </Text>
         </View>
       </ScrollView>
 

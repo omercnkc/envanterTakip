@@ -129,8 +129,8 @@ export const LegalModal: React.FC<LegalModalProps> = ({
                 </Text>
                 <Text style={styles.paragraph}>
                   {language === 'tr'
-                    ? 'Safe Envanter olarak, ev envanteriniz, fatura belgeleriniz ve kişisel varlık verilerinizin gizliliğine en üst düzeyde önem veriyoruz. Kişisel verileriniz üçüncü şahıslara veya reklam verenlere asla satılmaz veya pazarlanmaz.'
-                    : 'At Safe Envanter, we prioritize the confidentiality of your home inventory, invoices, and personal asset data. Your data is never sold or marketed to third parties or advertisers.'}
+                    ? 'Güvenli Envanter olarak, ev envanteriniz, fatura belgeleriniz ve kişisel varlık verilerinizin gizliliğine en üst düzeyde önem veriyoruz. Kişisel verileriniz üçüncü şahıslara veya reklam verenlere asla satılmaz veya pazarlanmaz.'
+                    : 'At Safe Inventory, we prioritize the confidentiality of your home inventory, invoices, and personal asset data. Your data is never sold or marketed to third parties or advertisers.'}
                 </Text>
 
                 <Text style={styles.sectionTitle}>
@@ -195,8 +195,8 @@ export const LegalModal: React.FC<LegalModalProps> = ({
                 </Text>
                 <Text style={styles.paragraph}>
                   {language === 'tr'
-                    ? '6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") uyarınca, veri sorumlusu sıfatıyla Safe Envanter tarafından kişisel verileriniz aşağıda açıklanan çerçevede işlenmektedir.'
-                    : 'In compliance with applicable data protection legislation (GDPR / KVKK), Safe Envanter acts as the data controller and processes personal information strictly within the following scope.'}
+                    ? '6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") uyarınca, veri sorumlusu sıfatıyla Güvenli Envanter tarafından kişisel verileriniz aşağıda açıklanan çerçevede işlenmektedir.'
+                    : 'In compliance with applicable data protection legislation (GDPR / KVKK), Safe Inventory acts as the data controller and processes personal information strictly within the following scope.'}
                 </Text>
 
                 <Text style={styles.sectionTitle}>
@@ -252,8 +252,8 @@ export const LegalModal: React.FC<LegalModalProps> = ({
                 </Text>
                 <Text style={styles.paragraph}>
                   {language === 'tr'
-                    ? 'Safe Envanter, kullanıcıların kişisel ev eşyalarını kayıt altına almalarına, garanti ve bakım tarihlerini organize etmelerine yardımcı olan bir dijital asistan uygulamasıdır.'
-                    : 'Safe Envanter is a digital assistant designed to help users track personal belongings, warranties, and maintenance schedules.'}
+                    ? 'Güvenli Envanter, kullanıcıların kişisel ev eşyalarını kayıt altına almalarına, garanti ve bakım tarihlerini organize etmelerine yardımcı olan bir dijital asistan uygulamasıdır.'
+                    : 'Safe Inventory is a digital assistant designed to help users track personal belongings, warranties, and maintenance schedules.'}
                 </Text>
 
                 <Text style={styles.sectionTitle}>
@@ -261,8 +261,8 @@ export const LegalModal: React.FC<LegalModalProps> = ({
                 </Text>
                 <Text style={styles.paragraph}>
                   {language === 'tr'
-                    ? 'Uygulama tarafından sağlanan garanti süresi hesaplamaları ve anlık bildirimler kullanıcının girdiği bilgilere dayanır. Üretici veya satıcı firmaların garanti şartları, yasal mevzuat ve kullanıcı hataları kaynaklı hak kayıplarından Safe Envanter sorumlu tutulamaz.'
-                    : 'Warranty calculations and reminders are based on user inputs. Safe Envanter is not liable for manufacturer policy variations, statutory shifts, or user-entry discrepancies.'}
+                    ? 'Uygulama tarafından sağlanan garanti süresi hesaplamaları ve anlık bildirimler kullanıcının girdiği bilgilere dayanır. Üretici veya satıcı firmaların garanti şartları, yasal mevzuat ve kullanıcı hataları kaynaklı hak kayıplarından Güvenli Envanter sorumlu tutulamaz.'
+                    : 'Warranty calculations and reminders are based on user inputs. Safe Inventory is not liable for manufacturer policy variations, statutory shifts, or user-entry discrepancies.'}
                 </Text>
 
                 <Text style={styles.sectionTitle}>

@@ -64,7 +64,7 @@ export const BiometricLockOverlay: React.FC = () => {
 
     try {
       const res = await biometricHelper.authenticate(
-        language === 'tr' ? 'Safe Envanter Kilidini Aç' : 'Unlock Safe Inventory'
+        language === 'tr' ? 'Güvenli Envanter Kilidini Aç' : 'Unlock Safe Inventory'
       );
       if (res.success) {
         setIsLocked(false);
@@ -158,7 +158,7 @@ export const BiometricLockOverlay: React.FC = () => {
         </Animated.View>
 
         <Text style={[styles.title, { color: colors.onBackground }]}>
-          {language === 'tr' ? 'Safe Envanter Kilitli' : 'Safe Inventory Locked'}
+          {language === 'tr' ? 'Güvenli Envanter Kilitli' : 'Safe Inventory Locked'}
         </Text>
         <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
           {language === 'tr'

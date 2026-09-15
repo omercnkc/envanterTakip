@@ -289,7 +289,7 @@ export const WidgetPreviewModal: React.FC<WidgetPreviewModalProps> = ({
                     <Text style={styles.stepText}>
                       {language === 'tr'
                         ? 'Listeden "Ev Envanter & Garanti Takip" uygulamasını bulun.'
-                        : 'Find "Safe Envanter" from the list of apps.'}
+                        : 'Find "Safe Inventory" from the list of apps.'}
                     </Text>
                   </View>
 

@@ -149,7 +149,9 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     if (!saved || !saved.email || !saved.password) {
       return;
     }
-    const res = await biometricHelper.authenticate('Safe Envanter Girişi');
+    const res = await biometricHelper.authenticate(
+      language === 'tr' ? 'Güvenli Envanter Girişi' : 'Safe Inventory Login'
+    );
     if (res.success) {
       onSubmit({ email: saved.email, password: saved.password });
     }

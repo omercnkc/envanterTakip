@@ -129,7 +129,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
       >
         <TechOrbitLoader
           fullScreen={false}
-          message="Safe Envanter"
+          message={language === 'tr' ? 'Güvenli Envanter' : 'Safe Inventory'}
           subMessage={language === 'tr' ? 'GARANTİ & VARLIK YÖNETİMİ' : 'WARRANTY & ASSET MANAGEMENT'}
         />
       </Animated.View>

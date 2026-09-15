@@ -138,7 +138,7 @@ export const ProfileScreen: React.FC = () => {
   const handleAbout = () => {
     showAlert({
       type: 'info',
-      title: 'Safe Envanter',
+      title: language === 'tr' ? 'Güvenli Envanter' : 'Safe Inventory',
       message: language === 'tr'
         ? 'Versiyon 1.0.0\n\nEvdeki tüm maddi varlıklarınızı, garanti sürelerinizi ve bakım takvimlerinizi güvenle yönetebileceğiniz modern dijital envanter platformu.'
         : 'Version 1.0.0\n\nModern digital inventory platform to securely manage your household assets, warranties and maintenance schedules.',
@@ -298,7 +298,7 @@ export const ProfileScreen: React.FC = () => {
               <View style={styles.menuItemIconBox}>
                 <Info size={18} color={colors.outline} />
               </View>
-              <Text style={styles.menuItemLabel}>{language === 'tr' ? 'Safe Envanter Hakkında' : 'About Safe Inventory'}</Text>
+              <Text style={styles.menuItemLabel}>{language === 'tr' ? 'Güvenli Envanter Hakkında' : 'About Safe Inventory'}</Text>
             </View>
             <ChevronRight size={18} color={colors.outline} />
           </TouchableOpacity>
@@ -311,7 +311,9 @@ export const ProfileScreen: React.FC = () => {
             style={styles.appBrandingLogo}
             resizeMode="cover"
           />
-          <Text style={styles.appBrandingTitle}>Safe Envanter</Text>
+          <Text style={styles.appBrandingTitle}>
+            {language === 'tr' ? 'Güvenli Envanter' : 'Safe Inventory'}
+          </Text>
           <Text style={styles.appBrandingVersion}>{language === 'tr' ? 'v1.0.0 • Varlık & Garanti Yönetimi' : 'v1.0.0 • Asset & Warranty Management'}</Text>
         </View>
       </ScrollView>
