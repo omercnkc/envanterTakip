@@ -32,6 +32,7 @@ import { AuthStackParamList, RegisterFormData, registerSchema } from '../../type
 import { COLORS } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
 import { useAlert } from '../../context/AlertContext';
+import { useTranslation } from '../../i18n';
 import { GoogleIcon } from '../../components/GoogleIcon';
 import { AppCallout } from '../../components/AppCallout';
 import { checkPasswordStrength, generateStrongPassword } from '../../utils/passwordHelper';
@@ -43,6 +44,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const { signUp, signInWithGoogle } = useAuth();
   const { showAlert } = useAlert();
+  const { t, language } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -153,10 +155,12 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
     showAlert({
       type: 'info',
-      title: 'Şifre Kaydedilsin mi?',
-      message: 'Önerilen güçlü şifre bu cihaza kaydedilsin mi? Bir sonraki girişinizde e-posta ve şifreniz otomatik doldurulacaktır.',
-      confirmText: 'Evet, Kaydet',
-      cancelText: 'Hayır',
+      title: language === 'tr' ? 'Şifre Kaydedilsin mi?' : 'Save Password?',
+      message: language === 'tr'
+        ? 'Önerilen güçlü şifre bu cihaza kaydedilsin mi? Bir sonraki girişinizde e-posta ve şifreniz otomatik doldurulacaktır.'
+        : 'Save the suggested strong password on this device? Email and password will be auto-filled on next login.',
+      confirmText: language === 'tr' ? 'Evet, Kaydet' : 'Yes, Save',
+      cancelText: language === 'tr' ? 'Hayır' : 'No',
       onConfirm: async () => {
         setSaveOnRegister(true);
         setIsCredentialSaved(true);
@@ -183,9 +187,12 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
         }
         showAlert({
           type: 'success',
-          title: 'Kayıt Başarılı',
-          message: 'Hesabınız oluşturuldu. Lütfen e-postanızı kontrol ederek hesabınızı doğrulayın veya doğrudan giriş yapın.',
-          confirmText: 'Giriş Yap',
+          title: language === 'tr' ? 'Kayıt Başarılı' : 'Registration Successful',
+          message:
+            language === 'tr'
+              ? 'Hesabınız oluşturuldu. Lütfen e-postanızı kontrol ederek hesabınızı doğrulayın veya doğrudan giriş yapın.'
+              : 'Your account has been created. Please verify your email or log in directly.',
+          confirmText: language === 'tr' ? 'Giriş Yap' : 'Log In',
           showCancel: false,
           onConfirm: () => navigation.navigate('Login'),
         });
@@ -236,9 +243,9 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 resizeMode="cover"
               />
             </View>
-            <Text style={styles.title}>Hesap Oluştur</Text>
+            <Text style={styles.title}>{language === 'tr' ? 'Hesap Oluştur' : 'Create Account'}</Text>
             <Text style={styles.subtitle}>
-              Hemen katılın ve varlıklarınızı güvenle yönetmeye başlayın.
+              {language === 'tr' ? 'Hemen katılın ve varlıklarınızı güvenle yönetmeye başlayın.' : 'Join now and securely manage your home assets.'}
             </Text>
           </View>
 
@@ -261,7 +268,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
             {/* Ad Soyad */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                Ad Soyad <Text style={styles.requiredStar}>*</Text>
+                {t('auth.fullNameLabel')} <Text style={styles.requiredStar}>*</Text>
               </Text>
               <Controller
                 control={control}
@@ -280,7 +287,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                     />
                     <TextInput
                       style={styles.textInput}
-                      placeholder="Örn: Ahmet Yılmaz"
+                      placeholder={t('auth.fullNamePlaceholder')}
                       placeholderTextColor={COLORS.outline}
                       value={value}
                       onChangeText={onChange}
@@ -297,7 +304,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
             {/* E-posta Adresi */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                E-posta Adresi <Text style={styles.requiredStar}>*</Text>
+                {t('auth.emailLabel')} <Text style={styles.requiredStar}>*</Text>
               </Text>
               <Controller
                 control={control}
@@ -316,7 +323,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                     />
                     <TextInput
                       style={styles.textInput}
-                      placeholder="ornek@sirket.com"
+                      placeholder={t('auth.emailPlaceholder')}
                       placeholderTextColor={COLORS.outline}
                       keyboardType="email-address"
                       autoCapitalize="none"
@@ -337,7 +344,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
             <View style={styles.inputGroup}>
               <View style={styles.labelRow}>
                 <Text style={styles.label}>
-                  Şifre <Text style={styles.requiredStar}>*</Text>
+                  {t('auth.passwordLabel')} <Text style={styles.requiredStar}>*</Text>
                 </Text>
                 <TouchableOpacity
                   style={styles.suggestPasswordButton}
@@ -345,7 +352,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                   activeOpacity={0.7}
                 >
                   <Sparkles size={12} color={COLORS.primary} />
-                  <Text style={styles.suggestPasswordText}>Güçlü Şifre Öner</Text>
+                  <Text style={styles.suggestPasswordText}>{language === 'tr' ? 'Güçlü Şifre Öner' : 'Suggest Strong Password'}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -353,7 +360,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 <View style={styles.savedBadge}>
                   <Check size={12} color={COLORS.tertiary} />
                   <Text style={styles.savedBadgeText}>
-                    Şifre cihaza kaydedilecek (Girişte otomatik doldurulur)
+                    {language === 'tr' ? 'Şifre cihaza kaydedilecek (Girişte otomatik doldurulur)' : 'Password will be saved on device (auto-filled on login)'}
                   </Text>
                 </View>
               )}
@@ -424,7 +431,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                         />
                       </View>
                       <Text style={[styles.strengthLabel, { color: passwordStrength.color }]}>
-                        Şifre Gücü: {passwordStrength.label}
+                        {language === 'tr' ? 'Şifre Gücü' : 'Password Strength'}: {passwordStrength.label}
                       </Text>
                     </View>
                   )}
@@ -481,7 +488,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
             {/* Şifre Tekrar */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                Şifre Tekrar <Text style={styles.requiredStar}>*</Text>
+                {t('auth.passwordConfirmLabel')} <Text style={styles.requiredStar}>*</Text>
               </Text>
               <Controller
                 control={control}
@@ -538,8 +545,11 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 {termsWatch && <Check size={14} color={COLORS.onPrimary} />}
               </View>
               <Text style={styles.termsText}>
-                <Text style={styles.termsLink}>Kullanım Koşulları</Text>'nı ve{' '}
-                <Text style={styles.termsLink}>Gizlilik Politikası</Text>'nı okudum, kabul ediyorum.
+                {t('auth.termsAgreementPrefix')}
+                <Text style={styles.termsLink}>{t('auth.termsOfService')}</Text>
+                {t('auth.andConjunction')}
+                <Text style={styles.termsLink}>{t('auth.privacyPolicy')}</Text>
+                {t('auth.termsAgreementSuffix')}
               </Text>
             </TouchableOpacity>
             {errors.terms && (
@@ -560,7 +570,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 <ActivityIndicator color={COLORS.onPrimary} />
               ) : (
                 <>
-                  <Text style={styles.submitButtonText}>Kayıt Ol</Text>
+                  <Text style={styles.submitButtonText}>{t('auth.registerButton')}</Text>
                   <ArrowRight size={18} color={COLORS.onPrimary} />
                 </>
               )}
@@ -569,7 +579,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
             {/* Ayırıcı */}
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>veya</Text>
+              <Text style={styles.dividerText}>{t('auth.orDivider')}</Text>
               <View style={styles.dividerLine} />
             </View>
 
@@ -585,7 +595,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               ) : (
                 <>
                   <GoogleIcon size={20} />
-                  <Text style={styles.googleButtonText}>Google ile Devam Et</Text>
+                  <Text style={styles.googleButtonText}>{t('auth.googleSignIn')}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -593,12 +603,12 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Alt Giriş Yap Linki */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Zaten bir hesabınız var mı?</Text>
+            <Text style={styles.footerText}>{t('auth.hasAccountPrompt')}</Text>
             <TouchableOpacity
               onPress={() => navigation.navigate('Login')}
               activeOpacity={0.7}
             >
-              <Text style={styles.footerLink}>Giriş Yap</Text>
+              <Text style={styles.footerLink}>{t('auth.signInAction')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

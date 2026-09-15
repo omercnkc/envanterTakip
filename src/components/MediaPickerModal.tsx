@@ -10,8 +10,8 @@ import {
 import { Camera, Image as ImageIcon, FileText, ChevronRight } from 'lucide-react-native';
 import { COLORS } from '../constants';
 import { useSwipeDownToClose } from '../hooks/useSwipeDownToClose';
+import { useTranslation } from '../i18n';
 import { styles } from './MediaPickerModal.styles';
-
 
 interface MediaPickerModalProps {
   visible: boolean;
@@ -30,14 +30,18 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
   onSelectCamera,
   onSelectGallery,
   onSelectDocument,
-  title = 'Görsel Ekle',
-  subtitle = 'Fotoğraf çekin veya cihazınızdan seçin',
+  title,
+  subtitle,
   includeDocumentOption = false,
 }) => {
+  const { language } = useTranslation();
   const { panHandlers, translateY, handleClose } = useSwipeDownToClose({
     onClose,
     visible,
   });
+
+  const displayTitle = title || (language === 'tr' ? 'Görsel Ekle' : 'Add Media');
+  const displaySubtitle = subtitle || (language === 'tr' ? 'Fotoğraf çekin veya cihazınızdan seçin' : 'Take a photo or choose from device');
 
   return (
     <Modal
@@ -51,14 +55,13 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
           <View style={styles.backdropTouchable} />
         </TouchableWithoutFeedback>
 
-
         <Animated.View style={[styles.modalContent, { transform: [{ translateY }] }]}>
           <View {...panHandlers} style={styles.handleContainer}>
             <View style={styles.handleBar} />
           </View>
-          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.title}>{displayTitle}</Text>
 
-          <Text style={styles.subtitle}>{subtitle}</Text>
+          <Text style={styles.subtitle}>{displaySubtitle}</Text>
 
           <View style={styles.optionsList}>
             {/* 1. Kamera İle Çek */}
@@ -76,8 +79,12 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
                 <Camera size={22} color={COLORS.primary} />
               </View>
               <View style={styles.optionTextBox}>
-                <Text style={styles.optionTitle}>Kamera ile Çek</Text>
-                <Text style={styles.optionDesc}>Anlık fotoğraf çekin</Text>
+                <Text style={styles.optionTitle}>
+                  {language === 'tr' ? 'Kamera ile Çek' : 'Take Photo'}
+                </Text>
+                <Text style={styles.optionDesc}>
+                  {language === 'tr' ? 'Anlık fotoğraf çekin' : 'Take a new photo with camera'}
+                </Text>
               </View>
               <ChevronRight size={18} color={COLORS.outline} />
             </TouchableOpacity>
@@ -102,8 +109,12 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
                 <ImageIcon size={22} color={COLORS.tertiary} />
               </View>
               <View style={styles.optionTextBox}>
-                <Text style={styles.optionTitle}>Galeriden Seç</Text>
-                <Text style={styles.optionDesc}>Albümünüzden fotoğraf yükleyin</Text>
+                <Text style={styles.optionTitle}>
+                  {language === 'tr' ? 'Galeriden Seç' : 'Choose from Gallery'}
+                </Text>
+                <Text style={styles.optionDesc}>
+                  {language === 'tr' ? 'Albümünüzden fotoğraf yükleyin' : 'Upload photo from your library'}
+                </Text>
               </View>
               <ChevronRight size={18} color={COLORS.outline} />
             </TouchableOpacity>
@@ -129,8 +140,12 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
                   <FileText size={22} color={COLORS.warning} />
                 </View>
                 <View style={styles.optionTextBox}>
-                  <Text style={styles.optionTitle}>Belge / PDF Seç</Text>
-                  <Text style={styles.optionDesc}>PDF veya taranmış fatura belgesi</Text>
+                  <Text style={styles.optionTitle}>
+                    {language === 'tr' ? 'Belge / PDF Seç' : 'Choose Document / PDF'}
+                  </Text>
+                  <Text style={styles.optionDesc}>
+                    {language === 'tr' ? 'PDF veya taranmış fatura belgesi' : 'PDF or scanned invoice document'}
+                  </Text>
                 </View>
                 <ChevronRight size={18} color={COLORS.outline} />
               </TouchableOpacity>
@@ -143,12 +158,13 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
             onPress={handleClose}
             activeOpacity={0.7}
           >
-            <Text style={styles.cancelButtonText}>Vazgeç</Text>
+            <Text style={styles.cancelButtonText}>
+              {language === 'tr' ? 'Vazgeç' : 'Cancel'}
+            </Text>
           </TouchableOpacity>
 
         </Animated.View>
       </View>
     </Modal>
-
   );
 };

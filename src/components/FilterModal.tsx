@@ -9,6 +9,8 @@ import {
   Animated,
 } from 'react-native';
 import { DEFAULT_CATEGORIES, CategoryItem } from '../constants';
+import { getCategoryDisplayName } from '../constants/categories';
+import { useTranslation } from '../i18n';
 import { ProductFilterOptions } from '../types';
 import { useSwipeDownToClose } from '../hooks/useSwipeDownToClose';
 import { styles } from './FilterModal.styles';
@@ -35,6 +37,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
   onSelectStatus,
   onReset,
 }) => {
+  const { t, language } = useTranslation();
   const { panHandlers, translateY, handleClose } = useSwipeDownToClose({
     onClose,
     visible,
@@ -57,10 +60,9 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               </View>
 
               <View style={styles.header}>
-
-                <Text style={styles.title}>Filtrele</Text>
+                <Text style={styles.title}>{t('products.filterButton')}</Text>
                 <TouchableOpacity onPress={onReset} activeOpacity={0.7}>
-                  <Text style={styles.resetButtonText}>Temizle</Text>
+                  <Text style={styles.resetButtonText}>{t('products.resetFilters')}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -69,7 +71,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 showsVerticalScrollIndicator={false}
               >
                 {/* Kategori Filtresi */}
-                <Text style={styles.sectionTitle}>Kategori</Text>
+                <Text style={styles.sectionTitle}>{language === 'tr' ? 'Kategori' : 'Category'}</Text>
                 <View style={styles.chipContainer}>
                   <TouchableOpacity
                     style={[
@@ -85,7 +87,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                         selectedCategoryId === undefined && styles.chipTextActive,
                       ]}
                     >
-                      Tümü
+                      {language === 'tr' ? 'Tümü' : 'All'}
                     </Text>
                   </TouchableOpacity>
                   {DEFAULT_CATEGORIES.map((cat: CategoryItem) => {
@@ -105,7 +107,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                             isSelected && styles.chipTextActive,
                           ]}
                         >
-                          {cat.name}
+                          {getCategoryDisplayName(cat.name, language)}
                         </Text>
                       </TouchableOpacity>
                     );
@@ -113,7 +115,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 </View>
 
                 {/* Garanti Durumu Filtresi */}
-                <Text style={styles.sectionTitle}>Garanti Durumu</Text>
+                <Text style={styles.sectionTitle}>{language === 'tr' ? 'Garanti Durumu' : 'Warranty Status'}</Text>
                 <View style={styles.chipContainer}>
                   <TouchableOpacity
                     style={[
@@ -129,7 +131,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                         selectedStatus === 'all' && styles.chipTextActive,
                       ]}
                     >
-                      Tümü
+                      {language === 'tr' ? 'Tümü' : 'All'}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -146,7 +148,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                         selectedStatus === 'favorites' && styles.chipTextActive,
                       ]}
                     >
-                      ❤️ Favoriler
+                      {language === 'tr' ? '❤️ Favoriler' : '❤️ Favorites'}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -163,7 +165,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                         selectedStatus === 'active' && styles.chipTextActive,
                       ]}
                     >
-                      Devam Ediyor
+                      {language === 'tr' ? 'Devam Ediyor' : 'Active'}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -181,7 +183,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                           styles.chipTextActive,
                       ]}
                     >
-                      Yakında Bitiyor
+                      {language === 'tr' ? 'Yakında Bitiyor' : 'Expiring Soon'}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -198,7 +200,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                         selectedStatus === 'expired' && styles.chipTextActive,
                       ]}
                     >
-                      Süresi Doldu
+                      {language === 'tr' ? 'Süresi Doldu' : 'Expired'}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -210,7 +212,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                   onPress={handleClose}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.applyButtonText}>Uygula</Text>
+                  <Text style={styles.applyButtonText}>{language === 'tr' ? 'Uygula' : 'Apply'}</Text>
                 </TouchableOpacity>
               </View>
             </Animated.View>

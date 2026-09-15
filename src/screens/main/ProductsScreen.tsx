@@ -25,20 +25,25 @@ import { FilterModal } from '../../components/FilterModal';
 import { BarcodeScannerModal } from '../../components/BarcodeScannerModal';
 import { TechOrbitLoader } from '../../components/TechOrbitLoader';
 import { CategoryDistributionChart } from '../../components/CategoryDistributionChart';
+import { useTranslation } from '../../i18n';
 import { getStyles } from './ProductsScreen.styles';
 
 const ITEMS_PER_PAGE = 5;
 
-const QUICK_FILTER_TABS = [
-  { id: 'all', label: 'Tümü' },
-  { id: 'favorites', label: '❤️ Favoriler' },
-  { id: 'active', label: 'Devam Eden' },
-  { id: 'expiring_soon', label: 'Yakında Bitecek' },
-  { id: 'expired', label: 'Süresi Doldu' },
-];
-
 export const ProductsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
+  const { t, language } = useTranslation();
+
+  const quickFilterTabs = useMemo(
+    () => [
+      { id: 'all', label: t('common.all') },
+      { id: 'favorites', label: language === 'tr' ? '❤️ Favoriler' : '❤️ Favorites' },
+      { id: 'active', label: language === 'tr' ? 'Devam Eden' : 'Active' },
+      { id: 'expiring_soon', label: language === 'tr' ? 'Yakında Bitecek' : 'Expiring Soon' },
+      { id: 'expired', label: language === 'tr' ? 'Süresi Doldu' : 'Expired' },
+    ],
+    [t, language]
+  );
   const {
     products,
     allProducts,
@@ -78,7 +83,9 @@ export const ProductsScreen: React.FC = () => {
     );
 
     if (found) {
-      showSuccess(`"${found.name}" etiketi okundu.`);
+      showSuccess(
+        language === 'tr' ? `"${found.name}" etiketi okundu.` : `Scanned tag for "${found.name}".`
+      );
       navigation.navigate('ProductDetail', {
         productId: found.id,
         initialProduct: found,
@@ -90,7 +97,9 @@ export const ProductsScreen: React.FC = () => {
     if (targetId.includes('-')) {
       const res = await getProduct(targetId);
       if (res) {
-        showSuccess(`"${res.name}" etiketi okundu.`);
+        showSuccess(
+          language === 'tr' ? `"${res.name}" etiketi okundu.` : `Scanned tag for "${res.name}".`
+        );
         navigation.navigate('ProductDetail', {
           productId: res.id,
           initialProduct: res,
@@ -102,10 +111,13 @@ export const ProductsScreen: React.FC = () => {
     // 3. Eşleşme yoksa kullanıcıya seçenek sun
     showAlert({
       type: 'info',
-      title: 'Ürün Bulunamadı',
-      message: `"${scannedData}" kodlu etiket envanterinizdeki herhangi bir ürünle eşleşmedi. Bu kodla yeni bir ürün kaydetmek ister misiniz?`,
-      confirmText: 'Ürün Ekle',
-      cancelText: 'Vazgeç',
+      title: language === 'tr' ? 'Ürün Bulunamadı' : 'Item Not Found',
+      message:
+        language === 'tr'
+          ? `"${scannedData}" kodlu etiket envanterinizdeki herhangi bir ürünle eşleşmedi. Bu kodla yeni bir ürün kaydetmek ister misiniz?`
+          : `Tag "${scannedData}" did not match any item in your inventory. Would you like to add a new item with this code?`,
+      confirmText: language === 'tr' ? 'Ürün Ekle' : 'Add Item',
+      cancelText: language === 'tr' ? 'Vazgeç' : 'Cancel',
       onConfirm: () => {
         navigation.navigate('AddTab');
       },
@@ -175,14 +187,16 @@ export const ProductsScreen: React.FC = () => {
     <SafeAreaView style={styles.safeArea}>
       {/* Üst Başlık */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Ürünler</Text>
+        <Text style={styles.headerTitle}>{t('nav.products')}</Text>
         <TouchableOpacity
           style={styles.chartHeaderBtn}
           onPress={() => setChartModalVisible(true)}
           activeOpacity={0.75}
         >
           <PieChart size={15} color={colors.primary} />
-          <Text style={styles.chartHeaderBtnText}>Kategori Dağılımı</Text>
+          <Text style={styles.chartHeaderBtnText}>
+            {language === 'tr' ? 'Kategori Dağılımı' : 'Category Distribution'}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -192,7 +206,7 @@ export const ProductsScreen: React.FC = () => {
           <Search size={18} color={colors.outline} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Ara (ürün, marka, model, seri no)"
+            placeholder={t('products.searchPlaceholder')}
             placeholderTextColor={colors.outline}
             value={searchText}
             onChangeText={handleSearchChange}
@@ -224,7 +238,7 @@ export const ProductsScreen: React.FC = () => {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.filterScroll}
           >
-            {QUICK_FILTER_TABS.map((tab) => {
+            {quickFilterTabs.map((tab) => {
               const isSelected =
                 (filterOptions.warrantyStatus || 'all') === tab.id;
               return (
@@ -270,12 +284,12 @@ export const ProductsScreen: React.FC = () => {
         <View style={styles.listHeaderRow}>
           <Text style={styles.productCountText}>
             {products.length > 0
-              ? `${startIndex + 1}-${endIndex} / ${products.length} ürün`
-              : '0 ürün'}
+              ? `${startIndex + 1}-${endIndex} / ${products.length} ${language === 'tr' ? 'ürün' : 'items'}`
+              : (language === 'tr' ? '0 ürün' : '0 items')}
           </Text>
           {totalPages > 1 && (
             <Text style={styles.pageIndicatorText}>
-              Sayfa {page} / {totalPages}
+              {language === 'tr' ? 'Sayfa' : 'Page'} {page} / {totalPages}
             </Text>
           )}
         </View>
@@ -283,8 +297,8 @@ export const ProductsScreen: React.FC = () => {
         {/* Ürün Listesi - Yalnızca aktif sayfa renderlanır */}
         {isLoading && !isRefreshing ? (
           <TechOrbitLoader
-            message="Envanter Yükleniyor..."
-            subMessage="Cihazlarınız ve garantileriniz listeleniyor"
+            message={language === 'tr' ? 'Envanter Yükleniyor...' : 'Loading Inventory...'}
+            subMessage={language === 'tr' ? 'Cihazlarınız ve garantileriniz listeleniyor' : 'Fetching your devices and warranties'}
             fullScreen={false}
           />
         ) : (
@@ -319,24 +333,26 @@ export const ProductsScreen: React.FC = () => {
                 <EmptyState
                   title={
                     filterOptions.warrantyStatus === 'favorites'
-                      ? 'Henüz Favori Ürününüz Yok'
+                      ? (language === 'tr' ? 'Henüz Favori Ürününüz Yok' : 'No Favorite Items Yet')
                       : searchText || hasActiveFilters
-                      ? 'Eşleşen Ürün Bulunamadı'
-                      : 'Henüz ürün eklenmemiş'
+                      ? t('products.noFilteredResultTitle')
+                      : t('home.noProductsYetTitle')
                   }
                   description={
                     filterOptions.warrantyStatus === 'favorites'
-                      ? 'Sık takip etmek istediğiniz ürünlerin kalp simgesine dokunarak favorilerinize ekleyebilirsiniz.'
+                      ? (language === 'tr'
+                          ? 'Sık takip etmek istediğiniz ürünlerin kalp simgesine dokunarak favorilerinize ekleyebilirsiniz.'
+                          : 'Tap the heart icon on any item you want to keep on your favorites list.')
                       : searchText || hasActiveFilters
-                      ? 'Arama kriterlerinizi veya filtrelerinizi değiştirerek tekrar deneyebilirsiniz.'
-                      : 'Envanterinizi oluşturmak ve garantilerinizi takip etmek için ilk ürününüzü ekleyin.'
+                      ? t('products.noFilteredResultSubtitle')
+                      : t('home.noProductsYetSubtitle')
                   }
                   actionText={
                     filterOptions.warrantyStatus === 'favorites'
-                      ? 'Tüm Ürünleri Gör'
+                      ? (language === 'tr' ? 'Tüm Ürünleri Gör' : 'View All Items')
                       : searchText || hasActiveFilters
-                      ? 'Filtreleri Temizle'
-                      : 'İlk Ürünü Ekle'
+                      ? t('products.resetFilters')
+                      : t('home.addFirstProductBtn')
                   }
                   onActionPress={() => {
                     if (filterOptions.warrantyStatus === 'favorites') {
@@ -379,7 +395,7 @@ export const ProductsScreen: React.FC = () => {
                     page === 1 && styles.pageButtonTextDisabled,
                   ]}
                 >
-                  Önceki
+                  {language === 'tr' ? 'Önceki' : 'Previous'}
                 </Text>
               </TouchableOpacity>
 
@@ -443,7 +459,7 @@ export const ProductsScreen: React.FC = () => {
                     page === totalPages && styles.pageButtonTextDisabled,
                   ]}
                 >
-                  Sonraki
+                  {language === 'tr' ? 'Sonraki' : 'Next'}
                 </Text>
                 <ChevronRight
                   size={13}
@@ -453,7 +469,9 @@ export const ProductsScreen: React.FC = () => {
             </View>
 
             <Text style={styles.pageSummaryText}>
-              {products.length} üründen {startIndex + 1}-{endIndex} arası görüntüleniyor
+              {language === 'tr'
+                ? `${products.length} üründen ${startIndex + 1}-${endIndex} arası görüntüleniyor`
+                : `Showing ${startIndex + 1}-${endIndex} of ${products.length} items`}
             </Text>
           </View>
         )}

@@ -12,6 +12,8 @@ import {
 import { X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useTranslation } from '../i18n';
+
 interface ImageViewerModalProps {
   visible: boolean;
   imageUrl?: string | null;
@@ -28,6 +30,7 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
   onClose,
 }) => {
   const insets = useSafeAreaInsets();
+  const { language } = useTranslation();
 
   if (!imageUrl) return null;
 
@@ -50,7 +53,9 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
                 {title}
               </Text>
             ) : (
-              <Text style={styles.titleText}>Fotoğraf Önizleme</Text>
+              <Text style={styles.titleText}>
+                {language === 'tr' ? 'Fotoğraf Önizleme' : 'Photo Preview'}
+              </Text>
             )}
           </View>
 
@@ -84,7 +89,9 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
             onPress={onClose}
             activeOpacity={0.8}
           >
-            <Text style={styles.hintText}>Kapatmak için dokunun</Text>
+            <Text style={styles.hintText}>
+              {language === 'tr' ? 'Kapatmak için dokunun' : 'Tap to close'}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

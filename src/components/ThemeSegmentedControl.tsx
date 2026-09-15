@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Sun, Moon, Smartphone } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from '../i18n';
 import { ThemeMode } from '../constants/colors';
 import { RADIUS } from '../constants';
 
@@ -19,15 +20,16 @@ interface ThemeOption {
   icon: typeof Sun;
 }
 
-const THEME_OPTIONS: ThemeOption[] = [
-  { key: 'light', label: 'Açık', icon: Sun },
-  { key: 'dark', label: 'Koyu', icon: Moon },
-  { key: 'system', label: 'Sistem', icon: Smartphone },
-];
-
 export const ThemeSegmentedControl: React.FC = () => {
   const { theme, setTheme, colors } = useTheme();
+  const { language } = useTranslation();
   const [containerWidth, setContainerWidth] = useState(0);
+
+  const themeOptions: ThemeOption[] = [
+    { key: 'light', label: language === 'en' ? 'Light' : 'Açık', icon: Sun },
+    { key: 'dark', label: language === 'en' ? 'Dark' : 'Koyu', icon: Moon },
+    { key: 'system', label: language === 'en' ? 'System' : 'Sistem', icon: Smartphone },
+  ];
 
   const getIndex = (t: ThemeMode) => {
     switch (t) {
@@ -94,7 +96,7 @@ export const ThemeSegmentedControl: React.FC = () => {
       )}
 
       {/* Seçenek Butonları */}
-      {THEME_OPTIONS.map((opt) => {
+      {themeOptions.map((opt) => {
         const isActive = theme === opt.key;
         const IconComponent = opt.icon;
 

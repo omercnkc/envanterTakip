@@ -7,6 +7,7 @@
 import { differenceInDays } from 'date-fns';
 import { Product } from '../types';
 import { parseAnyDate, formatCurrency } from './warrantyCalculator';
+import { getCategoryDisplayName } from '../constants/categories';
 
 export interface CategoryFinancialStat {
   categoryId: number;
@@ -179,9 +180,11 @@ export function generateInsuranceReportText(
  */
 export function generateInsuranceReportHtml(
   products: Product[],
-  analytics: FinancialAnalyticsResult
+  analytics: FinancialAnalyticsResult,
+  language: 'tr' | 'en' = 'tr'
 ): string {
-  const dateStr = new Date().toLocaleDateString('tr-TR');
+  const isEn = language === 'en';
+  const dateStr = isEn ? new Date().toLocaleDateString('en-US') : new Date().toLocaleDateString('tr-TR');
 
   // En yüksek değerli ürünler satırları
   const topRows = analytics.topExpensiveProducts.map((item, idx) => `
@@ -199,8 +202,8 @@ export function generateInsuranceReportHtml(
   // Kategori dökümü satırları
   const catRows = analytics.categoryBreakdown.filter((c) => c.totalCost > 0).map((cat) => `
     <tr>
-      <td style="font-weight: 600; color: #0f172a;">${cat.categoryName}</td>
-      <td style="text-align: center;">${cat.productCount} adet</td>
+      <td style="font-weight: 600; color: #0f172a;">${getCategoryDisplayName(cat.categoryName, language)}</td>
+      <td style="text-align: center;">${cat.productCount} ${isEn ? 'items' : 'adet'}</td>
       <td class="price">${formatCurrency(cat.totalCost)}</td>
       <td style="text-align: right; font-weight: 700; color: #4648d4;">%${cat.percentage}</td>
     </tr>
@@ -211,7 +214,7 @@ export function generateInsuranceReportHtml(
     <tr>
       <td style="text-align: center; color: #64748b;">${idx + 1}</td>
       <td style="font-weight: 600; color: #0f172a;">${prod.name}</td>
-      <td>${prod.category?.name || 'Genel'}</td>
+      <td>${getCategoryDisplayName(prod.category?.name || (isEn ? 'General' : 'Genel'), language)}</td>
       <td>${[prod.brand, prod.model].filter(Boolean).join(' - ') || '—'}</td>
       <td><code>${prod.serial_number || '—'}</code></td>
       <td style="text-align: center;">${prod.purchase_date || '—'}</td>
@@ -224,7 +227,7 @@ export function generateInsuranceReportHtml(
     <html>
     <head>
       <meta charset="utf-8">
-      <title>Ev Envanter ve Maddi Değer Raporu</title>
+      <title>${isEn ? 'Home Inventory and Valuation Report' : 'Ev Envanter ve Maddi Değer Raporu'}</title>
       <style>
         @page { size: A4; margin: 14mm 12mm; }
         * { box-sizing: border-box; }
@@ -376,45 +379,45 @@ export function generateInsuranceReportHtml(
     <body>
       <div class="header">
         <div>
-          <div class="brand-title">🛡️ Ev Envanter & Garanti Takip</div>
-          <div class="report-type">Finansal Envanter & Sigorta Değer Beyan Raporu</div>
+          <div class="brand-title">🛡️ ${isEn ? 'Safe Inventory & Warranty Vault' : 'Ev Envanter & Garanti Takip'}</div>
+          <div class="report-type">${isEn ? 'Financial Inventory & Insurance Valuation Report' : 'Finansal Envanter & Sigorta Değer Beyan Raporu'}</div>
         </div>
         <div class="date-box">
-          <div><strong>Rapor Tarihi:</strong> ${dateStr}</div>
-          <div><strong>Belge No:</strong> ENV-${Date.now().toString().slice(-6)}</div>
+          <div><strong>${isEn ? 'Report Date:' : 'Rapor Tarihi:'}</strong> ${dateStr}</div>
+          <div><strong>${isEn ? 'Document No:' : 'Belge No:'}</strong> ENV-${Date.now().toString().slice(-6)}</div>
         </div>
       </div>
 
       <div class="summary-grid">
         <div class="summary-card highlight">
-          <div class="summary-label">Toplam Envanter Değeri</div>
+          <div class="summary-label">${isEn ? 'Total Inventory Value' : 'Toplam Envanter Değeri'}</div>
           <div class="summary-value">${formatCurrency(analytics.totalValue)}</div>
         </div>
         <div class="summary-card">
-          <div class="summary-label">Kayıtlı Eşya Sayısı</div>
-          <div class="summary-value">${products.length} adet</div>
+          <div class="summary-label">${isEn ? 'Registered Items' : 'Kayıtlı Eşya Sayısı'}</div>
+          <div class="summary-value">${products.length} ${isEn ? 'items' : 'adet'}</div>
         </div>
         <div class="summary-card">
-          <div class="summary-label">Ortalama Eşya Değeri</div>
+          <div class="summary-label">${isEn ? 'Average Item Value' : 'Ortalama Eşya Değeri'}</div>
           <div class="summary-value">${formatCurrency(analytics.averageValue)}</div>
         </div>
         <div class="summary-card">
-          <div class="summary-label">Son 1 Yıl Harcaması</div>
+          <div class="summary-label">${isEn ? 'Past 1 Year Spend' : 'Son 1 Yıl Harcaması'}</div>
           <div class="summary-value">${formatCurrency(analytics.lastYearTotal)}</div>
         </div>
       </div>
 
-      <div class="section-header">En Yüksek Değerli Eşyalar (Portföy Payı)</div>
+      <div class="section-header">${isEn ? 'Most Valuable Assets (Portfolio Share)' : 'En Yüksek Değerli Eşyalar (Portföy Payı)'}</div>
       <table>
         <thead>
           <tr>
-            <th style="width: 35px; text-align: center;">Sıra</th>
-            <th>Ürün Adı</th>
-            <th>Marka / Model</th>
-            <th>Seri Numarası</th>
-            <th style="text-align: center;">Satın Alma</th>
-            <th style="text-align: right;">Değer</th>
-            <th style="text-align: right;">Pay</th>
+            <th style="width: 35px; text-align: center;">${isEn ? 'Rank' : 'Sıra'}</th>
+            <th>${isEn ? 'Product Name' : 'Ürün Adı'}</th>
+            <th>${isEn ? 'Brand / Model' : 'Marka / Model'}</th>
+            <th>${isEn ? 'Serial Number' : 'Seri Numarası'}</th>
+            <th style="text-align: center;">${isEn ? 'Purchase Date' : 'Satın Alma'}</th>
+            <th style="text-align: right;">${isEn ? 'Value' : 'Değer'}</th>
+            <th style="text-align: right;">${isEn ? 'Share' : 'Pay'}</th>
           </tr>
         </thead>
         <tbody>
@@ -422,14 +425,14 @@ export function generateInsuranceReportHtml(
         </tbody>
       </table>
 
-      <div class="section-header">Kategori Bazlı Bütçe & Harcama Dağılımı</div>
+      <div class="section-header">${isEn ? 'Category Breakdown & Budget Distribution' : 'Kategori Bazlı Bütçe & Harcama Dağılımı'}</div>
       <table>
         <thead>
           <tr>
-            <th>Kategori Adı</th>
-            <th style="text-align: center;">Eşya Adedi</th>
-            <th style="text-align: right;">Toplam Tutar</th>
-            <th style="text-align: right;">Oran (%)</th>
+            <th>${isEn ? 'Category Name' : 'Kategori Adı'}</th>
+            <th style="text-align: center;">${isEn ? 'Item Count' : 'Eşya Adedi'}</th>
+            <th style="text-align: right;">${isEn ? 'Total Amount' : 'Toplam Tutar'}</th>
+            <th style="text-align: right;">${isEn ? 'Ratio (%)' : 'Oran (%)'}</th>
           </tr>
         </thead>
         <tbody>
@@ -437,17 +440,17 @@ export function generateInsuranceReportHtml(
         </tbody>
       </table>
 
-      <div class="section-header">Tüm Kayıtlı Eşyalar & Maddi Değer Dökümü (${products.length} Eşya)</div>
+      <div class="section-header">${isEn ? `Complete Asset Inventory & Valuation (${products.length} Items)` : `Tüm Kayıtlı Eşyalar & Maddi Değer Dökümü (${products.length} Eşya)`}</div>
       <table>
         <thead>
           <tr>
-            <th style="width: 30px; text-align: center;">No</th>
-            <th>Eşya Adı</th>
-            <th>Kategori</th>
-            <th>Marka / Model</th>
-            <th>Seri No</th>
-            <th style="text-align: center;">Satın Alma</th>
-            <th style="text-align: right;">Fiyat</th>
+            <th style="width: 30px; text-align: center;">${isEn ? 'No' : 'No'}</th>
+            <th>${isEn ? 'Item Name' : 'Eşya Adı'}</th>
+            <th>${isEn ? 'Category' : 'Kategori'}</th>
+            <th>${isEn ? 'Brand / Model' : 'Marka / Model'}</th>
+            <th>${isEn ? 'Serial No' : 'Seri No'}</th>
+            <th style="text-align: center;">${isEn ? 'Purchase Date' : 'Satın Alma'}</th>
+            <th style="text-align: right;">${isEn ? 'Price' : 'Fiyat'}</th>
           </tr>
         </thead>
         <tbody>
@@ -457,11 +460,11 @@ export function generateInsuranceReportHtml(
 
       <div class="footer">
         <div>
-          <div>Bu belge Ev Envanter & Garanti Takip uygulaması üzerinden otomatik oluşturulmuştur.</div>
-          <div>Konut sigortası, kasko veya nakliye / taşınma beyanlarında envanter dökümü olarak kullanılabilir.</div>
+          <div>${isEn ? 'This document was automatically generated by Safe Inventory.' : 'Bu belge Ev Envanter & Garanti Takip uygulaması üzerinden otomatik oluşturulmuştur.'}</div>
+          <div>${isEn ? 'It can be used as an official asset declaration for homeowners insurance, moving, or transit insurance claims.' : 'Konut sigortası, kasko veya nakliye / taşınma beyanlarında envanter dökümü olarak kullanılabilir.'}</div>
         </div>
         <div class="signature-section">
-          <div class="signature-line">Beyan Eden / İmza</div>
+          <div class="signature-line">${isEn ? 'Declared By / Signature' : 'Beyan Eden / İmza'}</div>
         </div>
       </div>
     </body>

@@ -28,6 +28,7 @@ import { Product, MaintenanceFormData } from '../types';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useAlert } from '../context/AlertContext';
+import { useTranslation } from '../i18n';
 import { maskDateInput } from '../utils/warrantyCalculator';
 import { maintenanceService } from '../api/maintenanceService';
 import { scheduleMaintenanceNotifications } from '../utils/notificationHelper';
@@ -46,23 +47,6 @@ interface TemplateOption {
   icon: string;
 }
 
-const TEMPLATES: TemplateOption[] = [
-  { title: 'Periyodik Genel Bakım', interval: 12, icon: '🔧' },
-  { title: 'Filtre Değişimi & Temizliği', interval: 6, icon: '🪶' },
-  { title: 'Detaylı Temizlik & Hijyen', interval: 3, icon: '✨' },
-  { title: 'Parça & Sarf Malzeme Değişimi', interval: 6, icon: '⚙️' },
-  { title: 'Yetkili Servis Kontrolü', interval: 12, icon: '🛡️' },
-];
-
-const INTERVAL_OPTIONS = [
-  { label: 'Tek Seferlik', value: null },
-  { label: '1 Ay', value: 1 },
-  { label: '3 Ay', value: 3 },
-  { label: '6 Ay', value: 6 },
-  { label: '1 Yıl', value: 12 },
-  { label: '2 Yıl', value: 24 },
-];
-
 export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
   visible,
   product,
@@ -71,8 +55,26 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
 }) => {
   const { colors } = useTheme();
   const { user } = useAuth();
+  const { t, language } = useTranslation();
   const { showSuccess, showError, showWarning } = useAlert();
   const styles = useMemo(() => getStyles(colors), [colors]);
+
+  const templates: TemplateOption[] = useMemo(() => [
+    { title: language === 'tr' ? 'Periyodik Genel Bakım' : 'Periodic General Maintenance', interval: 12, icon: '🔧' },
+    { title: language === 'tr' ? 'Filtre Değişimi & Temizliği' : 'Filter Replacement & Cleaning', interval: 6, icon: '🪶' },
+    { title: language === 'tr' ? 'Detaylı Temizlik & Hijyen' : 'Deep Cleaning & Hygiene', interval: 3, icon: '✨' },
+    { title: language === 'tr' ? 'Parça & Sarf Malzeme Değişimi' : 'Parts & Consumables Replacement', interval: 6, icon: '⚙️' },
+    { title: language === 'tr' ? 'Yetkili Servis Kontrolü' : 'Authorized Service Inspection', interval: 12, icon: '🛡️' },
+  ], [language]);
+
+  const intervalOptions = useMemo(() => [
+    { label: language === 'tr' ? 'Tek Seferlik' : 'One-time', value: null },
+    { label: language === 'tr' ? '1 Ay' : '1 Month', value: 1 },
+    { label: language === 'tr' ? '3 Ay' : '3 Months', value: 3 },
+    { label: language === 'tr' ? '6 Ay' : '6 Months', value: 6 },
+    { label: language === 'tr' ? '1 Yıl' : '1 Year', value: 12 },
+    { label: language === 'tr' ? '2 Yıl' : '2 Years', value: 24 },
+  ], [language]);
 
   // Form durumları
   const [title, setTitle] = useState('');
@@ -106,12 +108,12 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
     setHasAttemptedSubmit(true);
 
     if (isTitleInvalid) {
-      showWarning('Lütfen bakım başlığını giriniz.');
+      showWarning(language === 'tr' ? 'Lütfen bakım başlığını giriniz.' : 'Please enter the maintenance title.');
       return;
     }
 
     if (isDateInvalid) {
-      showWarning('Lütfen geçerli bir bakım tarihi giriniz (GG/AA/YYYY).');
+      showWarning(language === 'tr' ? 'Lütfen geçerli bir bakım tarihi giriniz (GG/AA/YYYY).' : 'Please enter a valid maintenance date (DD/MM/YYYY).');
       return;
     }
 
@@ -131,14 +133,18 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
       const { data, error } = await maintenanceService.create(product.id, userId, formData);
 
       if (error || !data) {
-        showError(error || 'Bakım kaydı oluşturulamadı.');
+        showError(error || (language === 'tr' ? 'Bakım kaydı oluşturulamadı.' : 'Could not create maintenance record.'));
         return;
       }
 
       // Hatırlatma bildirimini zamanla (7 gün ve 1 gün kala)
       await scheduleMaintenanceNotifications(data, product.name);
 
-      showSuccess(`"${data.title}" bakım takvimine eklendi.`);
+      showSuccess(
+        language === 'tr'
+          ? `"${data.title}" bakım takvimine eklendi.`
+          : `"${data.title}" added to maintenance schedule.`
+      );
       // Formu sıfırla
       setTitle('');
       setCost('');
@@ -148,7 +154,7 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
       onCreated();
       onClose();
     } catch (err: any) {
-      showError(err?.message || 'Bir hata oluştu.');
+      showError(err?.message || (language === 'tr' ? 'Bir hata oluştu.' : 'An error occurred.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -183,7 +189,9 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
                     <Wrench size={20} color={colors.onPrimary} />
                   </View>
                   <View>
-                    <Text style={styles.headerTitle}>Yeni Bakım Planla</Text>
+                    <Text style={styles.headerTitle}>
+                      {language === 'tr' ? 'Yeni Bakım Planla' : 'Schedule New Maintenance'}
+                    </Text>
                     <Text style={styles.headerSubtitle} numberOfLines={1}>
                       {product.name}
                     </Text>
@@ -203,13 +211,15 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
                 contentContainerStyle={styles.scrollContent}
               >
                 {/* Hızlı Şablonlar */}
-                <Text style={styles.sectionLabel}>Hızlı Şablonlar</Text>
+                <Text style={styles.sectionLabel}>
+                  {language === 'tr' ? 'Hızlı Şablonlar' : 'Quick Templates'}
+                </Text>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.templatesScroll}
                 >
-                  {TEMPLATES.map((tmpl, idx) => {
+                  {templates.map((tmpl, idx) => {
                     const isActive = title === tmpl.title;
                     return (
                       <TouchableOpacity
@@ -238,7 +248,7 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
                 {/* Bakım Başlığı */}
                 <View style={[styles.fieldGroup, { marginTop: 12 }]}>
                   <Text style={styles.inputLabel}>
-                    Bakım Başlığı <Text style={styles.requiredStar}>*</Text>
+                    {language === 'tr' ? 'Bakım Başlığı' : 'Maintenance Title'} <Text style={styles.requiredStar}>*</Text>
                   </Text>
                   <View
                     style={[
@@ -252,7 +262,7 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
                     />
                     <TextInput
                       style={styles.textInput}
-                      placeholder="Örn: Periyodik Bakım, Filtre Değişimi"
+                      placeholder={language === 'tr' ? 'Örn: Periyodik Bakım, Filtre Değişimi' : 'e.g. Periodic Maintenance, Filter Replacement'}
                       placeholderTextColor={colors.onSurfaceVariant + '80'}
                       value={title}
                       onChangeText={(val) => {
@@ -261,14 +271,16 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
                     />
                   </View>
                   {hasAttemptedSubmit && isTitleInvalid ? (
-                    <Text style={styles.errorText}>Bakım başlığı zorunludur.</Text>
+                    <Text style={styles.errorText}>
+                      {language === 'tr' ? 'Bakım başlığı zorunludur.' : 'Maintenance title is required.'}
+                    </Text>
                   ) : null}
                 </View>
 
                 {/* Bakım Tarihi */}
                 <View style={styles.fieldGroup}>
                   <Text style={styles.inputLabel}>
-                    Bakım Tarihi (GG/AA/YYYY) <Text style={styles.requiredStar}>*</Text>
+                    {language === 'tr' ? 'Bakım Tarihi (GG/AA/YYYY)' : 'Maintenance Date (DD/MM/YYYY)'} <Text style={styles.requiredStar}>*</Text>
                   </Text>
                   <View
                     style={[
@@ -282,7 +294,7 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
                     />
                     <TextInput
                       style={styles.textInput}
-                      placeholder="GG/AA/YYYY"
+                      placeholder={language === 'tr' ? 'GG/AA/YYYY' : 'DD/MM/YYYY'}
                       placeholderTextColor={colors.onSurfaceVariant + '80'}
                       value={maintenanceDate}
                       onChangeText={handleDateChange}
@@ -291,19 +303,25 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
                     />
                   </View>
                   {hasAttemptedSubmit && isDateInvalid ? (
-                    <Text style={styles.errorText}>Lütfen geçerli bir tarih giriniz (GG/AA/YYYY).</Text>
+                    <Text style={styles.errorText}>
+                      {language === 'tr' ? 'Lütfen geçerli bir tarih giriniz (GG/AA/YYYY).' : 'Please enter a valid date (DD/MM/YYYY).'}
+                    </Text>
                   ) : (
                     <Text style={styles.helperText}>
-                      Bu tarihe 7 gün ve 1 gün kala telefonunuza otomatik hatırlatma bildirimi gönderilir.
+                      {language === 'tr'
+                        ? 'Bu tarihe 7 gün ve 1 gün kala telefonunuza otomatik hatırlatma bildirimi gönderilir.'
+                        : 'Automatic reminders will be sent 7 days and 1 day prior to this date.'}
                     </Text>
                   )}
                 </View>
 
                 {/* Tekrar Periyodu */}
                 <View style={styles.fieldGroup}>
-                  <Text style={styles.inputLabel}>Tekrar Periyodu</Text>
+                  <Text style={styles.inputLabel}>
+                    {language === 'tr' ? 'Tekrar Periyodu' : 'Recurrence Interval'}
+                  </Text>
                   <View style={styles.intervalsRow}>
-                    {INTERVAL_OPTIONS.map((opt, idx) => {
+                    {intervalOptions.map((opt, idx) => {
                       const isSelected = intervalMonths === opt.value;
                       return (
                         <TouchableOpacity
@@ -329,19 +347,25 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
                   </View>
                   <Text style={styles.helperText}>
                     {intervalMonths
-                      ? `Bakım tamamlandığında otomatik olarak ${intervalMonths} ay sonrasına yeni bir planlama açılır.`
-                      : 'Bu bakım tek seferliktir, tamamlandığında otomatik yinelenmez.'}
+                      ? (language === 'tr'
+                          ? `Bakım tamamlandığında otomatik olarak ${intervalMonths} ay sonrasına yeni bir planlama açılır.`
+                          : `When completed, automatically schedules the next occurrence in ${intervalMonths} month(s).`)
+                      : (language === 'tr'
+                          ? 'Bu bakım tek seferliktir, tamamlandığında otomatik yinelenmez.'
+                          : 'This is a one-time maintenance; it will not recur automatically.')}
                   </Text>
                 </View>
 
                 {/* Servis Sağlayıcı (Geniş & Taşmayan Alan) */}
                 <View style={styles.fieldGroup}>
-                  <Text style={styles.inputLabel}>Servis / Yapan Kişi</Text>
+                  <Text style={styles.inputLabel}>
+                    {language === 'tr' ? 'Servis / Yapan Kişi' : 'Service Provider / Performed By'}
+                  </Text>
                   <View style={styles.inputBox}>
                     <UserCheck size={18} color={colors.primary} />
                     <TextInput
                       style={styles.textInput}
-                      placeholder="Örn: Yetkili Servis, Özel Servis veya Kendim"
+                      placeholder={language === 'tr' ? 'Örn: Yetkili Servis, Özel Servis veya Kendim' : 'e.g. Authorized Service, Technician or Self'}
                       placeholderTextColor={colors.onSurfaceVariant + '80'}
                       value={serviceProvider}
                       onChangeText={setServiceProvider}
@@ -351,7 +375,9 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
 
                 {/* Tahmini Masraf */}
                 <View style={styles.fieldGroup}>
-                  <Text style={styles.inputLabel}>Tahmini Masraf (₺)</Text>
+                  <Text style={styles.inputLabel}>
+                    {language === 'tr' ? 'Tahmini Masraf (₺)' : 'Estimated Cost (₺)'}
+                  </Text>
                   <View style={styles.inputBox}>
                     <DollarSign size={18} color={colors.primary} />
                     <TextInput
@@ -367,12 +393,14 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
 
                 {/* Notlar */}
                 <View style={styles.fieldGroup}>
-                  <Text style={styles.inputLabel}>Notlar & Talimatlar</Text>
+                  <Text style={styles.inputLabel}>
+                    {language === 'tr' ? 'Notlar & Talimatlar' : 'Notes & Instructions'}
+                  </Text>
                   <View style={[styles.inputBox, styles.notesInput]}>
                     <FileText size={18} color={colors.primary} style={{ marginTop: 2 }} />
                     <TextInput
                       style={[styles.textInput, { height: '100%', textAlignVertical: 'top' }]}
-                      placeholder="Bakım notları, yapılan işlemler veya hatırlatmalar..."
+                      placeholder={language === 'tr' ? 'Bakım notları, yapılan işlemler veya hatırlatmalar...' : 'Maintenance notes, actions taken, or reminders...'}
                       placeholderTextColor={colors.onSurfaceVariant + '80'}
                       value={notes}
                       onChangeText={setNotes}
@@ -394,7 +422,9 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
                   ) : (
                     <>
                       <Plus size={20} color={colors.onPrimary} />
-                      <Text style={styles.submitButtonText}>Bakım Takvimine Ekle</Text>
+                      <Text style={styles.submitButtonText}>
+                        {language === 'tr' ? 'Bakım Takvimine Ekle' : 'Add to Maintenance Calendar'}
+                      </Text>
                     </>
                   )}
                 </TouchableOpacity>

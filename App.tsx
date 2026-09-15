@@ -16,6 +16,7 @@ import {
 import { DARK_COLORS, LIGHT_COLORS } from './src/constants/colors';
 import { BiometricLockOverlay, AppToast, AppAlertModal, PermissionModal } from './src/components';
 import { AlertProvider } from './src/context/AlertContext';
+import { LanguageProvider } from './src/i18n';
 import { permissionHelper, PermissionPromptConfig } from './src/utils/permissionHelper';
 
 /**
@@ -165,15 +166,17 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <ThemeProvider>
-        <AlertProvider>
-          <AuthProvider>
-            <InventoryProvider>
-              <AppContent />
-            </InventoryProvider>
-          </AuthProvider>
-        </AlertProvider>
-      </ThemeProvider>
+      <LanguageProvider>
+        <ThemeProvider>
+          <AlertProvider>
+            <AuthProvider>
+              <InventoryProvider>
+                <AppContent />
+              </InventoryProvider>
+            </AuthProvider>
+          </AlertProvider>
+        </ThemeProvider>
+      </LanguageProvider>
     </SafeAreaProvider>
   );
 }

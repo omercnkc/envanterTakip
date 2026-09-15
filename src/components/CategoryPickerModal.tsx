@@ -19,6 +19,8 @@ import {
 
 import { Category } from '../types';
 import { COLORS } from '../constants';
+import { getCategoryDisplayName } from '../constants/categories';
+import { useTranslation } from '../i18n';
 import { styles } from './CategoryPickerModal.styles';
 
 interface CategoryPickerModalProps {
@@ -64,6 +66,7 @@ export const CategoryPickerModal: React.FC<CategoryPickerModalProps> = ({
   onSelect,
   onClose,
 }) => {
+  const { t, language } = useTranslation();
   const { panHandlers, translateY, handleClose } = useSwipeDownToClose({
     onClose,
     visible,
@@ -80,7 +83,7 @@ export const CategoryPickerModal: React.FC<CategoryPickerModalProps> = ({
               </View>
 
               <View style={styles.header}>
-                <Text style={styles.title}>Kategori Seçin</Text>
+                <Text style={styles.title}>{t('modals.categoryPickerTitle')}</Text>
 
                 <TouchableOpacity style={styles.closeButton} onPress={handleClose} activeOpacity={0.7}>
                   <X size={24} color={COLORS.onSurface} />
@@ -107,7 +110,7 @@ export const CategoryPickerModal: React.FC<CategoryPickerModalProps> = ({
                         {renderCategoryIcon(item.icon, isSelected)}
                       </View>
                       <Text style={[styles.categoryName, isSelected && styles.categoryNameSelected]}>
-                        {item.name}
+                        {getCategoryDisplayName(item.name, language)}
                       </Text>
                       {isSelected && <Check size={20} color={COLORS.primary} />}
                     </TouchableOpacity>

@@ -19,6 +19,7 @@ import { Mail, ArrowLeft } from 'lucide-react-native';
 import { AuthStackParamList, ForgotPasswordFormData, forgotPasswordSchema } from '../../types';
 import { COLORS } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from '../../i18n';
 import { AppCallout } from '../../components/AppCallout';
 import { styles } from './ForgotPasswordScreen.styles';
 
@@ -26,6 +27,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'ForgotPassword'>;
 
 export const ForgotPasswordScreen: React.FC<Props> = ({ navigation, route }) => {
   const { resetPassword } = useAuth();
+  const { t, language } = useTranslation();
   const [serverError, setServerError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,10 +53,10 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation, route }) => 
       if (!result.success && result.error) {
         setServerError(result.error);
       } else {
-        setSuccessMessage('Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.');
+        setSuccessMessage(t('auth.emailSentSuccess'));
       }
     } catch {
-      setServerError('İşlem sırasında bir hata oluştu.');
+      setServerError(language === 'tr' ? 'İşlem sırasında bir hata oluştu.' : 'An error occurred during process.');
     } finally {
       setIsSubmitting(false);
     }
@@ -89,9 +91,11 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation, route }) => 
                 resizeMode="cover"
               />
             </View>
-            <Text style={styles.title}>Şifremi Unuttum</Text>
+            <Text style={styles.title}>{language === 'tr' ? 'Şifremi Unuttum' : 'Forgot Password'}</Text>
             <Text style={styles.subtitle}>
-              Hesabınıza kayıtlı e-posta adresinizi girin, sıfırlama bağlantısını iletelim.
+              {language === 'tr'
+                ? 'Hesabınıza kayıtlı e-posta adresinizi girin, sıfırlama bağlantısını iletelim.'
+                : 'Enter your registered email address to receive password reset link.'}
             </Text>
           </View>
 
@@ -109,7 +113,7 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation, route }) => 
             {successMessage && (
               <AppCallout
                 type="success"
-                title="E-posta Gönderildi"
+                title={language === 'tr' ? 'E-posta Gönderildi' : 'Email Sent'}
                 message={successMessage}
                 onClose={() => setSuccessMessage(null)}
                 style={{ marginBottom: 16 }}
@@ -119,7 +123,7 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation, route }) => 
             {/* E-posta */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                E-posta <Text style={styles.requiredStar}>*</Text>
+                {t('auth.emailLabel')} <Text style={styles.requiredStar}>*</Text>
               </Text>
               <Controller
                 control={control}
@@ -138,7 +142,7 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation, route }) => 
                     />
                     <TextInput
                       style={styles.textInput}
-                      placeholder="ornek@domain.com"
+                      placeholder={t('auth.emailPlaceholder')}
                       placeholderTextColor={COLORS.outline}
                       keyboardType="email-address"
                       autoCapitalize="none"
@@ -167,7 +171,7 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation, route }) => 
               {isSubmitting ? (
                 <ActivityIndicator color={COLORS.onPrimary} />
               ) : (
-                <Text style={styles.submitButtonText}>Sıfırlama Bağlantısı Gönder</Text>
+                <Text style={styles.submitButtonText}>{t('auth.sendResetLink')}</Text>
               )}
             </TouchableOpacity>
           </View>

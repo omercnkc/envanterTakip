@@ -21,6 +21,13 @@ export const CURRENCY_OPTIONS: CurrencyOption[] = [
   { code: 'GBP', symbol: '£', label: 'İngiliz Sterlini (£)' },
 ];
 
+export const getCurrencyOptions = (language: 'tr' | 'en' = 'tr'): CurrencyOption[] => [
+  { code: 'TRY', symbol: '₺', label: language === 'en' ? 'Turkish Lira (₺)' : 'Türk Lirası (₺)' },
+  { code: 'USD', symbol: '$', label: language === 'en' ? 'US Dollar ($)' : 'Amerikan Doları ($)' },
+  { code: 'EUR', symbol: '€', label: language === 'en' ? 'Euro (€)' : 'Euro (€)' },
+  { code: 'GBP', symbol: '£', label: language === 'en' ? 'British Pound (£)' : 'İngiliz Sterlini (£)' },
+];
+
 export const WARRANTY_MILESTONE_OPTIONS = [
   { days: 60, label: '60 Gün' },
   { days: 30, label: '30 Gün' },
@@ -42,6 +49,7 @@ const PREF_STORAGE_KEYS = {
   MAINTENANCE_REMINDERS: '@safe_envanter_pref_maintenance_reminders',
   DEFAULT_WARRANTY_MONTHS: '@safe_envanter_pref_default_warranty_months',
   NOTIFICATION_HOUR: '@safe_envanter_pref_notification_hour',
+  LANGUAGE: '@safe_envanter_pref_language',
 };
 
 export interface AppPreferences {
@@ -51,6 +59,7 @@ export interface AppPreferences {
   maintenanceReminders: boolean;
   defaultWarrantyMonths: number;
   notificationHour: number;
+  language: 'tr' | 'en';
 }
 
 const DEFAULT_PREFERENCES: AppPreferences = {
@@ -60,6 +69,7 @@ const DEFAULT_PREFERENCES: AppPreferences = {
   maintenanceReminders: true,
   defaultWarrantyMonths: 24,
   notificationHour: 10,
+  language: 'tr',
 };
 
 // Hafızada hızlı erişim için önbellek
@@ -77,12 +87,14 @@ export const appPreferencesHelper = {
         savedMaintenance,
         savedMonths,
         savedHour,
+        savedLanguage,
       ] = await Promise.all([
         AsyncStorage.getItem(PREF_STORAGE_KEYS.CURRENCY),
         AsyncStorage.getItem(PREF_STORAGE_KEYS.WARRANTY_DAYS),
         AsyncStorage.getItem(PREF_STORAGE_KEYS.MAINTENANCE_REMINDERS),
         AsyncStorage.getItem(PREF_STORAGE_KEYS.DEFAULT_WARRANTY_MONTHS),
         AsyncStorage.getItem(PREF_STORAGE_KEYS.NOTIFICATION_HOUR),
+        AsyncStorage.getItem(PREF_STORAGE_KEYS.LANGUAGE),
       ]);
 
       const currency = (savedCurrency as CurrencyCode) || DEFAULT_PREFERENCES.currency;
@@ -100,6 +112,8 @@ export const appPreferencesHelper = {
         }
       }
 
+      const language: 'tr' | 'en' = savedLanguage === 'en' ? 'en' : 'tr';
+
       cachedPreferences = {
         currency,
         currencySymbol: currencyOption.symbol,
@@ -107,6 +121,7 @@ export const appPreferencesHelper = {
         maintenanceReminders: savedMaintenance !== null ? savedMaintenance === 'true' : true,
         defaultWarrantyMonths: savedMonths ? Number(savedMonths) : 24,
         notificationHour: savedHour ? Number(savedHour) : 10,
+        language,
       };
 
       return cachedPreferences;
@@ -163,5 +178,13 @@ export const appPreferencesHelper = {
   async setNotificationHour(hour: number): Promise<void> {
     cachedPreferences.notificationHour = hour;
     await AsyncStorage.setItem(PREF_STORAGE_KEYS.NOTIFICATION_HOUR, String(hour));
+  },
+
+  /**
+   * Uygulama dilini kaydeder ('tr' | 'en')
+   */
+  async setLanguage(language: 'tr' | 'en'): Promise<void> {
+    cachedPreferences.language = language;
+    await AsyncStorage.setItem(PREF_STORAGE_KEYS.LANGUAGE, language);
   },
 };

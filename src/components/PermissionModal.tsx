@@ -17,6 +17,7 @@ import {
 } from 'lucide-react-native';
 
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from '../i18n';
 import { PermissionPromptConfig } from '../utils/permissionHelper';
 import { getStyles } from './PermissionModal.styles';
 
@@ -32,6 +33,7 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
   onDismiss,
 }) => {
   const { colors } = useTheme();
+  const { language } = useTranslation();
   const styles = useMemo(() => getStyles(colors), [colors]);
 
   if (!config) return null;
@@ -85,7 +87,9 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
           <View style={styles.privacyRow}>
             <Lock size={13} color={colors.outline} />
             <Text style={styles.privacyText}>
-              Verileriniz uçtan uca şifrelidir ve gizliliğinize saygı duyulur.
+              {language === 'tr'
+                ? 'Verileriniz uçtan uca şifrelidir ve gizliliğinize saygı duyulur.'
+                : 'Your data is end-to-end encrypted and your privacy is respected.'}
             </Text>
           </View>
 
@@ -105,7 +109,7 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
               activeOpacity={0.7}
             >
               <Text style={styles.dismissButtonText}>
-                {config.secondaryButtonText || 'Şimdi Değil'}
+                {config.secondaryButtonText || (language === 'tr' ? 'Şimdi Değil' : 'Not Now')}
               </Text>
             </TouchableOpacity>
           </View>

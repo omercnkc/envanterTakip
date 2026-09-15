@@ -29,6 +29,7 @@ import {
 import { Product } from '../types';
 import { useTheme } from '../context/ThemeContext';
 import { useInventory } from '../context/InventoryContext';
+import { useTranslation } from '../i18n';
 import { formatCurrency } from '../utils/warrantyCalculator';
 import {
   calculateFinancialAnalytics,
@@ -58,6 +59,7 @@ export const FinancialAnalyticsModal: React.FC<FinancialAnalyticsModalProps> = (
 }) => {
   const { colors } = useTheme();
   const { allProducts } = useInventory();
+  const { language } = useTranslation();
   const styles = useMemo(() => getStyles(colors), [colors]);
 
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -76,7 +78,7 @@ export const FinancialAnalyticsModal: React.FC<FinancialAnalyticsModalProps> = (
   const handleSharePdf = async () => {
     try {
       setIsGeneratingPdf(true);
-      const html = generateInsuranceReportHtml(allProducts, analytics);
+      const html = generateInsuranceReportHtml(allProducts, analytics, language);
       const { uri, base64 } = await Print.printToFileAsync({
         html,
         base64: true,
@@ -85,7 +87,7 @@ export const FinancialAnalyticsModal: React.FC<FinancialAnalyticsModalProps> = (
       let targetUri = uri;
       if (base64) {
         // Android FileProvider uyumluluğu için dosyayı doğrudan cacheDirectory içine Base64 olarak yazıyoruz
-        const filename = `ev_envanter_raporu_${Date.now()}.pdf`;
+        const filename = `envanter_raporu_${Date.now()}.pdf`;
         targetUri = `${FileSystem.cacheDirectory}${filename}`;
         await FileSystem.writeAsStringAsync(targetUri, base64, {
           encoding: FileSystem.EncodingType.Base64,
@@ -97,17 +99,23 @@ export const FinancialAnalyticsModal: React.FC<FinancialAnalyticsModalProps> = (
         await Sharing.shareAsync(targetUri, {
           UTI: '.pdf',
           mimeType: 'application/pdf',
-          dialogTitle: 'Ev Envanter & Maddi Değer Raporu',
+          dialogTitle: language === 'tr' ? 'Ev Envanter & Maddi Değer Raporu' : 'Home Inventory & Valuation Report',
         });
       } else {
-        Alert.alert('Bilgi', 'Bu cihazda dosya paylaşım servisi desteklenmiyor.');
+        Alert.alert(
+          language === 'tr' ? 'Bilgi' : 'Info',
+          language === 'tr' ? 'Bu cihazda dosya paylaşım servisi desteklenmiyor.' : 'Sharing service is not supported on this device.'
+        );
       }
     } catch (error: any) {
       if (error?.message?.includes('cancelled') || error?.message?.includes('dismissed')) {
         return;
       }
       console.warn('PDF paylaşım hatası:', error);
-      Alert.alert('Hata', 'PDF raporu paylaşılırken bir sorun oluştu.');
+      Alert.alert(
+        language === 'tr' ? 'Hata' : 'Error',
+        language === 'tr' ? 'PDF raporu paylaşılırken bir sorun oluştu.' : 'A problem occurred while sharing the PDF report.'
+      );
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -117,7 +125,7 @@ export const FinancialAnalyticsModal: React.FC<FinancialAnalyticsModalProps> = (
   const handlePrint = async () => {
     try {
       setIsPrinting(true);
-      const html = generateInsuranceReportHtml(allProducts, analytics);
+      const html = generateInsuranceReportHtml(allProducts, analytics, language);
       await Print.printAsync({ html });
     } catch (error) {
       console.warn('Yazdırma hatası:', error);
@@ -154,9 +162,13 @@ export const FinancialAnalyticsModal: React.FC<FinancialAnalyticsModalProps> = (
                     <TrendingUp size={22} color={colors.onPrimary} />
                   </View>
                   <View>
-                    <Text style={styles.headerTitle}>Finansal Envanter Analizi</Text>
+                    <Text style={styles.headerTitle}>
+                      {language === 'tr' ? 'Finansal Envanter Analizi' : 'Financial Inventory Analytics'}
+                    </Text>
                     <Text style={styles.headerSubtitle}>
-                      Ev eşyalarınızın toplam maddi servet dökümü
+                      {language === 'tr'
+                        ? 'Ev eşyalarınızın toplam maddi servet dökümü'
+                        : 'Total asset valuation and breakdown of home items'}
                     </Text>
                   </View>
                 </View>
@@ -178,19 +190,25 @@ export const FinancialAnalyticsModal: React.FC<FinancialAnalyticsModalProps> = (
                   <View style={styles.heroBadgeRow}>
                     <View style={styles.heroTag}>
                       <ShieldCheck size={14} color="#ffffff" />
-                      <Text style={styles.heroTagText}>SİGORTA & TEMİNAT DEĞERİ</Text>
+                      <Text style={styles.heroTagText}>
+                        {language === 'tr' ? 'SİGORTA & TEMİNAT DEĞERİ' : 'INSURANCE & COLLATERAL VALUE'}
+                      </Text>
                     </View>
                     <Text style={styles.heroItemCountText}>
-                      {analytics.pricedCount} / {allProducts.length} Fiyatlı Eşya
+                      {analytics.pricedCount} / {allProducts.length} {language === 'tr' ? 'Fiyatlı Eşya' : 'Priced Items'}
                     </Text>
                   </View>
 
-                  <Text style={styles.heroTotalLabel}>Toplam Envanter Maddi Değeri</Text>
+                  <Text style={styles.heroTotalLabel}>
+                    {language === 'tr' ? 'Toplam Envanter Maddi Değeri' : 'Total Inventory Valuation'}
+                  </Text>
                   <Text style={styles.heroTotalValue}>
                     {formatCurrency(analytics.totalValue)}
                   </Text>
                   <Text style={styles.heroFooterNote}>
-                    Taşınma veya konut sigortası durumlarında evinizdeki tescilli eşyaların toplam ikame bedelidir.
+                    {language === 'tr'
+                      ? 'Taşınma veya konut sigortası durumlarında evinizdeki tescilli eşyaların toplam ikame bedelidir.'
+                      : 'Total replacement cost of registered items for moving or home insurance purposes.'}
                   </Text>
                 </View>
 
@@ -204,7 +222,9 @@ export const FinancialAnalyticsModal: React.FC<FinancialAnalyticsModalProps> = (
                     <Text style={styles.metricValue} numberOfLines={1}>
                       {formatCurrency(analytics.averageValue)}
                     </Text>
-                    <Text style={styles.metricLabel}>Ortalama Değer</Text>
+                    <Text style={styles.metricLabel}>
+                      {language === 'tr' ? 'Ortalama Değer' : 'Average Value'}
+                    </Text>
                   </View>
 
                   {/* Son 1 Yıl Harcaması */}
@@ -215,7 +235,9 @@ export const FinancialAnalyticsModal: React.FC<FinancialAnalyticsModalProps> = (
                     <Text style={[styles.metricValue, { color: '#10b981' }]} numberOfLines={1}>
                       {formatCurrency(analytics.lastYearTotal)}
                     </Text>
-                    <Text style={styles.metricLabel}>Son 1 Yılda Alınan</Text>
+                    <Text style={styles.metricLabel}>
+                      {language === 'tr' ? 'Son 1 Yılda Alınan' : 'Past Year Purchases'}
+                    </Text>
                   </View>
 
                   {/* Fiyat Giriş Oranı */}
@@ -226,7 +248,9 @@ export const FinancialAnalyticsModal: React.FC<FinancialAnalyticsModalProps> = (
                     <Text style={[styles.metricValue, { color: '#0284c7' }]} numberOfLines={1}>
                       %{pricedRatio}
                     </Text>
-                    <Text style={styles.metricLabel}>Fiyat Girilme Oranı</Text>
+                    <Text style={styles.metricLabel}>
+                      {language === 'tr' ? 'Fiyat Girilme Oranı' : 'Pricing Ratio'}
+                    </Text>
                   </View>
                 </View>
 
@@ -234,7 +258,9 @@ export const FinancialAnalyticsModal: React.FC<FinancialAnalyticsModalProps> = (
                 <View style={styles.sectionHeader}>
                   <View style={styles.sectionTitleRow}>
                     <Crown size={18} color={colors.warning} />
-                    <Text style={styles.sectionTitle}>En Yüksek Değerli Eşyalar</Text>
+                    <Text style={styles.sectionTitle}>
+                      {language === 'tr' ? 'En Yüksek Değerli Eşyalar' : 'Highest Valued Items'}
+                    </Text>
                   </View>
                   <Text style={styles.sectionBadge}>Top 3</Text>
                 </View>
@@ -293,7 +319,7 @@ export const FinancialAnalyticsModal: React.FC<FinancialAnalyticsModalProps> = (
                                 {product.name}
                               </Text>
                               <Text style={styles.topItemMeta} numberOfLines={1}>
-                                {brandModel || product.category?.name || 'Cihaz'}
+                                {brandModel || product.category?.name || (language === 'tr' ? 'Cihaz' : 'Device')}
                               </Text>
                             </View>
                           </View>
@@ -304,7 +330,7 @@ export const FinancialAnalyticsModal: React.FC<FinancialAnalyticsModalProps> = (
                               {formatCurrency(product.purchase_price || 0)}
                             </Text>
                             <Text style={styles.topItemShare}>
-                              Portföyün %{item.percentageOfTotal}'i
+                              {language === 'tr' ? `Portföyün %${item.percentageOfTotal}'i` : `${item.percentageOfTotal}% of total`}
                             </Text>
                           </View>
                         </TouchableOpacity>
@@ -314,7 +340,9 @@ export const FinancialAnalyticsModal: React.FC<FinancialAnalyticsModalProps> = (
                 ) : (
                   <View style={styles.topItemsContainer}>
                     <Text style={{ fontSize: 13, color: colors.onSurfaceVariant }}>
-                      Henüz fiyat bilgisi eklenmiş ürün bulunmuyor.
+                      {language === 'tr'
+                        ? 'Henüz fiyat bilgisi eklenmiş ürün bulunmuyor.'
+                        : 'No products with price information yet.'}
                     </Text>
                   </View>
                 )}
@@ -345,7 +373,9 @@ export const FinancialAnalyticsModal: React.FC<FinancialAnalyticsModalProps> = (
                       <Share2 size={18} color={colors.onPrimary} />
                     )}
                     <Text style={styles.sharePdfButtonText}>
-                      {isGeneratingPdf ? 'PDF Hazırlanıyor...' : 'PDF Raporu Olarak Paylaş'}
+                      {isGeneratingPdf
+                        ? (language === 'tr' ? 'PDF Hazırlanıyor...' : 'Preparing PDF...')
+                        : (language === 'tr' ? 'PDF Raporu Olarak Paylaş' : 'Share as PDF Report')}
                     </Text>
                   </TouchableOpacity>
 
@@ -361,7 +391,9 @@ export const FinancialAnalyticsModal: React.FC<FinancialAnalyticsModalProps> = (
                       <Printer size={18} color={colors.primary} />
                     )}
                     <Text style={styles.printButtonText}>
-                      {isPrinting ? 'Yazıcıya Gönderiliyor...' : 'Yazdır / Çıktı Al (PDF)'}
+                      {isPrinting
+                        ? (language === 'tr' ? 'Yazıcıya Gönderiliyor...' : 'Sending to Printer...')
+                        : (language === 'tr' ? 'Yazdır / Çıktı Al (PDF)' : 'Print / Export PDF')}
                     </Text>
                   </TouchableOpacity>
                 </View>

@@ -13,6 +13,7 @@ import { Fingerprint, Lock, LogOut } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from '../i18n';
 import { biometricHelper, BiometricCheckResult } from '../utils/biometricHelper';
 import { RADIUS, SPACING } from '../constants';
 
@@ -20,6 +21,7 @@ export const BiometricLockOverlay: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { user, signOut } = useAuth();
   const { colors, isDark } = useTheme();
+  const { language } = useTranslation();
 
   const [isLocked, setIsLocked] = useState(false);
   const [biometricInfo, setBiometricInfo] = useState<BiometricCheckResult | null>(null);
@@ -61,14 +63,16 @@ export const BiometricLockOverlay: React.FC = () => {
     setIsAuthenticating(true);
 
     try {
-      const res = await biometricHelper.authenticate('Safe Envanter Kilidini Aç');
+      const res = await biometricHelper.authenticate(
+        language === 'tr' ? 'Safe Envanter Kilidini Aç' : 'Unlock Safe Inventory'
+      );
       if (res.success) {
         setIsLocked(false);
       }
     } finally {
       setIsAuthenticating(false);
     }
-  }, [isAuthenticating]);
+  }, [isAuthenticating, language]);
 
   // İlk açılışta ve arka plandan dönüşte kilit kontrolü
   useEffect(() => {
@@ -123,7 +127,7 @@ export const BiometricLockOverlay: React.FC = () => {
     return null;
   }
 
-  const typeName = biometricInfo?.biometricTypeName || 'Biyometri';
+  const typeName = biometricInfo?.biometricTypeName || (language === 'tr' ? 'Biyometri' : 'Biometrics');
 
   return (
     <View
@@ -154,10 +158,12 @@ export const BiometricLockOverlay: React.FC = () => {
         </Animated.View>
 
         <Text style={[styles.title, { color: colors.onBackground }]}>
-          Safe Envanter Kilitli
+          {language === 'tr' ? 'Safe Envanter Kilitli' : 'Safe Inventory Locked'}
         </Text>
         <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
-          Varlıklarınıza ve garanti verilerinize erişmek için {typeName} ile doğrulayın.
+          {language === 'tr'
+            ? `Varlıklarınıza ve garanti verilerinize erişmek için ${typeName} ile doğrulayın.`
+            : `Verify with ${typeName} to access your items and warranty records.`}
         </Text>
 
         <TouchableOpacity
@@ -167,7 +173,7 @@ export const BiometricLockOverlay: React.FC = () => {
         >
           <Lock size={18} color={colors.onPrimary} />
           <Text style={[styles.unlockButtonText, { color: colors.onPrimary }]}>
-            {typeName} ile Aç
+            {language === 'tr' ? `${typeName} ile Aç` : `Unlock with ${typeName}`}
           </Text>
         </TouchableOpacity>
       </View>
@@ -184,7 +190,7 @@ export const BiometricLockOverlay: React.FC = () => {
         >
           <LogOut size={16} color={colors.error} />
           <Text style={[styles.logoutText, { color: colors.error }]}>
-            Farklı Hesapla Giriş Yap / Çıkış Yap
+            {language === 'tr' ? 'Farklı Hesapla Giriş Yap / Çıkış Yap' : 'Log In With Another Account / Sign Out'}
           </Text>
         </TouchableOpacity>
       </View>

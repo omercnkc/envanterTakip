@@ -7,6 +7,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { Product } from '../types';
 import { calculateWarrantyStatus, formatDateTurkish } from '../utils/warrantyCalculator';
+import { getCategoryDisplayName } from '../constants/categories';
 import { formatAppError } from '../utils/errorHandler';
 
 // CSV Hücre Kaçış Fonksiyonu (Virgül, noktalı virgül, tırnak, yeni satır güvenliği)
@@ -22,36 +23,53 @@ export const exportService = {
    * Ürünleri Excel ile uyumlu UTF-8 BOM'lu CSV metnine dönüştürür.
    * Türkçe Excel varsayılanı olan noktalı virgül (;) ayırıcı kullanılır.
    */
-  generateCSV(products: Product[]): string {
+  generateCSV(products: Product[], language: 'tr' | 'en' = 'tr'): string {
     const BOM = '\uFEFF'; // Excel Türkçe karakter uyumluluğu için UTF-8 BOM
-    
-    const headers = [
-      'Ürün Adı',
-      'Kategori',
-      'Marka',
-      'Model',
-      'Seri Numarası',
-      'Satın Alma Tarihi',
-      'Fiyat (TL)',
-      'Garanti Süresi (Ay)',
-      'Garanti Bitiş Tarihi',
-      'Kalan Gün',
-      'Garanti Durumu',
-      'Satıcı / Mağaza',
-      'Açıklama',
-    ];
+    const isEn = language === 'en';
+
+    const headers = isEn
+      ? [
+          'Product Name',
+          'Category',
+          'Brand',
+          'Model',
+          'Serial Number',
+          'Purchase Date',
+          'Price',
+          'Warranty Duration (Months)',
+          'Warranty End Date',
+          'Remaining Days',
+          'Warranty Status',
+          'Store / Seller',
+          'Description',
+        ]
+      : [
+          'Ürün Adı',
+          'Kategori',
+          'Marka',
+          'Model',
+          'Seri Numarası',
+          'Satın Alma Tarihi',
+          'Fiyat (TL)',
+          'Garanti Süresi (Ay)',
+          'Garanti Bitiş Tarihi',
+          'Kalan Gün',
+          'Garanti Durumu',
+          'Satıcı / Mağaza',
+          'Açıklama',
+        ];
 
     const rows = products.map((p) => {
-      const warranty = calculateWarrantyStatus(p.warranty_end_date);
-      const categoryName = p.category?.name || 'Diğer';
+      const warranty = calculateWarrantyStatus(p.warranty_end_date, undefined, language);
+      const categoryName = getCategoryDisplayName(p.category?.name || (isEn ? 'Other' : 'Diğer'), language);
       const formattedPurchaseDate = p.purchase_date ? formatDateTurkish(p.purchase_date) : '-';
       const formattedEndDate = formatDateTurkish(p.warranty_end_date);
       const price = p.purchase_price != null ? Number(p.purchase_price).toFixed(2) : '0.00';
       const duration = p.warranty_duration_months != null ? String(p.warranty_duration_months) : '-';
       const daysText =
         warranty.status === 'expired'
-          ? `Süresi Doldu (${warranty.daysRemaining} gün önce)`
-          : `${warranty.daysRemaining} gün`;
+          ? (isEn ? `Expired (${warranty.daysRemaining} days ago)` : `Süresi Doldu (${warranty.daysRemaining} gün önce)`)
+          : `${warranty.daysRemaining} ${isEn ? 'days' : 'gün'}`;
 
       return [
         escapeCSVCell(p.name),
@@ -118,15 +136,20 @@ export const exportService = {
   async exportAndShare({
     format,
     products,
+    language = 'tr',
   }: {
     format: 'csv' | 'json';
     products: Product[];
+    language?: 'tr' | 'en';
   }): Promise<{ success: boolean; error?: string }> {
     try {
       if (!products || products.length === 0) {
         return {
           success: false,
-          error: 'Dışa aktarılacak kayıtlı ürün bulunamadı. Lütfen önce ürün ekleyin.',
+          error:
+            language === 'en'
+              ? 'No items found to export. Please add products first.'
+              : 'Dışa aktarılacak kayıtlı ürün bulunamadı. Lütfen önce ürün ekleyin.',
         };
       }
 
@@ -134,7 +157,10 @@ export const exportService = {
       if (!isSharingAvailable) {
         return {
           success: false,
-          error: 'Cihazınızda dosya paylaşım desteği bulunmuyor.',
+          error:
+            language === 'en'
+              ? 'Sharing is not supported on this device.'
+              : 'Cihazınızda dosya paylaşım desteği bulunmuyor.',
         };
       }
 
@@ -143,7 +169,7 @@ export const exportService = {
       const filename = `safe_envanter_${dateStamp}_${timestamp}.${format}`;
 
       const fileUri = `${FileSystem.cacheDirectory}${filename}`;
-      const content = format === 'csv' ? this.generateCSV(products) : this.generateJSON(products);
+      const content = format === 'csv' ? this.generateCSV(products, language) : this.generateJSON(products);
 
       await FileSystem.writeAsStringAsync(fileUri, content, {
         encoding: FileSystem.EncodingType.UTF8,
@@ -151,7 +177,7 @@ export const exportService = {
 
       await Sharing.shareAsync(fileUri, {
         mimeType: format === 'csv' ? 'text/csv' : 'application/json',
-        dialogTitle: 'Envanter Verilerini Dışa Aktar',
+        dialogTitle: language === 'en' ? 'Export Inventory Data' : 'Envanter Verilerini Dışa Aktar',
         UTI: format === 'csv' ? 'public.comma-separated-values-text' : 'public.json',
       });
 

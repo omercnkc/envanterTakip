@@ -57,15 +57,17 @@ export const parseAnyDate = (dateStr: string | Date | null | undefined): Date | 
  */
 export const calculateWarrantyStatus = (
   warrantyEndDateStr: string | null | undefined,
-  themeColors?: ThemeColors
+  themeColors?: ThemeColors,
+  language: 'tr' | 'en' = 'tr'
 ): WarrantyCalculationResult => {
   const currentColors = themeColors || COLORS;
+  const isEn = language === 'en';
 
   if (!warrantyEndDateStr) {
     return {
       status: 'expired',
       daysRemaining: 0,
-      label: 'Tarih Belirtilmedi',
+      label: isEn ? 'No Date' : 'Tarih Belirtilmedi',
       color: currentColors.secondary,
       bgColor: currentColors.secondaryContainer,
     };
@@ -81,7 +83,7 @@ export const calculateWarrantyStatus = (
       return {
         status: 'expired',
         daysRemaining: 0,
-        label: 'Geçersiz Tarih',
+        label: isEn ? 'Invalid Date' : 'Geçersiz Tarih',
         color: currentColors.secondary,
         bgColor: currentColors.secondaryContainer,
       };
@@ -94,7 +96,7 @@ export const calculateWarrantyStatus = (
       return {
         status: 'active',
         daysRemaining,
-        label: 'Devam Ediyor',
+        label: isEn ? 'Active' : 'Devam Ediyor',
         color: currentColors.warranty?.active || currentColors.tertiary,
         bgColor: currentColors.warranty?.activeBg || currentColors.tertiaryContainer + '20',
       };
@@ -102,7 +104,7 @@ export const calculateWarrantyStatus = (
       return {
         status: 'expiring_soon',
         daysRemaining,
-        label: 'Yakında Bitecek',
+        label: isEn ? 'Expiring Soon' : 'Yakında Bitecek',
         color: currentColors.warranty?.expiring || currentColors.warning,
         bgColor: currentColors.warranty?.expiringBg || currentColors.warningContainer,
       };
@@ -110,7 +112,7 @@ export const calculateWarrantyStatus = (
       return {
         status: 'expired',
         daysRemaining: Math.abs(daysRemaining),
-        label: 'Süresi Doldu',
+        label: isEn ? 'Expired' : 'Süresi Doldu',
         color: currentColors.warranty?.expired || currentColors.error,
         bgColor: currentColors.warranty?.expiredBg || currentColors.errorContainer + '60',
       };
@@ -119,7 +121,7 @@ export const calculateWarrantyStatus = (
     return {
       status: 'expired',
       daysRemaining: 0,
-      label: 'Süresi Doldu',
+      label: isEn ? 'Expired' : 'Süresi Doldu',
       color: currentColors.warranty?.expired || currentColors.error,
       bgColor: currentColors.warranty?.expiredBg || currentColors.errorContainer + '60',
     };

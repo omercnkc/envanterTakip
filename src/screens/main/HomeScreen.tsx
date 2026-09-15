@@ -32,6 +32,7 @@ import { BarcodeScannerModal } from '../../components/BarcodeScannerModal';
 import { FinancialAnalyticsModal } from '../../components/FinancialAnalyticsModal';
 import { calculateWarrantyStatus, formatCurrency } from '../../utils/warrantyCalculator';
 import { calculateFinancialAnalytics } from '../../utils/financialCalculator';
+import { useTranslation } from '../../i18n';
 import { getStyles } from './HomeScreen.styles';
 
 export const HomeScreen: React.FC = () => {
@@ -46,6 +47,7 @@ export const HomeScreen: React.FC = () => {
     setFilterOptions,
   } = useInventory();
   const { showSuccess, showAlert } = useAlert();
+  const { t, language } = useTranslation();
   const { colors } = useTheme();
   const styles = useMemo(() => getStyles(colors), [colors]);
 
@@ -78,7 +80,9 @@ export const HomeScreen: React.FC = () => {
     );
 
     if (found) {
-      showSuccess(`"${found.name}" etiketi okundu.`);
+      showSuccess(
+        language === 'tr' ? `"${found.name}" etiketi okundu.` : `Scanned tag for "${found.name}".`
+      );
       navigation.navigate('ProductDetail', {
         productId: found.id,
         initialProduct: found,
@@ -90,7 +94,9 @@ export const HomeScreen: React.FC = () => {
     if (targetId.includes('-')) {
       const res = await getProduct(targetId);
       if (res) {
-        showSuccess(`"${res.name}" etiketi okundu.`);
+        showSuccess(
+          language === 'tr' ? `"${res.name}" etiketi okundu.` : `Scanned tag for "${res.name}".`
+        );
         navigation.navigate('ProductDetail', {
           productId: res.id,
           initialProduct: res,
@@ -102,10 +108,13 @@ export const HomeScreen: React.FC = () => {
     // 3. Eşleşme yoksa kullanıcıya seçenek sun
     showAlert({
       type: 'info',
-      title: 'Ürün Bulunamadı',
-      message: `"${scannedData}" kodlu etiket envanterinizdeki herhangi bir ürünle eşleşmedi. Bu kodla yeni bir ürün kaydetmek ister misiniz?`,
-      confirmText: 'Ürün Ekle',
-      cancelText: 'Vazgeç',
+      title: language === 'tr' ? 'Ürün Bulunamadı' : 'Item Not Found',
+      message:
+        language === 'tr'
+          ? `"${scannedData}" kodlu etiket envanterinizdeki herhangi bir ürünle eşleşmedi. Bu kodla yeni bir ürün kaydetmek ister misiniz?`
+          : `Tag "${scannedData}" did not match any item in your inventory. Would you like to add a new item with this code?`,
+      confirmText: language === 'tr' ? 'Ürün Ekle' : 'Add Item',
+      cancelText: language === 'tr' ? 'Vazgeç' : 'Cancel',
       onConfirm: () => {
         navigation.navigate('AddTab');
       },
@@ -212,10 +221,10 @@ export const HomeScreen: React.FC = () => {
 
             <View style={styles.greetingTextContainer}>
               <Text style={styles.greetingText} numberOfLines={1}>
-                Merhaba, {firstName}
+                {language === 'tr' ? `Merhaba, ${firstName}` : `Hello, ${firstName}`}
               </Text>
               <Text style={styles.subtitleText} numberOfLines={1}>
-                Envanterin güvende, garantilerini takip et.
+                {language === 'tr' ? 'Envanterin güvende, garantilerini takip et.' : 'Inventory safe, track all warranties.'}
               </Text>
             </View>
           </View>
@@ -244,10 +253,10 @@ export const HomeScreen: React.FC = () => {
           <View style={styles.bentoBlob} />
 
           <View style={styles.bentoLeft}>
-            <Text style={styles.bentoTitle}>Toplam Ürün</Text>
+            <Text style={styles.bentoTitle}>{t('home.totalProducts')}</Text>
             <View style={styles.bentoNumberRow}>
               <Text style={styles.bentoBigNumber}>{stats.total}</Text>
-              <Text style={styles.bentoNumberLabel}>ürün</Text>
+              <Text style={styles.bentoNumberLabel}>{language === 'tr' ? 'ürün' : 'items'}</Text>
             </View>
           </View>
 
@@ -276,7 +285,7 @@ export const HomeScreen: React.FC = () => {
                     <Clock size={12} color={colors.warranty?.expiring || colors.warning} />
                   </View>
                   <Text style={[styles.bentoStatusBadgeText, { color: colors.warranty?.expiring || colors.warning }]}>
-                    Yaklaşan Garanti
+                    {t('home.expiringSoon')}
                   </Text>
                 </View>
                 <Text
@@ -284,10 +293,10 @@ export const HomeScreen: React.FC = () => {
                   numberOfLines={1}
                 >
                   {closestWarrantyInfo.daysRemaining === 0
-                    ? 'Bugün Son Gün'
+                    ? (language === 'tr' ? 'Bugün Son Gün' : 'Expires Today')
                     : closestWarrantyInfo.daysRemaining === 1
-                    ? 'Yarın Bitiyor'
-                    : `Sıradaki: ${closestWarrantyInfo.daysRemaining} gün`}
+                    ? (language === 'tr' ? 'Yarın Bitiyor' : 'Expires Tomorrow')
+                    : `${language === 'tr' ? 'Sıradaki' : 'Next'}: ${closestWarrantyInfo.daysRemaining} ${t('common.days')}`}
                 </Text>
                 <View style={styles.bentoStatusProductRow}>
                   <Text style={styles.bentoStatusProductName} numberOfLines={1}>
@@ -308,17 +317,17 @@ export const HomeScreen: React.FC = () => {
                     <ShieldCheck size={12} color={colors.warranty?.active || colors.tertiary} />
                   </View>
                   <Text style={[styles.bentoStatusBadgeText, { color: colors.warranty?.active || colors.tertiary }]}>
-                    Garantiler Güvende
+                    {language === 'tr' ? 'Garantiler Güvende' : 'Warranties Safe'}
                   </Text>
                 </View>
                 <Text style={styles.bentoStatusMainText} numberOfLines={1}>
-                  Bu Ay Risk Yok
+                  {language === 'tr' ? 'Bu Ay Risk Yok' : 'No Risk This Month'}
                 </Text>
                 <View style={styles.bentoStatusProductRow}>
                   <Text style={styles.bentoStatusProductName} numberOfLines={1}>
                     {closestWarrantyInfo.product
-                      ? `Sıradaki: ${closestWarrantyInfo.product.name}`
-                      : 'Tümü koruma altında'}
+                      ? `${language === 'tr' ? 'Sıradaki' : 'Next'}: ${closestWarrantyInfo.product.name}`
+                      : (language === 'tr' ? 'Tümü koruma altında' : 'All protected')}
                   </Text>
                   <ChevronRight size={13} color={colors.outline} />
                 </View>
@@ -335,15 +344,19 @@ export const HomeScreen: React.FC = () => {
                     <ShieldCheck size={12} color={colors.primary} />
                   </View>
                   <Text style={[styles.bentoStatusBadgeText, { color: colors.primary }]}>
-                    Garantiler Güvende
+                    {language === 'tr' ? 'Garantiler Güvende' : 'Warranties Safe'}
                   </Text>
                 </View>
                 <Text style={styles.bentoStatusMainText} numberOfLines={1}>
-                  {stats.total === 0 ? 'Ürün Eklenmedi' : 'Aktif Garanti Yok'}
+                  {stats.total === 0
+                    ? (language === 'tr' ? 'Ürün Eklenmedi' : 'No Items Added')
+                    : (language === 'tr' ? 'Aktif Garanti Yok' : 'No Active Warranty')}
                 </Text>
                 <View style={styles.bentoStatusProductRow}>
                   <Text style={styles.bentoStatusProductName} numberOfLines={1}>
-                    {stats.total === 0 ? 'İlk ürünü ekleyin' : 'Tümü sona erdi'}
+                    {stats.total === 0
+                      ? (language === 'tr' ? 'İlk ürünü ekleyin' : 'Add first item')
+                      : (language === 'tr' ? 'Tümü sona erdi' : 'All expired')}
                   </Text>
                   <ChevronRight size={13} color={colors.outline} />
                 </View>
@@ -363,25 +376,29 @@ export const HomeScreen: React.FC = () => {
               <TrendingUp size={20} color={colors.primary} />
             </View>
             <View style={styles.financialLabelGroup}>
-              <Text style={styles.financialTitle}>Maddi Envanter Değeri</Text>
+              <Text style={styles.financialTitle}>
+                {language === 'tr' ? 'Maddi Envanter Değeri' : 'Total Portfolio Value'}
+              </Text>
               <Text style={styles.financialValue}>
                 {formatCurrency(financialStats.totalValue)}
               </Text>
               <Text style={styles.financialSubValue}>
                 {financialStats.pricedCount > 0
-                  ? `${financialStats.pricedCount} kayıtlı eşya · Ort: ${formatCurrency(financialStats.averageValue)}`
-                  : 'Fiyat bilgisi girilmemiş'}
+                  ? `${financialStats.pricedCount} ${language === 'tr' ? 'kayıtlı eşya · Ort' : 'items · Avg'}: ${formatCurrency(financialStats.averageValue)}`
+                  : (language === 'tr' ? 'Fiyat bilgisi girilmemiş' : 'No pricing data')}
               </Text>
             </View>
           </View>
 
           <View style={styles.financialActionBadge}>
-            <Text style={styles.financialActionBadgeText}>Analiz</Text>
+            <Text style={styles.financialActionBadgeText}>
+              {language === 'tr' ? 'Analiz' : 'Analysis'}
+            </Text>
             <ChevronRight size={13} color={colors.onPrimary} />
           </View>
         </TouchableOpacity>
 
-        {/* 4'lü İstatistik Izgarası (Salt Bilgi Kartları - Click Event'siz) */}
+        {/* 4'lü İstatistik Izgarası */}
         <View style={styles.statsGrid}>
           {/* Stat 1: Aktif Garanti */}
           <View style={styles.statCard}>
@@ -397,7 +414,7 @@ export const HomeScreen: React.FC = () => {
               {stats.active}
             </Text>
             <Text style={styles.statLabel} numberOfLines={2}>
-              Aktif Garanti
+              {t('home.activeWarranty')}
             </Text>
           </View>
 
@@ -415,7 +432,7 @@ export const HomeScreen: React.FC = () => {
               {stats.expiringSoon}
             </Text>
             <Text style={styles.statLabel} numberOfLines={2}>
-              Yakında Bitecek
+              {t('home.expiringSoon')}
             </Text>
           </View>
 
@@ -433,7 +450,7 @@ export const HomeScreen: React.FC = () => {
               {stats.expired}
             </Text>
             <Text style={styles.statLabel} numberOfLines={2}>
-              Süresi Dolmuş
+              {t('home.expiredWarranty')}
             </Text>
           </View>
 
@@ -451,20 +468,20 @@ export const HomeScreen: React.FC = () => {
               {stats.total}
             </Text>
             <Text style={styles.statLabel} numberOfLines={2}>
-              Tüm Ürünler
+              {t('home.totalProducts')}
             </Text>
           </View>
         </View>
 
         {/* Yaklaşan / Son Ürünler Bölümü */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Yaklaşan Garantiler</Text>
+          <Text style={styles.sectionTitle}>{language === 'tr' ? 'Son Eklenen Ürünler' : 'Recently Added Items'}</Text>
           <TouchableOpacity
             style={styles.seeAllButton}
             onPress={() => navigation.navigate('ProductsTab')}
             activeOpacity={0.7}
           >
-            <Text style={styles.seeAllText}>Tümünü Gör</Text>
+            <Text style={styles.seeAllText}>{t('common.viewAll')}</Text>
             <ChevronRight size={16} color={colors.primary} />
           </TouchableOpacity>
         </View>
@@ -483,9 +500,9 @@ export const HomeScreen: React.FC = () => {
           </View>
         ) : (
           <EmptyState
-            title="Henüz ürün eklenmemiş"
-            description="Envanterinizi oluşturmak ve garantilerinizi takip etmek için ilk ürününüzü ekleyin."
-            actionText="İlk Ürünü Ekle"
+            title={t('home.noProductsYetTitle')}
+            description={t('home.noProductsYetSubtitle')}
+            actionText={t('home.addFirstProductBtn')}
             onActionPress={() => navigation.navigate('AddTab')}
           />
         )}

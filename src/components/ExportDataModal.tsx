@@ -15,6 +15,7 @@ import { useSwipeDownToClose } from '../hooks/useSwipeDownToClose';
 import { COLORS } from '../constants';
 import { useInventory } from '../context/InventoryContext';
 import { useAlert } from '../context/AlertContext';
+import { useTranslation } from '../i18n';
 import { exportService } from '../api/exportService';
 import { styles } from './ExportDataModal.styles';
 
@@ -29,6 +30,7 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
 }) => {
   const { products } = useInventory();
   const { showWarning, showError, showSuccess } = useAlert();
+  const { language } = useTranslation();
   const [selectedFormat, setSelectedFormat] = useState<'csv' | 'json'>('csv');
   const [loading, setLoading] = useState(false);
 
@@ -42,8 +44,10 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
   const handleExport = async () => {
     if (productCount === 0) {
       showWarning(
-        'Dışa aktarmak için en az 1 ürün kaydınızın bulunması gerekir. Lütfen önce ürün ekleyin.',
-        'Kayıtlı Ürün Yok'
+        language === 'tr'
+          ? 'Dışa aktarmak için en az 1 ürün kaydınızın bulunması gerekir. Lütfen önce ürün ekleyin.'
+          : 'You must have at least 1 product record to export. Please add a product first.',
+        language === 'tr' ? 'Kayıtlı Ürün Yok' : 'No Products Registered'
       );
       return;
     }
@@ -53,17 +57,31 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
       const result = await exportService.exportAndShare({
         format: selectedFormat,
         products,
+        language,
       });
 
       if (!result.success) {
-        showError(result.error || 'Bir sorun oluştu.', 'Dışa Aktarma Başarısız');
+        showError(
+          result.error || (language === 'tr' ? 'Bir sorun oluştu.' : 'A problem occurred.'),
+          language === 'tr' ? 'Dışa Aktarma Başarısız' : 'Export Failed'
+        );
         return;
       }
 
-      showSuccess('Envanter verisi başarıyla dışa aktarıldı.', 'Başarılı');
+      showSuccess(
+        language === 'tr'
+          ? 'Envanter verisi başarıyla dışa aktarıldı.'
+          : 'Inventory data successfully exported.',
+        language === 'tr' ? 'Başarılı' : 'Success'
+      );
       onClose();
     } catch {
-      showError('Dosya oluşturulurken beklenmedik bir hata meydana geldi.', 'Hata');
+      showError(
+        language === 'tr'
+          ? 'Dosya oluşturulurken beklenmedik bir hata meydana geldi.'
+          : 'An unexpected error occurred while creating the file.',
+        language === 'tr' ? 'Hata' : 'Error'
+      );
     } finally {
       setLoading(false);
     }
@@ -87,7 +105,9 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
           </View>
 
           <View style={styles.headerRow}>
-            <Text style={styles.title}>Verileri Dışa Aktar</Text>
+            <Text style={styles.title}>
+              {language === 'tr' ? 'Verileri Dışa Aktar' : 'Export Data'}
+            </Text>
             <TouchableOpacity
               style={styles.closeIconButton}
               onPress={handleClose}
@@ -99,14 +119,20 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
           </View>
 
           <Text style={styles.subtitle}>
-            Envanterinizi istediğiniz formatta dışa aktarın ve paylaşın
+            {language === 'tr'
+              ? 'Envanterinizi istediğiniz formatta dışa aktarın ve paylaşın'
+              : 'Export and share your inventory in your preferred format'}
           </Text>
 
           {/* Özet Kartı */}
           <View style={styles.summaryCard}>
-            <Text style={styles.summaryLabel}>Dışa aktarılacak toplam varlık</Text>
+            <Text style={styles.summaryLabel}>
+              {language === 'tr' ? 'Dışa aktarılacak toplam varlık' : 'Total items to export'}
+            </Text>
             <View style={styles.summaryBadge}>
-              <Text style={styles.summaryBadgeText}>{productCount} Ürün</Text>
+              <Text style={styles.summaryBadgeText}>
+                {productCount} {language === 'tr' ? 'Ürün' : 'Items'}
+              </Text>
             </View>
           </View>
 
@@ -134,13 +160,19 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
               </View>
               <View style={styles.formatInfo}>
                 <View style={styles.formatTitleRow}>
-                  <Text style={styles.formatTitle}>Excel Tablosu (.csv)</Text>
+                  <Text style={styles.formatTitle}>
+                    {language === 'tr' ? 'Excel Tablosu (.csv)' : 'Excel Spreadsheet (.csv)'}
+                  </Text>
                   <View style={styles.badgePill}>
-                    <Text style={styles.badgePillText}>ÖNERİLEN</Text>
+                    <Text style={styles.badgePillText}>
+                      {language === 'tr' ? 'ÖNERİLEN' : 'RECOMMENDED'}
+                    </Text>
                   </View>
                 </View>
                 <Text style={styles.formatDescription}>
-                  Excel & Google Sheets uyumlu. Garanti bitişleri, fiyatlar ve kategori bilgilerini içerir.
+                  {language === 'tr'
+                    ? 'Excel & Google Sheets uyumlu. Garanti bitişleri, fiyatlar ve kategori bilgilerini içerir.'
+                    : 'Compatible with Excel & Google Sheets. Includes warranties, prices, and categories.'}
                 </Text>
               </View>
               <View
@@ -175,10 +207,14 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
               </View>
               <View style={styles.formatInfo}>
                 <View style={styles.formatTitleRow}>
-                  <Text style={styles.formatTitle}>JSON Veri Dosyası (.json)</Text>
+                  <Text style={styles.formatTitle}>
+                    {language === 'tr' ? 'JSON Veri Dosyası (.json)' : 'JSON Data File (.json)'}
+                  </Text>
                 </View>
                 <Text style={styles.formatDescription}>
-                  Yedekleme ve sistemler arası veri aktarımı için yapılandırılmış ham veri formatı.
+                  {language === 'tr'
+                    ? 'Yedekleme ve sistemler arası veri aktarımı için yapılandırılmış ham veri formatı.'
+                    : 'Structured raw data format for full backup and cross-platform data transfer.'}
                 </Text>
               </View>
               <View
@@ -200,7 +236,9 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
               disabled={loading}
               activeOpacity={0.7}
             >
-              <Text style={styles.cancelButtonText}>Vazgeç</Text>
+              <Text style={styles.cancelButtonText}>
+                {language === 'tr' ? 'Vazgeç' : 'Cancel'}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -214,7 +252,9 @@ export const ExportDataModal: React.FC<ExportDataModalProps> = ({
               ) : (
                 <>
                   <Share2 size={18} color={COLORS.onPrimary} />
-                  <Text style={styles.exportButtonText}>Dışa Aktar</Text>
+                  <Text style={styles.exportButtonText}>
+                    {language === 'tr' ? 'Dışa Aktar' : 'Export'}
+                  </Text>
                 </>
               )}
             </TouchableOpacity>

@@ -23,6 +23,7 @@ import {
 import { useTheme } from '../../context/ThemeContext';
 import { useInventory } from '../../context/InventoryContext';
 import { useAlert } from '../../context/AlertContext';
+import { useTranslation } from '../../i18n';
 import { calculateWarrantyStatus, formatDateTurkish } from '../../utils/warrantyCalculator';
 import { sendTestNotification } from '../../utils/notificationHelper';
 import { EmptyState } from '../../components/EmptyState';
@@ -51,6 +52,7 @@ export const NotificationsScreen: React.FC = () => {
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const [isSendingTest, setIsSendingTest] = useState(false);
   const { colors } = useTheme();
+  const { t, language } = useTranslation();
   const { showSuccess, showError, showAlert } = useAlert();
   const styles = useMemo(() => getStyles(colors), [colors]);
 
@@ -81,13 +83,17 @@ export const NotificationsScreen: React.FC = () => {
       setIsSendingTest(true);
       await sendTestNotification();
       showSuccess(
-        'Test bildirimi başarıyla planlandı. 2 saniye içinde bildirim çubuğunda görünecektir.',
-        'Bildirim Planlandı'
+        language === 'tr'
+          ? 'Test bildirimi başarıyla planlandı. 2 saniye içinde bildirim çubuğunda görünecektir.'
+          : 'Test notification scheduled. It will appear in notification bar in 2 seconds.',
+        language === 'tr' ? 'Bildirim Planlandı' : 'Notification Scheduled'
       );
     } catch {
       showError(
-        'Lütfen telefon ayarlarından uygulama bildirim izinlerini etkinleştirdiğinizden emin olun.',
-        'Bildirim Gönderilemedi'
+        language === 'tr'
+          ? 'Lütfen telefon ayarlarından uygulama bildirim izinlerini etkinleştirdiğinizden emin olun.'
+          : 'Please make sure application notification permissions are enabled in device settings.',
+        language === 'tr' ? 'Bildirim Gönderilemedi' : 'Notification Failed'
       );
     } finally {
       setIsSendingTest(false);
@@ -110,8 +116,8 @@ export const NotificationsScreen: React.FC = () => {
             id,
             productId: p.id,
             productName: p.name,
-            message: 'Garanti süresi sona erdi.',
-            timestamp: p.warranty_end_date ? formatDateTurkish(p.warranty_end_date) : 'Süresi Doldu',
+            message: language === 'tr' ? 'Garanti süresi sona erdi.' : 'Warranty has expired.',
+            timestamp: p.warranty_end_date ? formatDateTurkish(p.warranty_end_date) : (language === 'tr' ? 'Süresi Doldu' : 'Expired'),
             type: 'error',
             isRead: readIds.has(id),
           });
@@ -123,16 +129,20 @@ export const NotificationsScreen: React.FC = () => {
         let type: 'warning' | 'error' = 'warning';
 
         if (daysRemaining === 0) {
-          msg = 'Garanti süresi bugün sona eriyor!';
+          msg = language === 'tr' ? 'Garanti süresi bugün sona eriyor!' : 'Warranty expires today!';
           type = 'error';
         } else if (daysRemaining === 1) {
-          msg = 'Garanti süresi yarın sona eriyor!';
+          msg = language === 'tr' ? 'Garanti süresi yarın sona eriyor!' : 'Warranty expires tomorrow!';
           type = 'error';
         } else if (daysRemaining <= 7) {
-          msg = `Garanti süresinin bitmesine son ${daysRemaining} gün kaldı!`;
+          msg = language === 'tr'
+            ? `Garanti süresinin bitmesine son ${daysRemaining} gün kaldı!`
+            : `Only ${daysRemaining} days left until warranty expires!`;
           type = 'warning';
         } else {
-          msg = `Garantinin bitmesine ${daysRemaining} gün kaldı.`;
+          msg = language === 'tr'
+            ? `Garantinin bitmesine ${daysRemaining} gün kaldı.`
+            : `${daysRemaining} days remaining until warranty ends.`;
           type = 'warning';
         }
 
@@ -143,7 +153,7 @@ export const NotificationsScreen: React.FC = () => {
             productId: p.id,
             productName: p.name,
             message: msg,
-            timestamp: p.warranty_end_date ? formatDateTurkish(p.warranty_end_date) : 'Yakında',
+            timestamp: p.warranty_end_date ? formatDateTurkish(p.warranty_end_date) : (language === 'tr' ? 'Yakında' : 'Soon'),
             type,
             isRead: readIds.has(id),
           });
@@ -153,7 +163,7 @@ export const NotificationsScreen: React.FC = () => {
     });
 
     return list;
-  }, [products, readIds, deletedIds]);
+  }, [products, readIds, deletedIds, language]);
 
   // Sayı Hesaplamaları (Tümü, Okunmayan, Okunan)
   const counts = useMemo(() => {
@@ -215,10 +225,10 @@ export const NotificationsScreen: React.FC = () => {
     if (notifications.length === 0) return;
     showAlert({
       type: 'danger',
-      title: 'Bildirimleri Sil',
-      message: 'Mevcut tüm bildirimleri silmek istediğinizden emin misiniz?',
-      confirmText: 'Tümünü Sil',
-      cancelText: 'Vazgeç',
+      title: t('notifications.clearAllConfirmTitle'),
+      message: t('notifications.clearAllConfirmMessage'),
+      confirmText: language === 'tr' ? 'Tümünü Sil' : 'Clear All',
+      cancelText: t('common.cancel'),
       destructive: true,
       onConfirm: async () => {
         const allIds = notifications.map((n) => n.id);
@@ -226,7 +236,7 @@ export const NotificationsScreen: React.FC = () => {
         setDeletedIds(updated);
         try {
           await AsyncStorage.setItem(DELETED_NOTIFICATIONS_KEY, JSON.stringify([...updated]));
-          showSuccess('Tüm bildirimler temizlendi.');
+          showSuccess(language === 'tr' ? 'Tüm bildirimler temizlendi.' : 'All notifications cleared.');
         } catch (err) {
           console.warn('Silme kaydedilemedi:', err);
         }
@@ -267,7 +277,7 @@ export const NotificationsScreen: React.FC = () => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <Text style={styles.headerTitle}>Bildirimler</Text>
+          <Text style={styles.headerTitle}>{t('notifications.screenTitle')}</Text>
           <TouchableOpacity
             style={styles.testButton}
             onPress={handleSendTestNotification}
@@ -280,7 +290,7 @@ export const NotificationsScreen: React.FC = () => {
               <Sparkles size={14} color={colors.primary} />
             )}
             <Text style={styles.testButtonText}>
-              {isSendingTest ? '...' : 'Test Bildirimi'}
+              {isSendingTest ? '...' : (language === 'tr' ? 'Test Bildirimi' : 'Test Notification')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -298,7 +308,7 @@ export const NotificationsScreen: React.FC = () => {
                 activeTab === 'all' && styles.tabTextActive,
               ]}
             >
-              Tümü ({counts.all})
+              {language === 'tr' ? 'Tümü' : 'All'} ({counts.all})
             </Text>
           </TouchableOpacity>
 
@@ -313,7 +323,7 @@ export const NotificationsScreen: React.FC = () => {
                 activeTab === 'unread' && styles.tabTextActive,
               ]}
             >
-              Okunmayan ({counts.unread})
+              {language === 'tr' ? 'Okunmayan' : 'Unread'} ({counts.unread})
             </Text>
           </TouchableOpacity>
 
@@ -328,7 +338,7 @@ export const NotificationsScreen: React.FC = () => {
                 activeTab === 'read' && styles.tabTextActive,
               ]}
             >
-              Okunan ({counts.read})
+              {language === 'tr' ? 'Okunan' : 'Read'} ({counts.read})
             </Text>
           </TouchableOpacity>
         </View>
@@ -338,10 +348,10 @@ export const NotificationsScreen: React.FC = () => {
           <View style={styles.toolbarRow}>
             <Text style={styles.toolbarSummary}>
               {activeTab === 'unread'
-                ? `${counts.unread} Okunmamış`
+                ? (language === 'tr' ? `${counts.unread} Okunmamış` : `${counts.unread} Unread`)
                 : activeTab === 'read'
-                ? `${counts.read} Okunmuş`
-                : `${counts.all} Bildirim`}
+                ? (language === 'tr' ? `${counts.read} Okunmuş` : `${counts.read} Read`)
+                : (language === 'tr' ? `${counts.all} Bildirim` : `${counts.all} Notifications`)}
             </Text>
             <View style={styles.toolbarActions}>
               {counts.unread > 0 && (
@@ -351,7 +361,7 @@ export const NotificationsScreen: React.FC = () => {
                   activeOpacity={0.7}
                 >
                   <CheckCheck size={13} color={colors.primary} />
-                  <Text style={styles.actionButtonText}>Tümünü Oku</Text>
+                  <Text style={styles.actionButtonText}>{language === 'tr' ? 'Tümünü Oku' : 'Mark All Read'}</Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity
@@ -361,7 +371,7 @@ export const NotificationsScreen: React.FC = () => {
               >
                 <Trash2 size={13} color={colors.error} />
                 <Text style={[styles.actionButtonText, styles.actionButtonDangerText]}>
-                  Tümünü Sil
+                  {language === 'tr' ? 'Tümünü Sil' : 'Clear All'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -409,9 +419,9 @@ export const NotificationsScreen: React.FC = () => {
         ListEmptyComponent={
           <EmptyState
             icon={<Bell size={40} color={colors.outline} />}
-            title="Bildirim Bulunmuyor"
-            description="Yalnızca belirttiğiniz garanti süresi yaklaşan (son 30, 7, 1 gün) veya süresi dolan ürünler burada listelenir."
-            actionText="Ana Sayfaya Dön"
+            title={t('notifications.emptyTitle')}
+            description={t('notifications.emptySubtitle')}
+            actionText={language === 'tr' ? 'Ana Sayfaya Dön' : 'Go to Home'}
             onActionPress={() => navigation.navigate('HomeTab')}
           />
         }

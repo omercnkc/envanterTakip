@@ -36,11 +36,46 @@ export const BIOMETRIC_TIMEOUT_OPTIONS: BiometricTimeoutOption[] = [
   },
 ];
 
+export const getBiometricTimeoutOptions = (language: 'tr' | 'en' = 'tr'): BiometricTimeoutOption[] => [
+  {
+    id: 'immediately',
+    label: language === 'en' ? 'Immediately' : 'Anında',
+    minutes: 0,
+    description: language === 'en' ? 'Locks whenever you leave the app' : 'Uygulamadan her çıkıldığında kilitlenir',
+  },
+  {
+    id: '15m',
+    label: language === 'en' ? '15 Minutes' : '15 Dakika',
+    minutes: 15,
+    description: language === 'en' ? 'Does not require biometric within 15 minutes' : '15 dakika içinde dönüldüğünde parmak izi istemez',
+  },
+  {
+    id: '30m',
+    label: language === 'en' ? '30 Minutes' : '30 Dakika',
+    minutes: 30,
+    description: language === 'en' ? 'Does not require biometric within 30 minutes' : '30 dakika içinde dönüldüğünde parmak izi istemez',
+  },
+];
+
 export interface BiometricCheckResult {
   hasHardware: boolean;
   isEnrolled: boolean;
   biometricTypeName: string; // 'Face ID', 'Parmak İzi' veya 'Biyometri'
+  biometricType?: 'face' | 'fingerprint' | 'biometric' | 'none';
 }
+
+export const getBiometricTypeName = (
+  type?: 'face' | 'fingerprint' | 'biometric' | 'none',
+  language: 'tr' | 'en' = 'tr'
+): string => {
+  if (type === 'face') {
+    return language === 'en' ? 'Face ID' : 'Face ID / Yüz Tanıma';
+  }
+  if (type === 'fingerprint') {
+    return language === 'en' ? 'Touch ID / Fingerprint' : 'Parmak İzi / Touch ID';
+  }
+  return language === 'en' ? 'Biometrics' : 'Biyometri';
+};
 
 let inMemoryLastUnlockTime = 0;
 let inMemoryBackgroundTime = 0;
@@ -56,7 +91,6 @@ export const biometricHelper = {
       clearTimeout(mediaPickerTimeout);
       mediaPickerTimeout = null;
     }
-
     if (active) {
       isMediaPickerActive = true;
       inMemoryLastUnlockTime = Date.now();
@@ -77,31 +111,37 @@ export const biometricHelper = {
   /**
    * Cihazın biyometrik donanım ve kayıt durumunu sorgular.
    */
-  async checkBiometrics(): Promise<BiometricCheckResult> {
+  async checkBiometrics(language: 'tr' | 'en' = 'tr'): Promise<BiometricCheckResult> {
     try {
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
       const isEnrolled = hasHardware ? await LocalAuthentication.isEnrolledAsync() : false;
 
-      let biometricTypeName = 'Biyometri';
+      let biometricType: 'face' | 'fingerprint' | 'biometric' | 'none' = 'biometric';
       if (hasHardware) {
         const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
         if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
-          biometricTypeName = 'Face ID / Yüz Tanıma';
+          biometricType = 'face';
         } else if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
-          biometricTypeName = 'Parmak İzi';
+          biometricType = 'fingerprint';
         }
+      } else {
+        biometricType = 'none';
       }
+
+      const biometricTypeName = getBiometricTypeName(biometricType, language);
 
       return {
         hasHardware,
         isEnrolled,
         biometricTypeName,
+        biometricType,
       };
     } catch {
       return {
         hasHardware: false,
         isEnrolled: false,
-        biometricTypeName: 'Biyometri',
+        biometricTypeName: language === 'en' ? 'Biometrics' : 'Biyometri',
+        biometricType: 'none',
       };
     }
   },

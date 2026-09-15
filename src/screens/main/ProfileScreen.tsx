@@ -29,6 +29,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useInventory } from '../../context/InventoryContext';
 import { useAlert } from '../../context/AlertContext';
+import { useTranslation } from '../../i18n';
 import { EditProfileModal, LegalModal, ImageViewerModal } from '../../components';
 import {
   calculateFinancialAnalytics,
@@ -41,6 +42,7 @@ export const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { profile, user } = useAuth();
   const { colors } = useTheme();
+  const { t, language } = useTranslation();
   const { stats, products } = useInventory();
   const { showAlert, showError, showSuccess } = useAlert();
 
@@ -51,7 +53,7 @@ export const ProfileScreen: React.FC = () => {
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
-  const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Kullanıcı';
+  const displayName = profile?.full_name || user?.email?.split('@')[0] || (language === 'tr' ? 'Kullanıcı' : 'User');
   const email = profile?.email || user?.email || 'kullanici@safeenvanter.com';
   const userInitials = (displayName[0] || 'K').toUpperCase();
   const avatarUrl = profile?.avatar_url;
@@ -68,19 +70,21 @@ export const ProfileScreen: React.FC = () => {
   }, [stats.total, stats.active]);
 
   const healthScoreLabel = useMemo(() => {
-    if (healthScore >= 80) return 'Mükemmel Koruma';
-    if (healthScore >= 50) return 'İyi Seviye Koruma';
-    return 'Garantisi Bitenler Var';
-  }, [healthScore]);
+    if (healthScore >= 80) return language === 'tr' ? 'Mükemmel Koruma' : 'Excellent Protection';
+    if (healthScore >= 50) return language === 'tr' ? 'İyi Seviye Koruma' : 'Good Protection';
+    return language === 'tr' ? 'Garantisi Bitenler Var' : 'Some Expired';
+  }, [healthScore, language]);
 
   // Doğrudan Resmi PDF Sigorta Raporu Oluştur & Paylaş
   const handleGeneratePdfReport = async () => {
     if (products.length === 0) {
       showAlert({
         type: 'info',
-        title: 'Envanter Boş',
-        message: 'Rapor oluşturabilmek için önce birkaç ürün eklemelisiniz.',
-        confirmText: 'Tamam',
+        title: language === 'tr' ? 'Envanter Boş' : 'Inventory Empty',
+        message: language === 'tr'
+          ? 'Rapor oluşturabilmek için önce birkaç ürün eklemelisiniz.'
+          : 'You must add a few products before generating a report.',
+        confirmText: t('common.ok'),
         showCancel: false,
       });
       return;
@@ -88,7 +92,7 @@ export const ProfileScreen: React.FC = () => {
 
     try {
       setIsGeneratingPdf(true);
-      const html = generateInsuranceReportHtml(products, analytics);
+      const html = generateInsuranceReportHtml(products, analytics, language);
       const { uri, base64 } = await Print.printToFileAsync({
         html,
         base64: true,
@@ -105,12 +109,15 @@ export const ProfileScreen: React.FC = () => {
 
       await Sharing.shareAsync(shareUri, {
         mimeType: 'application/pdf',
-        dialogTitle: 'Ev Envanter & Sigorta Raporu',
+        dialogTitle: language === 'tr' ? 'Ev Envanter & Sigorta Raporu' : 'Home Inventory & Insurance Report',
         UTI: 'com.adobe.pdf',
       });
     } catch (err) {
       console.warn('PDF paylaşım hatası:', err);
-      showError('PDF raporu oluşturulurken bir sorun meydana geldi.', 'Hata');
+      showError(
+        language === 'tr' ? 'PDF raporu oluşturulurken bir sorun meydana geldi.' : 'An error occurred while creating PDF report.',
+        language === 'tr' ? 'Hata' : 'Error'
+      );
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -119,10 +126,12 @@ export const ProfileScreen: React.FC = () => {
   const handleHelp = () => {
     showAlert({
       type: 'info',
-      title: 'Yardım & Destek',
-      message: 'Sorularınız, önerileriniz veya geri bildirimleriniz için support@safeenvanter.com adresinden bize 7/24 ulaşabilirsiniz.',
+      title: language === 'tr' ? 'Yardım & Destek' : 'Help & Support',
+      message: language === 'tr'
+        ? 'Sorularınız, önerileriniz veya geri bildirimleriniz için support@safeenvanter.com adresinden bize 7/24 ulaşabilirsiniz.'
+        : 'For questions, suggestions, or feedback, you can reach us 24/7 at support@safeenvanter.com.',
       showCancel: false,
-      confirmText: 'Anladım',
+      confirmText: language === 'tr' ? 'Anladım' : 'Got it',
     });
   };
 
@@ -130,9 +139,11 @@ export const ProfileScreen: React.FC = () => {
     showAlert({
       type: 'info',
       title: 'Safe Envanter',
-      message: 'Versiyon 1.0.0\n\nEvdeki tüm maddi varlıklarınızı, garanti sürelerinizi ve bakım takvimlerinizi güvenle yönetebileceğiniz modern dijital envanter platformu.',
+      message: language === 'tr'
+        ? 'Versiyon 1.0.0\n\nEvdeki tüm maddi varlıklarınızı, garanti sürelerinizi ve bakım takvimlerinizi güvenle yönetebileceğiniz modern dijital envanter platformu.'
+        : 'Version 1.0.0\n\nModern digital inventory platform to securely manage your household assets, warranties and maintenance schedules.',
       showCancel: false,
-      confirmText: 'Kapat',
+      confirmText: t('common.close'),
     });
   };
 
@@ -142,7 +153,7 @@ export const ProfileScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.headerTitle}>Profil</Text>
+        <Text style={styles.headerTitle}>{t('profile.screenTitle')}</Text>
 
         {/* 1. Profil Kullanıcı Kartı (Fotoğraflı veya Monogram) */}
         <View style={styles.userCard}>
@@ -173,7 +184,7 @@ export const ProfileScreen: React.FC = () => {
             activeOpacity={0.7}
           >
             <Pencil size={13} color={colors.primary} />
-            <Text style={styles.editProfileButtonText}>Profili Düzenle</Text>
+            <Text style={styles.editProfileButtonText}>{t('profile.editProfileBtn')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -182,7 +193,7 @@ export const ProfileScreen: React.FC = () => {
           <View style={styles.healthHeaderRow}>
             <View style={styles.healthLeft}>
               <ShieldCheck size={18} color="#10B981" />
-              <Text style={styles.healthTitle}>Garanti Güvence Skoru</Text>
+              <Text style={styles.healthTitle}>{language === 'tr' ? 'Garanti Güvence Skoru' : 'Warranty Assurance Score'}</Text>
             </View>
             <View style={styles.healthScoreBadge}>
               <Sparkles size={12} color="#059669" />
@@ -201,7 +212,7 @@ export const ProfileScreen: React.FC = () => {
           </View>
 
           <Text style={styles.healthHintText}>
-            {healthScoreLabel} • {stats.active} aktif garanti koruması
+            {healthScoreLabel} • {stats.active} {language === 'tr' ? 'aktif garanti koruması' : 'active warranties'}
           </Text>
         </View>
 
@@ -221,9 +232,9 @@ export const ProfileScreen: React.FC = () => {
               )}
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.pdfReportTitle}>Resmi Envanter & Sigorta Raporu</Text>
+              <Text style={styles.pdfReportTitle}>{language === 'tr' ? 'Resmi Envanter & Sigorta Raporu' : 'Official Inventory & Insurance Report'}</Text>
               <Text style={styles.pdfReportSubtitle}>
-                A4 formatında imzalı PDF beyan dökümü oluşturun ve paylaşın
+                {language === 'tr' ? 'A4 formatında imzalı PDF beyan dökümü oluşturun ve paylaşın' : 'Generate and share signed A4 PDF declaration statement'}
               </Text>
             </View>
           </View>
@@ -242,7 +253,7 @@ export const ProfileScreen: React.FC = () => {
               <View style={styles.menuItemIconBox}>
                 <Settings size={18} color={colors.primary} />
               </View>
-              <Text style={styles.menuItemLabel}>Uygulama & Güvenlik Ayarları</Text>
+              <Text style={styles.menuItemLabel}>{language === 'tr' ? 'Uygulama & Güvenlik Ayarları' : 'App & Security Settings'}</Text>
             </View>
             <ChevronRight size={18} color={colors.outline} />
           </TouchableOpacity>
@@ -257,7 +268,7 @@ export const ProfileScreen: React.FC = () => {
               <View style={styles.menuItemIconBox}>
                 <ShieldCheck size={18} color={colors.tertiary} />
               </View>
-              <Text style={styles.menuItemLabel}>Gizlilik Politikası & KVKK</Text>
+              <Text style={styles.menuItemLabel}>{language === 'tr' ? 'Gizlilik Politikası & KVKK' : 'Privacy Policy & Terms'}</Text>
             </View>
             <ChevronRight size={18} color={colors.outline} />
           </TouchableOpacity>
@@ -272,7 +283,7 @@ export const ProfileScreen: React.FC = () => {
               <View style={styles.menuItemIconBox}>
                 <HelpCircle size={18} color={colors.outline} />
               </View>
-              <Text style={styles.menuItemLabel}>Yardım & Destek</Text>
+              <Text style={styles.menuItemLabel}>{language === 'tr' ? 'Yardım & Destek' : 'Help & Support'}</Text>
             </View>
             <ChevronRight size={18} color={colors.outline} />
           </TouchableOpacity>
@@ -287,7 +298,7 @@ export const ProfileScreen: React.FC = () => {
               <View style={styles.menuItemIconBox}>
                 <Info size={18} color={colors.outline} />
               </View>
-              <Text style={styles.menuItemLabel}>Safe Envanter Hakkında</Text>
+              <Text style={styles.menuItemLabel}>{language === 'tr' ? 'Safe Envanter Hakkında' : 'About Safe Inventory'}</Text>
             </View>
             <ChevronRight size={18} color={colors.outline} />
           </TouchableOpacity>
@@ -301,7 +312,7 @@ export const ProfileScreen: React.FC = () => {
             resizeMode="cover"
           />
           <Text style={styles.appBrandingTitle}>Safe Envanter</Text>
-          <Text style={styles.appBrandingVersion}>v1.0.0 • Varlık & Garanti Yönetimi</Text>
+          <Text style={styles.appBrandingVersion}>{language === 'tr' ? 'v1.0.0 • Varlık & Garanti Yönetimi' : 'v1.0.0 • Asset & Warranty Management'}</Text>
         </View>
       </ScrollView>
 

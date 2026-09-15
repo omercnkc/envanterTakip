@@ -25,3 +25,31 @@ export const CATEGORIES: CategoryItem[] = [
 
 export const DEFAULT_CATEGORIES = CATEGORIES;
 
+export const CATEGORY_TRANSLATION_MAP: Record<string, { en: string; tr: string; key: string }> = {
+  'Televizyon': { en: 'Television', tr: 'Televizyon', key: 'categories.tv' },
+  'Bilgisayar': { en: 'Computers', tr: 'Bilgisayar', key: 'categories.laptop' },
+  'Telefon': { en: 'Smartphone', tr: 'Telefon', key: 'categories.smartphone' },
+  'Tablet': { en: 'Tablet', tr: 'Tablet', key: 'categories.tablet' },
+  'Beyaz Eşya': { en: 'Major Appliances', tr: 'Beyaz Eşya', key: 'categories.refrigerator' },
+  'Küçük Ev Aletleri': { en: 'Small Appliances', tr: 'Küçük Ev Aletleri', key: 'categories.coffee' },
+  'Mobilya': { en: 'Furniture', tr: 'Mobilya', key: 'categories.armchair' },
+  'Mutfak Ürünleri': { en: 'Kitchenware', tr: 'Mutfak Ürünleri', key: 'categories.utensils' },
+  'Oyun / Konsol': { en: 'Gaming / Console', tr: 'Oyun / Konsol', key: 'categories.gamepad' },
+  'Diğer': { en: 'Other', tr: 'Diğer', key: 'categories.other' },
+};
+
+export const getCategoryDisplayName = (name: string, language: 'tr' | 'en' = 'tr'): string => {
+  if (!name) return name;
+  const match = CATEGORY_TRANSLATION_MAP[name];
+  if (match) {
+    return language === 'en' ? match.en : match.tr;
+  }
+  // If the reverse was saved (in English)
+  for (const item of Object.values(CATEGORY_TRANSLATION_MAP)) {
+    if (item.en.toLowerCase() === name.toLowerCase()) {
+      return language === 'en' ? item.en : item.tr;
+    }
+  }
+  return name;
+};
+

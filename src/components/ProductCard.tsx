@@ -20,6 +20,8 @@ import { Product } from '../types';
 import { useTheme } from '../context/ThemeContext';
 import { useInventory } from '../context/InventoryContext';
 import { useAlert } from '../context/AlertContext';
+import { useTranslation, useLanguage } from '../i18n';
+import { getCategoryDisplayName } from '../constants/categories';
 import {
   formatDateTurkish,
   calculateWarrantyStatus,
@@ -63,6 +65,8 @@ const getCategoryIcon = (iconName?: string | null, size = 26, color = '#4648d4')
 export const ProductCard: React.FC<ProductCardProps> = React.memo(
   ({ product, onPress, showPercentageGauge = false, showFavoriteButton = true }) => {
     const { colors } = useTheme();
+    const { t } = useTranslation();
+    const { language } = useLanguage();
     const styles = useMemo(() => getStyles(colors), [colors]);
     const { isFavorite, toggleFavorite } = useInventory();
     const { showSuccess, showInfo } = useAlert();
@@ -73,19 +77,22 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(
       const willBeFav = !isFav;
       await toggleFavorite(product.id);
       if (willBeFav) {
-        showSuccess('Ürün favorilere eklendi.');
+        showSuccess(t('productCard.addedToFavorites'));
       } else {
-        showInfo('Ürün favorilerden çıkarıldı.');
+        showInfo(t('productCard.removedFromFavorites'));
       }
     };
 
-    const categoryName = product.category?.name || 'Genel';
+    const categoryName = getCategoryDisplayName(
+      product.category?.name || t('productCard.defaultCategory'),
+      language
+    );
     const brandName = product.brand ? ` • ${product.brand}` : '';
 
     // Lazy evaluation: Yüzde hesaplamasını sadece gösterge aktifse çalıştır
     const statusInfo = useMemo(
-      () => calculateWarrantyStatus(product.warranty_end_date, colors),
-      [product.warranty_end_date, colors]
+      () => calculateWarrantyStatus(product.warranty_end_date, colors, language),
+      [product.warranty_end_date, colors, language]
     );
 
     const percentage = useMemo(
@@ -126,8 +133,8 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(
             <Calendar size={13} color={colors.outline} style={styles.dateIcon} />
             <Text style={styles.warrantyDate} numberOfLines={1}>
               {showPercentageGauge
-                ? `${formatDateTurkish(product.warranty_end_date)} tarihine kadar`
-                : `Garanti bitişi: ${formatDateTurkish(product.warranty_end_date)}`}
+                ? t('productCard.untilDate', { date: formatDateTurkish(product.warranty_end_date) })
+                : t('productCard.warrantyEnd', { date: formatDateTurkish(product.warranty_end_date) })}
             </Text>
           </View>
         </View>

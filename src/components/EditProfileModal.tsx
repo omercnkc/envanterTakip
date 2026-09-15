@@ -20,6 +20,7 @@ import { useSwipeDownToClose } from '../hooks/useSwipeDownToClose';
 import { COLORS } from '../constants';
 import { useAuth } from '../context/AuthContext';
 import { useAlert } from '../context/AlertContext';
+import { useTranslation } from '../i18n';
 import { mediaHelper } from '../utils/mediaHelper';
 import { updateProfileSchema, UpdateProfileFormData } from '../types';
 import { MediaPickerModal } from './MediaPickerModal';
@@ -36,6 +37,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 }) => {
   const { profile, user, updateProfile } = useAuth();
   const { showSuccess, showError } = useAlert();
+  const { language } = useTranslation();
   const [submitting, setSubmitting] = useState(false);
   const [avatarUri, setAvatarUri] = useState<string | null>(profile?.avatar_url || null);
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
@@ -92,13 +94,22 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     try {
       const result = await updateProfile(data.fullName, avatarUri);
       if (!result.success) {
-        showError(result.error || 'Bir hata oluştu.', 'Profil Güncellenemedi');
+        showError(
+          result.error || (language === 'tr' ? 'Bir hata oluştu.' : 'An error occurred.'),
+          language === 'tr' ? 'Profil Güncellenemedi' : 'Profile Update Failed'
+        );
         return;
       }
-      showSuccess('Profil bilgileriniz başarıyla güncellendi.', 'Başarılı');
+      showSuccess(
+        language === 'tr' ? 'Profil bilgileriniz başarıyla güncellendi.' : 'Your profile information has been updated.',
+        language === 'tr' ? 'Başarılı' : 'Success'
+      );
       onClose();
     } catch {
-      showError('Profil güncellenirken beklenmedik bir hata oluştu.', 'Hata');
+      showError(
+        language === 'tr' ? 'Profil güncellenirken beklenmedik bir hata oluştu.' : 'An unexpected error occurred while updating profile.',
+        language === 'tr' ? 'Hata' : 'Error'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -129,7 +140,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           </View>
 
           <View style={styles.headerRow}>
-            <Text style={styles.title}>Profili Düzenle</Text>
+            <Text style={styles.title}>
+              {language === 'tr' ? 'Profili Düzenle' : 'Edit Profile'}
+            </Text>
             <TouchableOpacity
               style={styles.closeIconButton}
               onPress={handleClose}
@@ -140,7 +153,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.subtitle}>Hesap bilgilerinizi güncelleyin</Text>
+          <Text style={styles.subtitle}>
+            {language === 'tr' ? 'Hesap bilgilerinizi güncelleyin' : 'Update your account details'}
+          </Text>
 
           {/* Profil Fotoğrafı Seçici */}
           <View style={styles.avatarPickerContainer}>
@@ -162,14 +177,18 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               </View>
             </TouchableOpacity>
             <TouchableOpacity onPress={handlePickAvatar} disabled={submitting}>
-              <Text style={styles.avatarHintText}>Fotoğrafı Değiştir</Text>
+              <Text style={styles.avatarHintText}>
+                {language === 'tr' ? 'Fotoğrafı Değiştir' : 'Change Photo'}
+              </Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.form}>
             {/* Ad Soyad Alanı */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Ad Soyad</Text>
+              <Text style={styles.label}>
+                {language === 'tr' ? 'Ad Soyad' : 'Full Name'}
+              </Text>
               <Controller
                 control={control}
                 name="fullName"
@@ -183,7 +202,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                     <User size={18} color={COLORS.outline} />
                     <TextInput
                       style={styles.input}
-                      placeholder="Örn: Ahmet Yılmaz"
+                      placeholder={language === 'tr' ? 'Örn: Ahmet Yılmaz' : 'e.g. John Doe'}
                       placeholderTextColor={COLORS.outline}
                       value={value}
                       onChangeText={onChange}
@@ -201,7 +220,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
             {/* E-posta Alanı (Sabit / Bilgilendirme) */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>E-posta Adresi</Text>
+              <Text style={styles.label}>
+                {language === 'tr' ? 'E-posta Adresi' : 'Email Address'}
+              </Text>
               <View style={[styles.inputWrapper, styles.inputWrapperDisabled]}>
                 <Mail size={18} color={COLORS.outline} />
                 <TextInput
@@ -212,7 +233,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 <Lock size={16} color={COLORS.outline} />
               </View>
               <Text style={styles.helperText}>
-                E-posta adresi güvenlik sebebiyle değiştirilemez.
+                {language === 'tr'
+                  ? 'E-posta adresi güvenlik sebebiyle değiştirilemez.'
+                  : 'Email address cannot be changed for security reasons.'}
               </Text>
             </View>
           </View>
@@ -225,9 +248,10 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               disabled={submitting}
               activeOpacity={0.7}
             >
-              <Text style={styles.cancelButtonText}>Vazgeç</Text>
+              <Text style={styles.cancelButtonText}>
+                {language === 'tr' ? 'Vazgeç' : 'Cancel'}
+              </Text>
             </TouchableOpacity>
-
 
             <TouchableOpacity
               style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
@@ -238,7 +262,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               {submitting ? (
                 <ActivityIndicator size="small" color={COLORS.onPrimary} />
               ) : (
-                <Text style={styles.saveButtonText}>Kaydet</Text>
+                <Text style={styles.saveButtonText}>
+                  {language === 'tr' ? 'Kaydet' : 'Save'}
+                </Text>
               )}
             </TouchableOpacity>
           </View>
@@ -249,8 +275,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       <MediaPickerModal
         visible={mediaPickerOpen}
         onClose={() => setMediaPickerOpen(false)}
-        title="Profil Fotoğrafı Seç"
-        subtitle="Fotoğraf çekin veya galerinizden seçin"
+        title={language === 'tr' ? 'Profil Fotoğrafı Seç' : 'Choose Profile Photo'}
+        subtitle={language === 'tr' ? 'Fotoğraf çekin veya galerinizden seçin' : 'Take a photo or choose from gallery'}
         onSelectCamera={handleSelectCamera}
         onSelectGallery={handleSelectGallery}
       />

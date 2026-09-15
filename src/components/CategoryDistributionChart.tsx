@@ -5,6 +5,8 @@ import { PieChart as PieChartIcon, ChevronRight, Package, Layers } from 'lucide-
 
 import { Product } from '../types';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from '../i18n';
+import { getCategoryDisplayName } from '../constants/categories';
 import { formatCurrency } from '../utils/warrantyCalculator';
 import {
   getCategoryChartData,
@@ -24,6 +26,7 @@ export const CategoryDistributionChart: React.FC<CategoryDistributionChartProps>
   initialMode = 'value',
 }) => {
   const { colors } = useTheme();
+  const { language } = useTranslation();
   const styles = useMemo(() => getStyles(colors), [colors]);
 
   const [mode, setMode] = useState<'count' | 'value'>(initialMode);
@@ -68,7 +71,9 @@ export const CategoryDistributionChart: React.FC<CategoryDistributionChartProps>
       <View style={styles.container}>
         <View style={styles.emptyContainer}>
           <Package size={28} color={colors.onSurfaceVariant} />
-          <Text style={styles.emptyText}>Grafik için henüz kayıtlı ürün bulunmuyor.</Text>
+          <Text style={styles.emptyText}>
+            {language === 'tr' ? 'Grafik için henüz kayıtlı ürün bulunmuyor.' : 'No products available for chart.'}
+          </Text>
         </View>
       </View>
     );
@@ -80,7 +85,9 @@ export const CategoryDistributionChart: React.FC<CategoryDistributionChartProps>
       <View style={styles.headerRow}>
         <View style={styles.headerLeft}>
           <PieChartIcon size={18} color={colors.primary} />
-          <Text style={styles.title}>Kategori Dağılımı</Text>
+          <Text style={styles.title}>
+            {language === 'tr' ? 'Kategori Dağılımı' : 'Category Breakdown'}
+          </Text>
         </View>
 
         <View style={styles.toggleGroup}>
@@ -90,7 +97,7 @@ export const CategoryDistributionChart: React.FC<CategoryDistributionChartProps>
             activeOpacity={0.7}
           >
             <Text style={[styles.toggleText, mode === 'count' && styles.toggleTextActive]}>
-              Adet
+              {language === 'tr' ? 'Adet' : 'Count'}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -99,7 +106,7 @@ export const CategoryDistributionChart: React.FC<CategoryDistributionChartProps>
             activeOpacity={0.7}
           >
             <Text style={[styles.toggleText, mode === 'value' && styles.toggleTextActive]}>
-              Tutar (₺)
+              {language === 'tr' ? 'Tutar (₺)' : 'Value (₺)'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -121,26 +128,34 @@ export const CategoryDistributionChart: React.FC<CategoryDistributionChartProps>
               {selectedItem ? (
                 <>
                   <Text style={styles.centerLabelSub} numberOfLines={1}>
-                    {selectedItem.categoryName}
+                    {getCategoryDisplayName(selectedItem.categoryName, language)}
                   </Text>
                   <Text style={styles.centerLabelMain} numberOfLines={1}>
                     {mode === 'count'
-                      ? `${selectedItem.productCount} Eşya`
+                      ? `${selectedItem.productCount} ${language === 'tr' ? 'Eşya' : 'Items'}`
                       : formatCurrency(selectedItem.totalCost)}
                   </Text>
                   <Text style={styles.centerLabelHint}>
-                    Portföyün %{selectedItem.percentage}'i
+                    {language === 'tr'
+                      ? `Portföyün %${selectedItem.percentage}'i`
+                      : `${selectedItem.percentage}% of portfolio`}
                   </Text>
                 </>
               ) : (
                 <>
                   <Text style={styles.centerLabelSub}>
-                    {mode === 'count' ? 'Toplam Eşya' : 'Toplam Değer'}
+                    {mode === 'count'
+                      ? (language === 'tr' ? 'Toplam Eşya' : 'Total Items')
+                      : (language === 'tr' ? 'Toplam Değer' : 'Total Value')}
                   </Text>
                   <Text style={styles.centerLabelMain} numberOfLines={1}>
-                    {mode === 'count' ? `${totalCount} Adet` : formatCurrency(totalValue)}
+                    {mode === 'count'
+                      ? `${totalCount} ${language === 'tr' ? 'Adet' : 'Items'}`
+                      : formatCurrency(totalValue)}
                   </Text>
-                  <Text style={styles.centerLabelHint}>Dilime Dokun</Text>
+                  <Text style={styles.centerLabelHint}>
+                    {language === 'tr' ? 'Dilime Dokun' : 'Tap Slice'}
+                  </Text>
                 </>
               )}
             </View>
@@ -157,7 +172,9 @@ export const CategoryDistributionChart: React.FC<CategoryDistributionChartProps>
         >
           <Layers size={14} color={colors.primary} />
           <Text style={styles.filterActionText}>
-            "{selectedItem.categoryName}" Ürünlerini Filtrele ({selectedItem.productCount})
+            {language === 'tr'
+              ? `"${getCategoryDisplayName(selectedItem.categoryName, language)}" Ürünlerini Filtrele (${selectedItem.productCount})`
+              : `Filter "${getCategoryDisplayName(selectedItem.categoryName, language)}" (${selectedItem.productCount})`}
           </Text>
           <ChevronRight size={14} color={colors.primary} />
         </TouchableOpacity>
@@ -167,6 +184,7 @@ export const CategoryDistributionChart: React.FC<CategoryDistributionChartProps>
       <View style={styles.legendContainer}>
         {chartData.map((item) => {
           const isSelected = selectedCategoryId === item.categoryId;
+          const displayName = getCategoryDisplayName(item.categoryName, language);
           return (
             <TouchableOpacity
               key={item.categoryId}
@@ -177,10 +195,10 @@ export const CategoryDistributionChart: React.FC<CategoryDistributionChartProps>
               <View style={styles.legendLeft}>
                 <View style={[styles.colorDot, { backgroundColor: item.color }]} />
                 <Text style={styles.categoryName} numberOfLines={1}>
-                  {item.categoryName}
+                  {displayName}
                 </Text>
                 <Text style={styles.categoryCountText}>
-                  ({item.productCount} adet)
+                  ({item.productCount} {language === 'tr' ? 'adet' : 'items'})
                 </Text>
               </View>
 

@@ -19,6 +19,7 @@ import Svg, { Path } from 'react-native-svg';
 
 import { useTheme } from '../context/ThemeContext';
 import { ThemeColors } from '../constants/colors';
+import { useTranslation } from '../i18n';
 import { MainTabParamList } from '../types';
 import { HomeScreen } from '../screens/main/HomeScreen';
 import { ProductsScreen } from '../screens/main/ProductsScreen';
@@ -32,12 +33,12 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const TAB_BAR_WIDTH = Math.min(380, SCREEN_WIDTH - 32);
 const TAB_WIDTH = TAB_BAR_WIDTH / 5;
 
-const getTabsConfig = (colors: ThemeColors) => [
-  { id: 'home', name: 'HomeTab', title: 'Ana Sayfa', icon: Home, color: colors.primary }, // #4648d4 (Ana marka moru)
-  { id: 'products', name: 'ProductsTab', title: 'Ürünler', icon: Package, color: colors.tertiary }, // #006c49 (Başarı & garanti yeşili)
-  { id: 'add', name: 'AddTab', title: 'Ekle', icon: Plus, color: colors.primaryContainer }, // #6063ee (Açık / vurgulu mor)
-  { id: 'notifications', name: 'NotificationsTab', title: 'Bildirimler', icon: Bell, color: colors.error }, // #ba1a1a (Hata ve dikkat kırmızısı)
-  { id: 'profile', name: 'ProfileTab', title: 'Profil', icon: User, color: colors.warning }, // #d97706 (Uyarı turuncusu)
+const getTabsConfig = (colors: ThemeColors, t: (k: string) => string) => [
+  { id: 'home', name: 'HomeTab', title: t('nav.home'), icon: Home, color: colors.primary },
+  { id: 'products', name: 'ProductsTab', title: t('nav.products'), icon: Package, color: colors.tertiary },
+  { id: 'add', name: 'AddTab', title: t('nav.add'), icon: Plus, color: colors.primaryContainer },
+  { id: 'notifications', name: 'NotificationsTab', title: t('nav.notifications'), icon: Bell, color: colors.error },
+  { id: 'profile', name: 'ProfileTab', title: t('nav.profile'), icon: User, color: colors.warning },
 ];
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -292,8 +293,9 @@ const FloatingBeadTabBar: React.FC<BottomTabBarProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const styles = useMemo(() => getStyles(colors), [colors]);
-  const tabsConfig = useMemo(() => getTabsConfig(colors), [colors]);
+  const tabsConfig = useMemo(() => getTabsConfig(colors, t), [colors, t]);
   const activeIndex = state.index;
 
   // Çizgi kuyruğu (birden fazla hızlı tıklamayı destekleyen dizi)

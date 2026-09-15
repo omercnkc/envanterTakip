@@ -22,17 +22,19 @@ import { Mail, Lock, Eye, EyeOff, Sparkles, Fingerprint } from 'lucide-react-nat
 import { AuthStackParamList, LoginFormData, loginSchema } from '../../types';
 import { COLORS } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from '../../i18n';
 import { GoogleIcon } from '../../components/GoogleIcon';
 import { AnimatedLock, LockAnimState, LockStatusType } from '../../components/AnimatedLock';
 import { AppCallout } from '../../components/AppCallout';
 import { getSavedCredentials, clearSavedCredentials, saveCredentials } from '../../utils/credentialHelper';
-import { biometricHelper, BiometricCheckResult } from '../../utils/biometricHelper';
+import { biometricHelper, BiometricCheckResult, getBiometricTypeName } from '../../utils/biometricHelper';
 import { styles } from './LoginScreen.styles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const { signIn, signInWithGoogle } = useAuth();
+  const { t, language } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -123,7 +125,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
         const [saved, bioEnabled, bioInfo] = await Promise.all([
           getSavedCredentials(),
           biometricHelper.isEnabled(),
-          biometricHelper.checkBiometrics(),
+          biometricHelper.checkBiometrics(language),
         ]);
         if (isMounted) {
           setBiometricEnabled(bioEnabled);
@@ -212,7 +214,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
         setAnimState('unlock');
       }
     } catch {
-      setServerError('Google ile giriş yapılırken bir hata oluştu.');
+      setServerError(language === 'tr' ? 'Google ile giriş yapılırken bir hata oluştu.' : 'An error occurred during Google sign in.');
       setStatusType('error');
       setAnimState('shake');
       setTimeout(() => setAnimState('idle'), 600);
@@ -244,8 +246,8 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 resizeMode="cover"
               />
             </View>
-            <Text style={styles.title}>Hoş Geldiniz</Text>
-            <Text style={styles.subtitle}>Lütfen hesabınıza giriş yapın.</Text>
+            <Text style={styles.title}>{t('auth.welcomeTitle')}</Text>
+            <Text style={styles.subtitle}>{t('auth.welcomeSubtitle')}</Text>
           </View>
 
           {/* Form Kartı */}
@@ -279,7 +281,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 <View style={styles.autoFillInfo}>
                   <Sparkles size={14} color={COLORS.primary} />
                   <Text style={styles.autoFillText}>
-                    Kayıtlı hesap bilgileri otomatik dolduruldu
+                    {language === 'tr' ? 'Kayıtlı hesap bilgileri otomatik dolduruldu' : 'Saved credentials auto-filled'}
                   </Text>
                 </View>
                 <TouchableOpacity
@@ -287,7 +289,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.autoFillClearText}>Temizle</Text>
+                  <Text style={styles.autoFillClearText}>{language === 'tr' ? 'Temizle' : 'Clear'}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -295,7 +297,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
             {/* E-posta Alanı */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                E-posta <Text style={styles.requiredStar}>*</Text>
+                {t('auth.emailLabel')} <Text style={styles.requiredStar}>*</Text>
               </Text>
               <Controller
                 control={control}
@@ -314,7 +316,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                     />
                     <TextInput
                       style={styles.textInput}
-                      placeholder="ornek@sirket.com"
+                      placeholder={t('auth.emailPlaceholder')}
                       placeholderTextColor={COLORS.outline}
                       keyboardType="email-address"
                       autoCapitalize="none"
@@ -343,13 +345,13 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
             <View style={styles.inputGroup}>
               <View style={styles.labelRow}>
                 <Text style={styles.label}>
-                  Şifre <Text style={styles.requiredStar}>*</Text>
+                  {t('auth.passwordLabel')} <Text style={styles.requiredStar}>*</Text>
                 </Text>
                 <TouchableOpacity
                   onPress={() => navigation.navigate('ForgotPassword')}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.forgotText}>Şifremi Unuttum</Text>
+                  <Text style={styles.forgotText}>{t('auth.forgotPasswordLink')}</Text>
                 </TouchableOpacity>
               </View>
               <Controller
@@ -418,7 +420,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 <ActivityIndicator color={COLORS.onPrimary} />
               ) : (
                 <Text style={styles.submitButtonText}>
-                  {statusType === 'success' ? 'Sisteme Giriliyor...' : 'Giriş Yap'}
+                  {statusType === 'success' ? (language === 'tr' ? 'Sisteme Giriliyor...' : 'Logging in...') : t('auth.loginButton')}
                 </Text>
               )}
             </TouchableOpacity>
@@ -433,9 +435,9 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               >
                 <Fingerprint size={20} color={COLORS.primary} />
                 <Text style={styles.biometricButtonText}>
-                  {biometricInfo?.biometricTypeName
-                    ? `${biometricInfo.biometricTypeName} ile Hızlı Giriş`
-                    : 'Biyometrik Giriş Yap'}
+                  {biometricInfo?.isEnrolled
+                    ? `${getBiometricTypeName(biometricInfo.biometricType, language)} ${language === 'tr' ? 'ile Hızlı Giriş' : 'Quick Login'}`
+                    : (language === 'tr' ? 'Biyometrik Giriş Yap' : 'Biometric Login')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -443,7 +445,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
             {/* Ayırıcı */}
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>veya</Text>
+              <Text style={styles.dividerText}>{t('auth.orDivider')}</Text>
               <View style={styles.dividerLine} />
             </View>
 
@@ -459,7 +461,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               ) : (
                 <>
                   <GoogleIcon size={20} />
-                  <Text style={styles.googleButtonText}>Google ile Giriş Yap</Text>
+                  <Text style={styles.googleButtonText}>{t('auth.googleSignIn')}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -467,12 +469,12 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Alt Kayıt Ol Linki */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Hesabınız yok mu?</Text>
+            <Text style={styles.footerText}>{t('auth.noAccountPrompt')}</Text>
             <TouchableOpacity
               onPress={() => navigation.navigate('Register')}
               activeOpacity={0.7}
             >
-              <Text style={styles.footerLink}>Kayıt Ol</Text>
+              <Text style={styles.footerLink}>{t('auth.signUpAction')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

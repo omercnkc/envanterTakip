@@ -5,6 +5,7 @@
 
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { LoginFormData, RegisterFormData, ForgotPasswordFormData, Profile } from '../types';
@@ -120,9 +121,12 @@ export const authService = {
     }
 
     try {
-      const redirectUrl = Linking.createURL('auth/callback', {
-        scheme: 'envantertakip',
-      });
+      const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+      const redirectUrl = isExpoGo
+        ? Linking.createURL('auth/callback')
+        : Linking.createURL('auth/callback', {
+            scheme: 'envantertakip',
+          });
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -144,6 +148,14 @@ export const authService = {
 
       if (result.type === 'success' && result.url) {
         const url = result.url;
+
+        // Olası OAuth hata parametresi
+        if (url.includes('error=')) {
+          const errMatch = url.match(/error_description=([^&]+)/) || url.match(/error=([^&]+)/);
+          if (errMatch && errMatch[1]) {
+            return { data: null, error: decodeURIComponent(errMatch[1].replace(/\+/g, ' ')) };
+          }
+        }
 
         // 1. PKCE Authorization Code akışı
         if (url.includes('code=')) {
@@ -185,6 +197,12 @@ export const authService = {
         if (currentSession?.session) {
           return { data: currentSession, error: null };
         }
+      }
+
+      // Tarayıcı kapandıysa da oturumun oluşup oluşmadığını tekrar doğrula
+      const { data: fallbackSession } = await supabase.auth.getSession();
+      if (fallbackSession?.session) {
+        return { data: fallbackSession, error: null };
       }
 
       if (result.type === 'cancel' || result.type === 'dismiss') {

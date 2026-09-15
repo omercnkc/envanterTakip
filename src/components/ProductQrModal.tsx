@@ -17,6 +17,7 @@ import { QrCode, Printer, Share2, X, Info } from 'lucide-react-native';
 import { Product } from '../types';
 import { useTheme } from '../context/ThemeContext';
 import { useAlert } from '../context/AlertContext';
+import { useTranslation } from '../i18n';
 import { formatDateTurkish } from '../utils/warrantyCalculator';
 import { getStyles } from './ProductQrModal.styles';
 
@@ -33,6 +34,7 @@ export const ProductQrModal: React.FC<ProductQrModalProps> = ({
 }) => {
   const { colors } = useTheme();
   const { showSuccess, showError } = useAlert();
+  const { language } = useTranslation();
   const styles = useMemo(() => getStyles(colors), [colors]);
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -141,12 +143,12 @@ export const ProductQrModal: React.FC<ProductQrModalProps> = ({
       </head>
       <body>
         <div class="info">
-          <div class="badge">🛡️ DİJİTAL ENVANTER ETİKETİ</div>
+          <div class="badge">🛡️ ${language === 'tr' ? 'DİJİTAL ENVANTER ETİKETİ' : 'DIGITAL ASSET TAG'}</div>
           <div class="title">${product.name}</div>
-          <div class="subtitle">${brandModelText || 'Genel Cihaz'}</div>
-          <div class="detail"><strong>Seri No:</strong> ${product.serial_number || 'Kayıtsız'}</div>
-          <div class="detail"><strong>Garanti Bitiş:</strong> ${formatDateTurkish(product.warranty_end_date)}</div>
-          <div class="footer">Kamerayla okutarak fatura ve garanti detaylarına anında ulaşın.</div>
+          <div class="subtitle">${brandModelText || (language === 'tr' ? 'Genel Cihaz' : 'Home Device')}</div>
+          <div class="detail"><strong>${language === 'tr' ? 'Seri No:' : 'Serial No:'}</strong> ${product.serial_number || (language === 'tr' ? 'Kayıtsız' : 'N/A')}</div>
+          <div class="detail"><strong>${language === 'tr' ? 'Garanti Bitiş:' : 'Warranty Ends:'}</strong> ${formatDateTurkish(product.warranty_end_date)}</div>
+          <div class="footer">${language === 'tr' ? 'Kamerayla okutarak fatura ve garanti detaylarına anında ulaşın.' : 'Scan with your camera to instantly view invoice and warranty details.'}</div>
         </div>
         <div class="qr-box">
           <img class="qr-img" src="${qrUrl}" alt="QR Kod" />
@@ -162,10 +164,18 @@ export const ProductQrModal: React.FC<ProductQrModalProps> = ({
       setIsProcessing(true);
       const html = generateLabelHtml();
       await Print.printAsync({ html });
-      showSuccess('Yazdırma işlemi başarıyla başlatıldı.');
+      showSuccess(
+        language === 'tr'
+          ? 'Yazdırma işlemi başarıyla başlatıldı.'
+          : 'Print process started successfully.'
+      );
     } catch (err: any) {
       if (err?.message?.includes('cancelled')) return;
-      showError('Etiket yazdırılırken bir sorun oluştu.');
+      showError(
+        language === 'tr'
+          ? 'Etiket yazdırılırken bir sorun oluştu.'
+          : 'A problem occurred while printing the label.'
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -193,11 +203,15 @@ export const ProductQrModal: React.FC<ProductQrModalProps> = ({
       await Sharing.shareAsync(targetUri, {
         UTI: '.pdf',
         mimeType: 'application/pdf',
-        dialogTitle: `${product.name} - Dijital Garanti Etiketi`,
+        dialogTitle: `${product.name} - ${language === 'tr' ? 'Dijital Garanti Etiketi' : 'Digital Warranty Tag'}`,
       });
     } catch (err: any) {
       if (err?.message?.includes('cancelled') || err?.message?.includes('dismissed')) return;
-      showError('Etiket paylaşılırken bir sorun oluştu.');
+      showError(
+        language === 'tr'
+          ? 'Etiket paylaşılırken bir sorun oluştu.'
+          : 'A problem occurred while sharing the tag.'
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -221,8 +235,12 @@ export const ProductQrModal: React.FC<ProductQrModalProps> = ({
                     <QrCode size={20} color={colors.primary} />
                   </View>
                   <View>
-                    <Text style={styles.headerTitle}>Dijital Ürün Etiketi</Text>
-                    <Text style={styles.headerSubtitle}>Cihaza yapıştırmak için QR kod</Text>
+                    <Text style={styles.headerTitle}>
+                      {language === 'tr' ? 'Dijital Ürün Etiketi' : 'Digital Product Tag'}
+                    </Text>
+                    <Text style={styles.headerSubtitle}>
+                      {language === 'tr' ? 'Cihaza yapıştırmak için QR kod' : 'QR code to attach to your device'}
+                    </Text>
                   </View>
                 </View>
                 <TouchableOpacity
@@ -237,7 +255,9 @@ export const ProductQrModal: React.FC<ProductQrModalProps> = ({
               {/* Fiziksel Etiket Kartı Önizlemesi */}
               <View style={styles.labelCard}>
                 <View style={styles.labelBadge}>
-                  <Text style={styles.labelBadgeText}>🛡️ DİJİTAL ENVANTER ETİKETİ</Text>
+                  <Text style={styles.labelBadgeText}>
+                    {language === 'tr' ? '🛡️ DİJİTAL ENVANTER ETİKETİ' : '🛡️ DIGITAL ASSET TAG'}
+                  </Text>
                 </View>
 
                 {/* Yüksek Çözünürlüklü SVG QR Kod */}
@@ -261,13 +281,17 @@ export const ProductQrModal: React.FC<ProductQrModalProps> = ({
 
                 <View style={styles.labelMetaRow}>
                   <View style={styles.labelMetaItem}>
-                    <Text style={styles.labelMetaLabel}>Seri No</Text>
+                    <Text style={styles.labelMetaLabel}>
+                      {language === 'tr' ? 'Seri No' : 'Serial No'}
+                    </Text>
                     <Text style={styles.labelMetaValue} numberOfLines={1}>
                       {product.serial_number || '—'}
                     </Text>
                   </View>
                   <View style={styles.labelMetaItem}>
-                    <Text style={styles.labelMetaLabel}>Garanti Bitişi</Text>
+                    <Text style={styles.labelMetaLabel}>
+                      {language === 'tr' ? 'Garanti Bitişi' : 'Warranty End'}
+                    </Text>
                     <Text style={styles.labelMetaValue}>
                       {formatDateTurkish(product.warranty_end_date)}
                     </Text>
@@ -279,7 +303,9 @@ export const ProductQrModal: React.FC<ProductQrModalProps> = ({
               <View style={styles.tipContainer}>
                 <Info size={16} color={colors.primary} />
                 <Text style={styles.tipText}>
-                  Bu etiketin çıktısını alıp cihazın altına veya arkasına yapıştırın. Arıza anında kamerayla okutarak anında faturaya ve garanti detaylarına ulaşabilirsiniz.
+                  {language === 'tr'
+                    ? 'Bu etiketin çıktısını alıp cihazın altına veya arkasına yapıştırın. Arıza anında kamerayla okutarak anında faturaya ve garanti detaylarına ulaşabilirsiniz.'
+                    : 'Print this tag and attach it to your device. Scan anytime with your camera to immediately access invoices and warranty info.'}
                 </Text>
               </View>
 
@@ -296,7 +322,9 @@ export const ProductQrModal: React.FC<ProductQrModalProps> = ({
                   ) : (
                     <>
                       <Printer size={18} color={colors.onPrimary} />
-                      <Text style={styles.printButtonText}>Yazdır / Çıktı Al</Text>
+                      <Text style={styles.printButtonText}>
+                        {language === 'tr' ? 'Yazdır / Çıktı Al' : 'Print / Export Tag'}
+                      </Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -308,7 +336,9 @@ export const ProductQrModal: React.FC<ProductQrModalProps> = ({
                   activeOpacity={0.7}
                 >
                   <Share2 size={18} color={colors.onBackground} />
-                  <Text style={styles.shareButtonText}>Paylaş</Text>
+                  <Text style={styles.shareButtonText}>
+                    {language === 'tr' ? 'Paylaş' : 'Share'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>

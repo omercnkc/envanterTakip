@@ -45,15 +45,19 @@ import {
   BiometricCheckResult,
   BiometricTimeout,
   BIOMETRIC_TIMEOUT_OPTIONS,
+  getBiometricTimeoutOptions,
+  getBiometricTypeName,
 } from '../../utils/biometricHelper';
 import {
   cancelAllWarrantyNotifications,
   syncAllWarrantyNotifications,
 } from '../../utils/notificationHelper';
+import { syncWidgetData } from '../../services/widgetSyncService';
 import { permissionHelper } from '../../utils/permissionHelper';
 import {
   appPreferencesHelper,
   CURRENCY_OPTIONS,
+  getCurrencyOptions,
   CurrencyCode,
   WARRANTY_MILESTONE_OPTIONS,
   DEFAULT_WARRANTY_DURATION_OPTIONS,
@@ -67,6 +71,7 @@ import {
   ThemeSegmentedControl,
   WidgetPreviewModal,
 } from '../../components';
+import { useTranslation, LANGUAGE_OPTIONS, Language } from '../../i18n';
 import { getStyles } from './SettingsScreen.styles';
 
 const STORAGE_KEYS = {
@@ -78,8 +83,9 @@ export const SettingsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { user, profile, signOut } = useAuth();
   const { theme, colors, systemColorScheme } = useTheme();
-  const { products } = useInventory();
+  const { products, allProducts } = useInventory();
   const { showAlert, showSuccess, showError, showWarning, showInfo } = useAlert();
+  const { t, language, setLanguage } = useTranslation();
 
   const styles = useMemo(() => getStyles(colors), [colors]);
   const isDark = theme === 'dark' || (theme === 'system' && systemColorScheme === 'dark');
@@ -102,6 +108,9 @@ export const SettingsScreen: React.FC = () => {
   const [selectedWarrantyDays, setSelectedWarrantyDays] = useState<number[]>([30, 14, 7, 1]);
   const [maintenanceReminders, setMaintenanceReminders] = useState(true);
   const [defaultWarrantyMonths, setDefaultWarrantyMonths] = useState(24);
+
+  const currencyOptions = useMemo(() => getCurrencyOptions(language), [language]);
+  const timeoutOptions = useMemo(() => getBiometricTimeoutOptions(language), [language]);
 
   // Kullanıcı bilgileri
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Kullanıcı';
@@ -195,7 +204,7 @@ export const SettingsScreen: React.FC = () => {
           AsyncStorage.getItem(STORAGE_KEYS.WARRANTY_REMINDERS),
           AsyncStorage.getItem(STORAGE_KEYS.EMAIL_NOTIFICATIONS),
           biometricHelper.isEnabled(),
-          biometricHelper.checkBiometrics(),
+          biometricHelper.checkBiometrics(language),
           biometricHelper.getTimeout(),
           appPreferencesHelper.getPreferences(),
         ]);
@@ -221,7 +230,7 @@ export const SettingsScreen: React.FC = () => {
     };
 
     loadSettings();
-  }, []);
+  }, [language]);
 
   const handleSelectTimeout = async (timeout: BiometricTimeout) => {
     setBiometricTimeout(timeout);
@@ -242,12 +251,12 @@ export const SettingsScreen: React.FC = () => {
       await AsyncStorage.setItem(STORAGE_KEYS.WARRANTY_REMINDERS, String(value));
       if (!value) {
         await cancelAllWarrantyNotifications();
-        showInfo('Garanti hatırlatıcı yerel bildirimleri iptal edildi.', 'Bildirimler Kapatıldı');
+        showInfo(t('settings.warrantyRemindersDisabled'), t('common.info'));
       } else {
         await syncAllWarrantyNotifications(products);
         showSuccess(
-          'Garanti süreleri yaklaşan ürünleriniz için hatırlatıcılar başarıyla planlandı.',
-          'Bildirimler Açıldı'
+          t('settings.warrantyRemindersEnabled'),
+          t('common.success')
         );
       }
     } catch (err) {
@@ -260,7 +269,7 @@ export const SettingsScreen: React.FC = () => {
     if (selectedWarrantyDays.includes(day)) {
       // En az 1 gün seçili kalmalı
       if (selectedWarrantyDays.length === 1) {
-        showWarning('En az bir bildirim günü seçili olmalıdır.', 'Uyarı');
+        showWarning(t('settings.minMilestoneDayWarning'), t('common.warning'));
         return;
       }
       updated = selectedWarrantyDays.filter((d) => d !== day);
@@ -281,9 +290,9 @@ export const SettingsScreen: React.FC = () => {
     setMaintenanceReminders(value);
     await appPreferencesHelper.setMaintenanceReminders(value);
     if (value) {
-      showSuccess('Periyodik bakım ve servis hatırlatıcıları aktifleştirildi.', 'Bakım Bildirimleri');
+      showSuccess(t('settings.maintenanceRemindersEnabled'), t('common.success'));
     } else {
-      showInfo('Periyodik bakım bildirimleri kapatıldı.', 'Bilgi');
+      showInfo(t('settings.maintenanceRemindersDisabled'), t('common.info'));
     }
   };
 
@@ -300,8 +309,8 @@ export const SettingsScreen: React.FC = () => {
     setSelectedCurrency(code);
     await appPreferencesHelper.setCurrency(code);
     showSuccess(
-      `Varsayılan para birimi ${code} olarak güncellendi.`,
-      'Para Birimi Güncellendi'
+      t('settings.currencyUpdatedSuccess', { code }),
+      t('common.success')
     );
   };
 
@@ -309,48 +318,59 @@ export const SettingsScreen: React.FC = () => {
     setDefaultWarrantyMonths(months);
     await appPreferencesHelper.setDefaultWarrantyMonths(months);
     showSuccess(
-      `Yeni ürünler için varsayılan garanti süresi ${months} ay yapıldı.`,
-      'Garanti Süresi Kaydedildi'
+      t('settings.warrantyDurationUpdatedSuccess', { months }),
+      t('common.success')
+    );
+  };
+
+  const handleSelectLanguage = async (newLang: Language) => {
+    await setLanguage(newLang);
+    await appPreferencesHelper.setLanguage(newLang);
+    syncWidgetData(allProducts || products, newLang);
+    showSuccess(
+      newLang === 'en' ? 'App language changed to English.' : 'Uygulama dili Türkçe olarak güncellendi.',
+      newLang === 'en' ? 'Language Updated' : 'Dil Güncellendi'
     );
   };
 
   const handleToggleBiometric = async (value: boolean) => {
     if (value) {
-      const check = await biometricHelper.checkBiometrics();
+      const check = await biometricHelper.checkBiometrics(language);
       if (!check.hasHardware) {
         showWarning(
-          'Cihazınızda biyometrik kimlik doğrulama (Face ID / Parmak İzi) donanımı bulunamadı.',
-          'Desteklenmiyor'
+          t('settings.noBiometricHardware'),
+          t('common.warning')
         );
         return;
       }
       if (!check.isEnrolled) {
         showWarning(
-          'Cihazınızda kayıtlı Face ID veya Parmak İzi bulunamadı. Lütfen cihaz ayarlarınızdan biyometri ekleyin.',
-          'Kayıt Bulunamadı'
+          t('settings.noBiometricEnrolled'),
+          t('common.warning')
         );
         return;
       }
 
+      const bioName = getBiometricTypeName(check.biometricType, language);
       const authRes = await biometricHelper.authenticate(
-        `${check.biometricTypeName} ile Kilidi Aktifleştir`
+        t('settings.biometricEnablePrompt', { type: bioName })
       );
       if (authRes.success) {
         await biometricHelper.setEnabled(true);
         setBiometricEnabled(true);
         showSuccess(
-          `Safe Envanter artık ${check.biometricTypeName} ile korunuyor.`,
-          'Biyometrik Kilit Aktif'
+          t('settings.biometricEnabledSuccess', { type: bioName }),
+          t('common.success')
         );
       }
     } else {
       const authRes = await biometricHelper.authenticate(
-        'Biyometrik Kilidi Kapatmak İçin Doğrulayın'
+        t('settings.biometricDisablePrompt')
       );
       if (authRes.success) {
         await biometricHelper.setEnabled(false);
         setBiometricEnabled(false);
-        showInfo('Uygulama açılış kilidi devre dışı bırakıldı.', 'Biyometrik Kilit Kapatıldı');
+        showInfo(t('settings.biometricDisabledSuccess'), t('common.info'));
       }
     }
   };
@@ -361,21 +381,22 @@ export const SettingsScreen: React.FC = () => {
 
     showAlert({
       type: 'warning',
-      title: 'Önbelleği Temizle',
-      message: `Geçici dosya önbelleği (${fileCount} dosya, ${formattedSize}) silinsin mi?`,
-      confirmText: 'Temizle',
-      cancelText: 'Vazgeç',
+      title: t('settings.clearCacheConfirmTitle'),
+      message: t('settings.clearCacheConfirmMessage', { count: fileCount, size: formattedSize }),
+      confirmText: t('settings.clearCacheButton'),
+      cancelText: t('common.cancel'),
       onConfirm: async () => {
         const result = await cacheHelper.clearCache();
         if (result.success) {
           showSuccess(
-            `${result.deletedCount} adet geçici dosya (${cacheHelper.formatBytes(
-              result.freedBytes
-            )}) silindi.`,
-            'Önbellek Temizlendi'
+            t('settings.clearCacheSuccess', {
+              count: result.deletedCount,
+              size: cacheHelper.formatBytes(result.freedBytes),
+            }),
+            t('common.success')
           );
         } else {
-          showError('Önbellek temizlenirken bir sorun oluştu.', 'Hata');
+          showError(t('settings.clearCacheError'), t('common.error'));
         }
       },
     });
@@ -384,10 +405,10 @@ export const SettingsScreen: React.FC = () => {
   const handleLogout = () => {
     showAlert({
       type: 'danger',
-      title: 'Oturumu Kapat',
-      message: 'Hesabınızdan çıkış yapmak istediğinize emin misiniz?',
-      confirmText: 'Çıkış Yap',
-      cancelText: 'Vazgeç',
+      title: t('settings.signOutConfirmTitle'),
+      message: t('settings.signOutConfirmMessage'),
+      confirmText: t('settings.signOutButton'),
+      cancelText: t('common.cancel'),
       destructive: true,
       onConfirm: async () => {
         await signOut();
@@ -398,14 +419,14 @@ export const SettingsScreen: React.FC = () => {
   const handleDeleteAccount = () => {
     showAlert({
       type: 'danger',
-      title: 'Hesabı Kalıcı Olarak Sil',
-      message: 'Hesabınızı ve kayıtlı tüm ürün, garanti ve fatura verilerinizi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
-      confirmText: 'Hesabımı Sil',
-      cancelText: 'Vazgeç',
+      title: t('settings.deleteAccountConfirmTitle'),
+      message: t('settings.deleteAccountConfirmMessage'),
+      confirmText: t('settings.deleteAccountButton'),
+      cancelText: t('common.cancel'),
       destructive: true,
       onConfirm: async () => {
         await signOut();
-        showSuccess('Hesabınız başarıyla kapatıldı.', 'Bilgi');
+        showSuccess(t('settings.accountDeletedSuccess'), t('common.info'));
       },
     });
   };
@@ -421,7 +442,7 @@ export const SettingsScreen: React.FC = () => {
         >
           <ArrowLeft size={22} color={colors.onBackground} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Ayarlar</Text>
+        <Text style={styles.headerTitle}>{t('settings.screenTitle')}</Text>
         <View style={styles.headerRightPlaceholder} />
       </View>
 
@@ -429,7 +450,7 @@ export const SettingsScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Üst Kompakt Hesap Kartı (Artık Profil ekranını taklit etmeyen sade ve modern satır) */}
+        {/* Üst Kompakt Hesap Kartı */}
         <TouchableOpacity
           style={styles.compactAccountCard}
           onPress={() => setEditProfileOpen(true)}
@@ -454,13 +475,13 @@ export const SettingsScreen: React.FC = () => {
           </View>
           <View style={styles.compactEditPill}>
             <Pencil size={11} color={colors.primary} />
-            <Text style={styles.compactEditText}>Düzenle</Text>
+            <Text style={styles.compactEditText}>{t('common.edit')}</Text>
           </View>
         </TouchableOpacity>
 
         {/* Bölüm 1: Hesap & Güvenlik */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeaderTitle}>Hesap & Güvenlik</Text>
+          <Text style={styles.sectionHeaderTitle}>{t('settings.sectionSecurity')}</Text>
           <View style={styles.card}>
             {/* Profil Bilgileri */}
             <TouchableOpacity
@@ -473,8 +494,8 @@ export const SettingsScreen: React.FC = () => {
                   <User size={18} color={tileColors.account.icon} />
                 </View>
                 <View style={styles.rowTexts}>
-                  <Text style={styles.rowLabel}>Hesap ve Profil Bilgileri</Text>
-                  <Text style={styles.rowSubtitle}>Ad soyad ve profil fotoğrafı</Text>
+                  <Text style={styles.rowLabel}>{t('profile.screenTitle')}</Text>
+                  <Text style={styles.rowSubtitle}>{t('modals.editProfileSubtitle')}</Text>
                 </View>
               </View>
               <ChevronRight size={18} color={colors.outline} />
@@ -491,8 +512,8 @@ export const SettingsScreen: React.FC = () => {
                   <Lock size={18} color={tileColors.password.icon} />
                 </View>
                 <View style={styles.rowTexts}>
-                  <Text style={styles.rowLabel}>Şifre ve Güvenlik</Text>
-                  <Text style={styles.rowSubtitle}>Giriş şifrenizi güncelleyin</Text>
+                  <Text style={styles.rowLabel}>{t('profile.changePassword')}</Text>
+                  <Text style={styles.rowSubtitle}>{t('modals.changePasswordTitle')}</Text>
                 </View>
               </View>
               <ChevronRight size={18} color={colors.outline} />
@@ -506,12 +527,12 @@ export const SettingsScreen: React.FC = () => {
                 </View>
                 <View style={styles.rowTexts}>
                   <Text style={styles.rowLabel}>
-                    {biometricInfo?.biometricTypeName
-                      ? `${biometricInfo.biometricTypeName} ile Kilit`
-                      : 'Biyometrik Kilit'}
+                    {biometricInfo?.isEnrolled
+                      ? `${getBiometricTypeName(biometricInfo.biometricType, language)} ${t('settings.biometricLock')}`
+                      : t('settings.biometricLock')}
                   </Text>
                   <Text style={styles.rowSubtitle}>
-                    Uygulama açılışlarında biyometrik doğrulama iste
+                    {t('settings.biometricLockDesc')}
                   </Text>
                 </View>
               </View>
@@ -527,10 +548,10 @@ export const SettingsScreen: React.FC = () => {
             {biometricEnabled && (
               <View style={styles.biometricTimeoutContainer}>
                 <View style={styles.biometricTimeoutHeader}>
-                  <Text style={styles.biometricTimeoutTitle}>Doğrulama İsteme Aralığı</Text>
+                  <Text style={styles.biometricTimeoutTitle}>{t('settings.biometricTimeoutTitle')}</Text>
                 </View>
                 <View style={styles.biometricTimeoutPillsRow}>
-                  {BIOMETRIC_TIMEOUT_OPTIONS.map((opt) => {
+                  {timeoutOptions.map((opt) => {
                     const isActive = biometricTimeout === opt.id;
                     return (
                       <TouchableOpacity
@@ -555,7 +576,7 @@ export const SettingsScreen: React.FC = () => {
                   })}
                 </View>
                 <Text style={styles.biometricTimeoutHint}>
-                  {BIOMETRIC_TIMEOUT_OPTIONS.find((o) => o.id === biometricTimeout)?.description}
+                  {timeoutOptions.find((o) => o.id === biometricTimeout)?.description}
                 </Text>
               </View>
             )}
@@ -564,7 +585,7 @@ export const SettingsScreen: React.FC = () => {
 
         {/* Bölüm 2: Bildirimler & Uyarılar */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeaderTitle}>Bildirimler & Uyarılar</Text>
+          <Text style={styles.sectionHeaderTitle}>{t('settings.sectionNotifications')}</Text>
           <View style={styles.card}>
             {/* Garanti Hatırlatıcıları Switch */}
             <View style={styles.cardRow}>
@@ -573,8 +594,8 @@ export const SettingsScreen: React.FC = () => {
                   <Bell size={18} color={tileColors.notifications.icon} />
                 </View>
                 <View style={styles.rowTexts}>
-                  <Text style={styles.rowLabel}>Garanti Hatırlatıcıları</Text>
-                  <Text style={styles.rowSubtitle}>Bitiş öncesi yerel anlık uyarılar</Text>
+                  <Text style={styles.rowLabel}>{t('settings.warrantyReminders')}</Text>
+                  <Text style={styles.rowSubtitle}>{t('settings.warrantyRemindersDesc')}</Text>
                 </View>
               </View>
               <Switch
@@ -589,8 +610,8 @@ export const SettingsScreen: React.FC = () => {
             {warrantyReminders && (
               <View style={styles.preferenceBlock}>
                 <View style={styles.preferenceHeader}>
-                  <Text style={styles.preferenceTitle}>Garanti Bildirim Günleri</Text>
-                  <Text style={styles.preferenceSubtitle}>Kaç gün önce uyarılsın?</Text>
+                  <Text style={styles.preferenceTitle}>{t('settings.notificationDaysTitle')}</Text>
+                  <Text style={styles.preferenceSubtitle}>{t('settings.notificationDaysSubtitle')}</Text>
                 </View>
                 <View style={styles.pillsRow}>
                   {WARRANTY_MILESTONE_OPTIONS.map((opt) => {
@@ -603,7 +624,7 @@ export const SettingsScreen: React.FC = () => {
                         activeOpacity={0.7}
                       >
                         <Text style={[styles.pillText, isSelected && styles.pillTextActive]}>
-                          {opt.label}
+                          {opt.days} {t('common.day')}
                         </Text>
                       </TouchableOpacity>
                     );
@@ -619,8 +640,8 @@ export const SettingsScreen: React.FC = () => {
                   <Wrench size={18} color={tileColors.maintenance.icon} />
                 </View>
                 <View style={styles.rowTexts}>
-                  <Text style={styles.rowLabel}>Bakım & Servis Uyarıları</Text>
-                  <Text style={styles.rowSubtitle}>Kombi, filtre ve araç bakım tarihleri</Text>
+                  <Text style={styles.rowLabel}>{t('settings.maintenanceReminders')}</Text>
+                  <Text style={styles.rowSubtitle}>{t('settings.maintenanceRemindersDesc')}</Text>
                 </View>
               </View>
               <Switch
@@ -638,8 +659,8 @@ export const SettingsScreen: React.FC = () => {
                   <Mail size={18} color={tileColors.email.icon} />
                 </View>
                 <View style={styles.rowTexts}>
-                  <Text style={styles.rowLabel}>E-posta Bildirimleri</Text>
-                  <Text style={styles.rowSubtitle}>Aylık özet ve kritik durum raporları</Text>
+                  <Text style={styles.rowLabel}>{t('settings.emailNotifications')}</Text>
+                  <Text style={styles.rowSubtitle}>{t('settings.emailNotificationsDesc')}</Text>
                 </View>
               </View>
               <Switch
@@ -654,7 +675,7 @@ export const SettingsScreen: React.FC = () => {
 
         {/* Bölüm 3: Görünüm & Tercihler */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeaderTitle}>Görünüm & Tercihler</Text>
+          <Text style={styles.sectionHeaderTitle}>{t('settings.sectionAppearance')}</Text>
           <View style={styles.card}>
             {/* Tema Seçici Kartı */}
             <View style={styles.themeSelectorContainer}>
@@ -664,16 +685,16 @@ export const SettingsScreen: React.FC = () => {
                     <Palette size={18} color={tileColors.appearance.icon} />
                   </View>
                   <View style={styles.rowTexts}>
-                    <Text style={styles.rowLabel}>Uygulama Teması</Text>
-                    <Text style={styles.rowSubtitle}>Açık, koyu veya sistem teması</Text>
+                    <Text style={styles.rowLabel}>{t('settings.themeTitle')}</Text>
+                    <Text style={styles.rowSubtitle}>{t('settings.themeDesc')}</Text>
                   </View>
                 </View>
                 <Text style={styles.themeCurrentLabel}>
                   {theme === 'system'
-                    ? `Sistem (${systemColorScheme === 'dark' ? 'Koyu' : 'Açık'})`
+                    ? `${t('settings.themeSystem')} (${systemColorScheme === 'dark' ? t('settings.themeDark') : t('settings.themeLight')})`
                     : theme === 'dark'
-                    ? 'Koyu Mod'
-                    : 'Açık Mod'}
+                    ? t('settings.themeDark')
+                    : t('settings.themeLight')}
                 </Text>
               </View>
 
@@ -682,11 +703,9 @@ export const SettingsScreen: React.FC = () => {
               {theme === 'system' && (
                 <View style={styles.systemThemeInfoBox}>
                   <Text style={styles.systemThemeInfoText}>
-                    Cihazınız şu anda{' '}
-                    <Text style={{ fontWeight: '700', color: colors.primary }}>
-                      {systemColorScheme === 'dark' ? 'Koyu Mod' : 'Açık Mod'}
-                    </Text>{' '}
-                    kullanıyor. Uygulama sistem rengine göre otomatik uyum sağlar.
+                    {t('settings.systemThemeInfo', {
+                      mode: systemColorScheme === 'dark' ? t('settings.themeDark') : t('settings.themeLight'),
+                    })}
                   </Text>
                 </View>
               )}
@@ -697,14 +716,14 @@ export const SettingsScreen: React.FC = () => {
               <View style={styles.preferenceHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <Coins size={16} color={tileColors.currency.icon} />
-                  <Text style={styles.preferenceTitle}>Varsayılan Para Birimi</Text>
+                  <Text style={styles.preferenceTitle}>{t('settings.currencyTitle')}</Text>
                 </View>
                 <Text style={styles.preferenceSubtitle}>
-                  {CURRENCY_OPTIONS.find((c) => c.code === selectedCurrency)?.symbol} {selectedCurrency}
+                  {currencyOptions.find((c) => c.code === selectedCurrency)?.symbol} {selectedCurrency}
                 </Text>
               </View>
               <View style={styles.pillsRow}>
-                {CURRENCY_OPTIONS.map((c) => {
+                {currencyOptions.map((c) => {
                   const isSelected = selectedCurrency === c.code;
                   return (
                     <TouchableOpacity
@@ -727,9 +746,9 @@ export const SettingsScreen: React.FC = () => {
               <View style={styles.preferenceHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <Clock size={16} color={tileColors.warrantyDuration.icon} />
-                  <Text style={styles.preferenceTitle}>Varsayılan Garanti Süresi</Text>
+                  <Text style={styles.preferenceTitle}>{t('settings.defaultWarrantyDurationTitle')}</Text>
                 </View>
-                <Text style={styles.preferenceSubtitle}>{defaultWarrantyMonths} Ay</Text>
+                <Text style={styles.preferenceSubtitle}>{defaultWarrantyMonths} {t('common.month')}</Text>
               </View>
               <View style={styles.pillsRow}>
                 {DEFAULT_WARRANTY_DURATION_OPTIONS.map((opt) => {
@@ -742,7 +761,7 @@ export const SettingsScreen: React.FC = () => {
                       activeOpacity={0.7}
                     >
                       <Text style={[styles.pillText, isSelected && styles.pillTextActive]}>
-                        {opt.label}
+                        {opt.months} {t('common.month')} ({Math.round(opt.months / 12)} {t('common.year')})
                       </Text>
                     </TouchableOpacity>
                   );
@@ -761,41 +780,48 @@ export const SettingsScreen: React.FC = () => {
                   <LayoutGrid size={18} color={colors.primary} />
                 </View>
                 <View style={styles.rowTexts}>
-                  <Text style={styles.rowLabel}>Ana Ekran Widget'ı</Text>
-                  <Text style={styles.rowSubtitle}>Canlı garanti panosu & önizleme</Text>
+                  <Text style={styles.rowLabel}>{t('settings.homeWidgetTitle')}</Text>
+                  <Text style={styles.rowSubtitle}>{t('settings.homeWidgetDesc')}</Text>
                 </View>
               </View>
               <ChevronRight size={16} color={colors.outline} />
             </TouchableOpacity>
 
-            {/* Uygulama Dili */}
-            <TouchableOpacity
-              style={[styles.cardRow, styles.cardRowNoBorder]}
-              onPress={() =>
-                showInfo('Şu anda sadece Türkçe dili desteklenmektedir.', 'Dil Seçimi')
-              }
-              activeOpacity={0.7}
-            >
-              <View style={styles.rowLeftContainer}>
-                <View style={[styles.iconTile, { backgroundColor: tileColors.language.bg }]}>
-                  <Globe size={18} color={tileColors.language.icon} />
+            {/* Uygulama Dili / Language Selector */}
+            <View style={[styles.preferenceBlock, { borderBottomWidth: 0, paddingBottom: 16 }]}>
+              <View style={styles.preferenceHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Globe size={16} color={tileColors.language.icon} />
+                  <Text style={styles.preferenceTitle}>{t('settings.appLanguageTitle')}</Text>
                 </View>
-                <View style={styles.rowTexts}>
-                  <Text style={styles.rowLabel}>Uygulama Dili</Text>
-                  <Text style={styles.rowSubtitle}>Varsayılan arayüz dili</Text>
-                </View>
+                <Text style={styles.preferenceSubtitle}>
+                  {language === 'tr' ? '🇹🇷 Türkçe (TR)' : '🇬🇧 English (EN)'}
+                </Text>
               </View>
-              <View style={styles.rowRight}>
-                <Text style={styles.rowValue}>Türkçe</Text>
-                <ChevronRight size={16} color={colors.outline} />
+              <View style={styles.pillsRow}>
+                {LANGUAGE_OPTIONS.map((langOpt) => {
+                  const isSelected = language === langOpt.code;
+                  return (
+                    <TouchableOpacity
+                      key={langOpt.code}
+                      style={[styles.pill, isSelected && styles.pillActive]}
+                      onPress={() => handleSelectLanguage(langOpt.code)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.pillText, isSelected && styles.pillTextActive]}>
+                        {langOpt.flag} {langOpt.nativeLabel}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
-            </TouchableOpacity>
+            </View>
           </View>
         </View>
 
         {/* Bölüm 4: Veri & Depolama */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeaderTitle}>Veri & Depolama</Text>
+          <Text style={styles.sectionHeaderTitle}>{t('settings.sectionData')}</Text>
           <View style={styles.card}>
             {/* Dışa Aktar */}
             <TouchableOpacity
@@ -808,8 +834,8 @@ export const SettingsScreen: React.FC = () => {
                   <Download size={18} color={tileColors.export.icon} />
                 </View>
                 <View style={styles.rowTexts}>
-                  <Text style={styles.rowLabel}>Verileri Dışa Aktar</Text>
-                  <Text style={styles.rowSubtitle}>Envanter listenizi Excel veya JSON olarak alın</Text>
+                  <Text style={styles.rowLabel}>{t('settings.exportDataTitle')}</Text>
+                  <Text style={styles.rowSubtitle}>{t('settings.exportDataDesc')}</Text>
                 </View>
               </View>
               <ChevronRight size={18} color={colors.outline} />
@@ -826,8 +852,8 @@ export const SettingsScreen: React.FC = () => {
                   <Upload size={18} color={tileColors.import.icon} />
                 </View>
                 <View style={styles.rowTexts}>
-                  <Text style={styles.rowLabel}>Yedeği Geri Yükle</Text>
-                  <Text style={styles.rowSubtitle}>JSON yedeğinden ürünleri tekrar aktarın</Text>
+                  <Text style={styles.rowLabel}>{t('settings.importDataTitle')}</Text>
+                  <Text style={styles.rowSubtitle}>{t('settings.importDataDesc')}</Text>
                 </View>
               </View>
               <ChevronRight size={18} color={colors.outline} />
@@ -844,8 +870,8 @@ export const SettingsScreen: React.FC = () => {
                   <Trash2 size={18} color={tileColors.cache.icon} />
                 </View>
                 <View style={styles.rowTexts}>
-                  <Text style={styles.rowLabel}>Önbelleği Temizle</Text>
-                  <Text style={styles.rowSubtitle}>Geçici dosya ve görsel önbelleğini silin</Text>
+                  <Text style={styles.rowLabel}>{t('settings.clearCacheTitle')}</Text>
+                  <Text style={styles.rowSubtitle}>{t('settings.clearCacheDesc')}</Text>
                 </View>
               </View>
               <ChevronRight size={18} color={colors.outline} />
@@ -855,7 +881,7 @@ export const SettingsScreen: React.FC = () => {
 
         {/* Bölüm 5: Yasal Bilgiler & Güvenlik */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeaderTitle}>Yasal & Güvenlik</Text>
+          <Text style={styles.sectionHeaderTitle}>{t('settings.legalTitle')}</Text>
           <View style={styles.card}>
             <TouchableOpacity
               style={[styles.cardRow, styles.cardRowNoBorder]}
@@ -867,8 +893,8 @@ export const SettingsScreen: React.FC = () => {
                   <FileText size={18} color={tileColors.legal.icon} />
                 </View>
                 <View style={styles.rowTexts}>
-                  <Text style={styles.rowLabel}>Gizlilik Politikası, KVKK & Şartlar</Text>
-                  <Text style={styles.rowSubtitle}>Veri koruma ilkeleri ve kullanıcı sözleşmesi</Text>
+                  <Text style={styles.rowLabel}>{t('settings.legalTitle')}</Text>
+                  <Text style={styles.rowSubtitle}>{t('settings.legalDesc')}</Text>
                 </View>
               </View>
               <ChevronRight size={18} color={colors.outline} />
@@ -878,7 +904,7 @@ export const SettingsScreen: React.FC = () => {
 
         {/* Bölüm 6: Oturum & Hesap Yönetimi */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeaderTitle}>Hesap İşlemleri</Text>
+          <Text style={styles.sectionHeaderTitle}>{t('settings.sectionAccount')}</Text>
           <View style={styles.card}>
             {/* Oturumu Kapat */}
             <TouchableOpacity
@@ -892,9 +918,11 @@ export const SettingsScreen: React.FC = () => {
                 </View>
                 <View style={styles.rowTexts}>
                   <Text style={[styles.rowLabel, { color: tileColors.logout.icon }]}>
-                    Oturumu Kapat
+                    {t('profile.signOut')}
                   </Text>
-                  <Text style={styles.rowSubtitle}>Bu cihazdaki aktif oturumu sonlandırın</Text>
+                  <Text style={styles.rowSubtitle}>
+                    {language === 'tr' ? 'Bu cihazdaki aktif oturumu sonlandırın' : 'End active session on this device'}
+                  </Text>
                 </View>
               </View>
               <ChevronRight size={18} color={tileColors.logout.icon} />
@@ -911,8 +939,8 @@ export const SettingsScreen: React.FC = () => {
                   <AlertTriangle size={18} color={tileColors.deleteAccount.icon} />
                 </View>
                 <View style={styles.rowTexts}>
-                  <Text style={[styles.rowLabel, { color: colors.error }]}>Hesabımı Sil</Text>
-                  <Text style={styles.rowSubtitle}>Tüm varlık ve garanti verilerinizi kalıcı silin</Text>
+                  <Text style={[styles.rowLabel, { color: colors.error }]}>{t('settings.deleteAccountTitle')}</Text>
+                  <Text style={styles.rowSubtitle}>{t('settings.deleteAccountDesc')}</Text>
                 </View>
               </View>
               <ChevronRight size={18} color={colors.error} />
@@ -924,7 +952,9 @@ export const SettingsScreen: React.FC = () => {
         <View style={styles.footer}>
           <View style={styles.footerSecurityRow}>
             <Shield size={14} color={colors.outline} />
-            <Text style={styles.footerSecurityText}>Uçtan Uca Şifreli & Güvenli Yerel Depolama</Text>
+            <Text style={styles.footerSecurityText}>
+              {language === 'tr' ? 'Uçtan Uca Şifreli & Güvenli Yerel Depolama' : 'End-to-End Encrypted & Secure Storage'}
+            </Text>
           </View>
           <Text style={styles.footerAppVersion}>Safe Envanter v1.0.0</Text>
         </View>

@@ -25,6 +25,7 @@ import {
 } from 'lucide-react-native';
 
 import { COLORS } from '../constants';
+import { useTranslation } from '../i18n';
 import { styles } from './AppCameraModal.styles';
 
 interface AppCameraModalProps {
@@ -39,14 +40,18 @@ export const AppCameraModal: React.FC<AppCameraModalProps> = ({
   visible,
   onClose,
   onCapture,
-  title = 'Fotoğraf Çek',
-  subtitle = 'Ürün veya faturanızı çerçeveye hizalayın',
+  title,
+  subtitle,
 }) => {
+  const { language } = useTranslation();
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<CameraType>('back');
   const [torch, setTorch] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
+
+  const displayTitle = title || (language === 'tr' ? 'Fotoğraf Çek' : 'Take Photo');
+  const displaySubtitle = subtitle || (language === 'tr' ? 'Ürün veya faturanızı çerçeveye hizalayın' : 'Align item or receipt within frame');
 
   const cameraRef = useRef<any>(null);
 
@@ -95,9 +100,13 @@ export const AppCameraModal: React.FC<AppCameraModalProps> = ({
           <CameraIcon size={32} color={COLORS.primary} />
         </View>
 
-        <Text style={styles.permissionTitle}>Kamera İzni Gerekiyor</Text>
+        <Text style={styles.permissionTitle}>
+          {language === 'tr' ? 'Kamera İzni Gerekiyor' : 'Camera Access Required'}
+        </Text>
         <Text style={styles.permissionDescription}>
-          Ürün ve fatura fotoğrafı çekebilmek için uygulamanın kameraya erişmesine izin vermelisiniz.
+          {language === 'tr'
+            ? 'Ürün ve fatura fotoğrafı çekebilmek için uygulamanın kameraya erişmesine izin vermelisiniz.'
+            : 'You must grant camera access to take photos of items and receipts.'}
         </Text>
 
         <TouchableOpacity
@@ -105,7 +114,9 @@ export const AppCameraModal: React.FC<AppCameraModalProps> = ({
           onPress={requestPermission}
           activeOpacity={0.8}
         >
-          <Text style={styles.permissionButtonText}>Kamera İzni Ver</Text>
+          <Text style={styles.permissionButtonText}>
+            {language === 'tr' ? 'Kamera İzni Ver' : 'Grant Camera Access'}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -113,7 +124,9 @@ export const AppCameraModal: React.FC<AppCameraModalProps> = ({
           onPress={handleClose}
           activeOpacity={0.7}
         >
-          <Text style={styles.cancelButtonText}>Vazgeç</Text>
+          <Text style={styles.cancelButtonText}>
+            {language === 'tr' ? 'Vazgeç' : 'Cancel'}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -147,8 +160,12 @@ export const AppCameraModal: React.FC<AppCameraModalProps> = ({
                 </TouchableOpacity>
 
                 <View style={styles.topBarTitleContainer}>
-                  <Text style={styles.topBarTitle}>Fotoğrafı Onayla</Text>
-                  <Text style={styles.topBarSubtitle}>Görsel net ve okunabilir mi?</Text>
+                  <Text style={styles.topBarTitle}>
+                    {language === 'tr' ? 'Fotoğrafı Onayla' : 'Confirm Photo'}
+                  </Text>
+                  <Text style={styles.topBarSubtitle}>
+                    {language === 'tr' ? 'Görsel net ve okunabilir mi?' : 'Is the photo clear and readable?'}
+                  </Text>
                 </View>
 
                 <View style={styles.placeholderSideButton} />
@@ -161,7 +178,9 @@ export const AppCameraModal: React.FC<AppCameraModalProps> = ({
                   activeOpacity={0.7}
                 >
                   <RotateCcw size={18} color="#ffffff" />
-                  <Text style={styles.retakeButtonText}>Tekrar Çek</Text>
+                  <Text style={styles.retakeButtonText}>
+                    {language === 'tr' ? 'Tekrar Çek' : 'Retake'}
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -170,7 +189,9 @@ export const AppCameraModal: React.FC<AppCameraModalProps> = ({
                   activeOpacity={0.8}
                 >
                   <Check size={20} color="#ffffff" />
-                  <Text style={styles.confirmButtonText}>Bu Fotoğrafı Kullan</Text>
+                  <Text style={styles.confirmButtonText}>
+                    {language === 'tr' ? 'Bu Fotoğrafı Kullan' : 'Use This Photo'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </SafeAreaView>
@@ -196,8 +217,8 @@ export const AppCameraModal: React.FC<AppCameraModalProps> = ({
                 </TouchableOpacity>
 
                 <View style={styles.topBarTitleContainer}>
-                  <Text style={styles.topBarTitle}>{title}</Text>
-                  <Text style={styles.topBarSubtitle}>{subtitle}</Text>
+                  <Text style={styles.topBarTitle}>{displayTitle}</Text>
+                  <Text style={styles.topBarSubtitle}>{displaySubtitle}</Text>
                 </View>
 
                 <TouchableOpacity

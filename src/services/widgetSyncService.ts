@@ -3,15 +3,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Product } from '../types';
 import { calculateWarrantyStatus, formatDateTurkish } from '../utils/warrantyCalculator';
 import { WarrantyWidget, WarrantyWidgetData } from '../widgets/WarrantyWidget';
+import { appPreferencesHelper } from '../utils/appPreferencesHelper';
 
 export const WIDGET_STORAGE_KEY = '@app_widget_warranty_data';
 
 /**
  * Ürün listesinden widget için gerekli en yakın garanti ve aktif sayı verisini hesaplar
  */
-export function calculateWidgetData(products: Product[]): WarrantyWidgetData {
+export function calculateWidgetData(
+  products: Product[],
+  language: 'tr' | 'en' = 'tr'
+): WarrantyWidgetData {
   if (!products || products.length === 0) {
     return {
+      language,
       nearestProduct: null,
       activeCount: 0,
       totalCount: 0,
@@ -61,6 +66,7 @@ export function calculateWidgetData(products: Product[]): WarrantyWidgetData {
   }
 
   return {
+    language,
     nearestProduct: nearestProductInfo,
     activeCount,
     totalCount: products.length,
@@ -70,8 +76,21 @@ export function calculateWidgetData(products: Product[]): WarrantyWidgetData {
 /**
  * Envanter verisi değiştikçe widget'ı hem yerel depolamada hem de Android ana ekranında günceller
  */
-export async function syncWidgetData(products: Product[]): Promise<WarrantyWidgetData> {
-  const data = calculateWidgetData(products);
+export async function syncWidgetData(
+  products: Product[],
+  explicitLanguage?: 'tr' | 'en'
+): Promise<WarrantyWidgetData> {
+  let lang = explicitLanguage;
+  if (!lang) {
+    try {
+      const prefs = await appPreferencesHelper.getPreferences();
+      lang = prefs.language || 'tr';
+    } catch {
+      lang = 'tr';
+    }
+  }
+
+  const data = calculateWidgetData(products, lang);
 
   try {
     // 1. Veriyi AsyncStorage'a yaz (TaskHandler okuyabilsin)

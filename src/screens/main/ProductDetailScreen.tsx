@@ -53,6 +53,8 @@ import {
   formatCurrency,
   calculateWarrantyStatus,
 } from '../../utils/warrantyCalculator';
+import { getCategoryDisplayName } from '../../constants/categories';
+import { useTranslation } from '../../i18n';
 import { getStyles } from './ProductDetailScreen.styles';
 
 export const ProductDetailScreen: React.FC = () => {
@@ -71,6 +73,7 @@ export const ProductDetailScreen: React.FC = () => {
   const [showHistory, setShowHistory] = useState(false);
 
   const { colors } = useTheme();
+  const { t, language } = useTranslation();
   const styles = useMemo(() => getStyles(colors), [colors]);
 
   const isFav = product?.id ? isFavorite(product.id) || product.is_favorite === true : false;
@@ -81,9 +84,13 @@ export const ProductDetailScreen: React.FC = () => {
     await toggleFavorite(product.id);
     setProduct((prev) => (prev ? { ...prev, is_favorite: willBeFav } : null));
     if (willBeFav) {
-      showSuccess('Ürün favorilere eklendi.');
+      showSuccess(
+        language === 'tr' ? 'Ürün favorilere eklendi.' : 'Item added to favorites.'
+      );
     } else {
-      showInfo('Ürün favorilerden çıkarıldı.');
+      showInfo(
+        language === 'tr' ? 'Ürün favorilerden çıkarıldı.' : 'Item removed from favorites.'
+      );
     }
   };
 
@@ -114,14 +121,21 @@ export const ProductDetailScreen: React.FC = () => {
   const handleCompleteMaintenance = (record: MaintenanceRecord) => {
     showAlert({
       type: 'success',
-      title: 'Bakımı Tamamla',
-      message: `"${record.title}" bakımının yapıldığını onaylıyor musunuz?${
-        record.interval_months
-          ? ` Otomatik olarak ${record.interval_months} ay sonrasına yeni bir periyodik bakım açılacaktır.`
-          : ''
-      }`,
-      confirmText: 'Tamamlandı Olarak Kaydet',
-      cancelText: 'Vazgeç',
+      title: language === 'tr' ? 'Bakımı Tamamla' : 'Complete Maintenance',
+      message:
+        language === 'tr'
+          ? `"${record.title}" bakımının yapıldığını onaylıyor musunuz?${
+              record.interval_months
+                ? ` Otomatik olarak ${record.interval_months} ay sonrasına yeni bir periyodik bakım açılacaktır.`
+                : ''
+            }`
+          : `Confirm completion of "${record.title}"?${
+              record.interval_months
+                ? ` A new recurring maintenance will automatically be scheduled for ${record.interval_months} months later.`
+                : ''
+            }`,
+      confirmText: language === 'tr' ? 'Tamamlandı Olarak Kaydet' : 'Mark Completed',
+      cancelText: language === 'tr' ? 'Vazgeç' : 'Cancel',
       onConfirm: async () => {
         const res = await maintenanceService.complete(record.id, true);
         if (res.data) {
@@ -129,14 +143,20 @@ export const ProductDetailScreen: React.FC = () => {
           if (res.nextRecord && product) {
             await scheduleMaintenanceNotifications(res.nextRecord, product.name);
             showSuccess(
-              `Bakım tamamlandı! Bir sonraki bakım: ${formatDateTurkish(res.nextRecord.maintenance_date)}`
+              language === 'tr'
+                ? `Bakım tamamlandı! Bir sonraki bakım: ${formatDateTurkish(res.nextRecord.maintenance_date)}`
+                : `Maintenance completed! Next maintenance: ${formatDateTurkish(res.nextRecord.maintenance_date)}`
             );
           } else {
-            showSuccess('Bakım tamamlandı olarak kaydedildi.');
+            showSuccess(
+              language === 'tr' ? 'Bakım tamamlandı olarak kaydedildi.' : 'Maintenance marked as completed.'
+            );
           }
           loadMaintenance();
         } else {
-          showError(res.error || 'Bakım tamamlanamadı.');
+          showError(
+            res.error || (language === 'tr' ? 'Bakım tamamlanamadı.' : 'Could not complete maintenance.')
+          );
         }
       },
     });
@@ -145,19 +165,24 @@ export const ProductDetailScreen: React.FC = () => {
   const handleDeleteMaintenance = (record: MaintenanceRecord) => {
     showAlert({
       type: 'danger',
-      title: 'Bakım Kaydını Sil',
-      message: `"${record.title}" bakım kaydını silmek istediğinize emin misiniz?`,
-      confirmText: 'Sil',
-      cancelText: 'Vazgeç',
+      title: language === 'tr' ? 'Bakım Kaydını Sil' : 'Delete Maintenance Log',
+      message:
+        language === 'tr'
+          ? `"${record.title}" bakım kaydını silmek istediğinize emin misiniz?`
+          : `Are you sure you want to delete maintenance record "${record.title}"?`,
+      confirmText: language === 'tr' ? 'Sil' : 'Delete',
+      cancelText: language === 'tr' ? 'Vazgeç' : 'Cancel',
       destructive: true,
       onConfirm: async () => {
         const res = await maintenanceService.delete(record.id);
         if (res.success) {
           await cancelMaintenanceNotifications(record.id);
-          showSuccess('Bakım kaydı silindi.');
+          showSuccess(language === 'tr' ? 'Bakım kaydı silindi.' : 'Maintenance log deleted.');
           loadMaintenance();
         } else {
-          showError(res.error || 'Silme işlemi başarısız.');
+          showError(
+            res.error || (language === 'tr' ? 'Silme işlemi başarısız.' : 'Failed to delete record.')
+          );
         }
       },
     });
@@ -166,19 +191,19 @@ export const ProductDetailScreen: React.FC = () => {
   const handleDelete = () => {
     showAlert({
       type: 'danger',
-      title: 'Ürünü Sil',
-      message: `"${product?.name}" ürününü envanterinizden silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
-      confirmText: 'Sil',
-      cancelText: 'Vazgeç',
+      title: t('productDetail.deleteConfirmTitle'),
+      message: t('productDetail.deleteConfirmMessage', { name: product?.name || '' }),
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
       destructive: true,
       onConfirm: async () => {
         if (!product?.id) return;
         const res = await deleteProduct(product.id);
         if (res.success) {
-          showSuccess('Ürün envanterden silindi.');
+          showSuccess(t('productDetail.deleteSuccess'));
           navigation.goBack();
         } else {
-          showError(res.error || 'Ürün silinirken bir hata oluştu.');
+          showError(res.error || (language === 'tr' ? 'Ürün silinirken bir hata oluştu.' : 'Failed to delete item.'));
         }
       },
     });
@@ -198,23 +223,22 @@ export const ProductDetailScreen: React.FC = () => {
         await Linking.openURL(product.invoice_path);
       }
     } catch {
-      showInfo(`Dosya adresi: ${product.invoice_path}`, 'Fatura Belgesi');
+      showInfo(`Dosya adresi: ${product.invoice_path}`, language === 'tr' ? 'Fatura Belgesi' : 'Invoice File');
     }
   };
 
   if (loading || !product) {
     return (
       <TechOrbitLoader
-        message="Ürün Detayları Yükleniyor..."
-        subMessage="Garanti ve fatura bilgileri getiriliyor"
+        message={language === 'tr' ? 'Ürün Detayları Yükleniyor...' : 'Loading Product Details...'}
+        subMessage={language === 'tr' ? 'Garanti ve fatura bilgileri getiriliyor' : 'Fetching warranty and receipt info'}
       />
     );
   }
 
-
-  const categoryName = product.category?.name || 'Genel';
+  const categoryName = getCategoryDisplayName(product.category?.name || (language === 'tr' ? 'Genel' : 'General'), language);
   const brandText = product.brand ? ` · ${product.brand}` : '';
-  const statusInfo = calculateWarrantyStatus(product.warranty_end_date, colors);
+  const statusInfo = calculateWarrantyStatus(product.warranty_end_date, colors, language);
 
   const pendingMaintenances = useMemo(
     () => maintenanceRecords.filter((m) => m.status === 'pending'),
@@ -238,7 +262,7 @@ export const ProductDetailScreen: React.FC = () => {
           >
             <ArrowLeft size={22} color={colors.onBackground} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Ürün Detayı</Text>
+          <Text style={styles.headerTitle}>{t('nav.productDetail')}</Text>
         </View>
         <View style={styles.headerRight}>
           <TouchableOpacity
@@ -316,7 +340,7 @@ export const ProductDetailScreen: React.FC = () => {
             <View style={styles.detailRow}>
               <View style={styles.detailLabelGroup}>
                 <Cpu size={17} color={colors.onSurfaceVariant} />
-                <Text style={styles.detailLabel}>Model</Text>
+                <Text style={styles.detailLabel}>{t('productDetail.model')}</Text>
               </View>
               <Text style={styles.detailValue}>{product.model}</Text>
             </View>
@@ -327,7 +351,7 @@ export const ProductDetailScreen: React.FC = () => {
             <View style={styles.detailRow}>
               <View style={styles.detailLabelGroup}>
                 <QrCode size={17} color={colors.onSurfaceVariant} />
-                <Text style={styles.detailLabel}>Seri Numarası</Text>
+                <Text style={styles.detailLabel}>{t('productDetail.serialNumber')}</Text>
               </View>
               <Text style={styles.detailValue}>{product.serial_number}</Text>
             </View>
@@ -337,7 +361,7 @@ export const ProductDetailScreen: React.FC = () => {
           <View style={styles.detailRow}>
             <View style={styles.detailLabelGroup}>
               <Layers size={17} color={colors.onSurfaceVariant} />
-              <Text style={styles.detailLabel}>Kategori</Text>
+              <Text style={styles.detailLabel}>{t('productDetail.category')}</Text>
             </View>
             <Text style={styles.detailValue}>{categoryName}</Text>
           </View>
@@ -347,7 +371,7 @@ export const ProductDetailScreen: React.FC = () => {
             <View style={styles.detailRow}>
               <View style={styles.detailLabelGroup}>
                 <Calendar size={17} color={colors.onSurfaceVariant} />
-                <Text style={styles.detailLabel}>Satın Alma Tarihi</Text>
+                <Text style={styles.detailLabel}>{t('productDetail.purchaseDate')}</Text>
               </View>
               <Text style={styles.detailValue}>{formatDateTurkish(product.purchase_date)}</Text>
             </View>
@@ -358,7 +382,7 @@ export const ProductDetailScreen: React.FC = () => {
             <View style={styles.detailRow}>
               <View style={styles.detailLabelGroup}>
                 <CreditCard size={17} color={colors.onSurfaceVariant} />
-                <Text style={styles.detailLabel}>Satın Alınan Fiyatı</Text>
+                <Text style={styles.detailLabel}>{t('productDetail.price')}</Text>
               </View>
               <Text style={styles.detailValue}>{formatCurrency(product.purchase_price)}</Text>
             </View>
@@ -368,7 +392,7 @@ export const ProductDetailScreen: React.FC = () => {
           <View style={styles.detailRow}>
             <View style={styles.detailLabelGroup}>
               <ShieldCheck size={17} color={colors.onSurfaceVariant} />
-              <Text style={styles.detailLabel}>Garanti Bitiş Tarihi</Text>
+              <Text style={styles.detailLabel}>{t('productDetail.warrantyEndDate')}</Text>
             </View>
             <Text style={styles.detailValue}>{formatDateTurkish(product.warranty_end_date)}</Text>
           </View>
@@ -378,7 +402,7 @@ export const ProductDetailScreen: React.FC = () => {
             <View style={styles.detailRow}>
               <View style={styles.detailLabelGroup}>
                 <Store size={17} color={colors.onSurfaceVariant} />
-                <Text style={styles.detailLabel}>Satın Alınan Mağaza</Text>
+                <Text style={styles.detailLabel}>{language === 'tr' ? 'Satın Alınan Mağaza' : 'Store / Vendor'}</Text>
               </View>
               <Text style={styles.detailValue}>{product.store_name}</Text>
             </View>
@@ -389,7 +413,7 @@ export const ProductDetailScreen: React.FC = () => {
             <View style={styles.descriptionRow}>
               <View style={styles.detailLabelGroup}>
                 <FileText size={17} color={colors.onSurfaceVariant} />
-                <Text style={styles.detailLabel}>Açıklama</Text>
+                <Text style={styles.detailLabel}>{t('productDetail.notes')}</Text>
               </View>
               <Text style={styles.descriptionText}>{product.description}</Text>
             </View>
@@ -398,7 +422,9 @@ export const ProductDetailScreen: React.FC = () => {
 
         {/* Fatura Bölümü */}
         <View style={styles.invoiceSection}>
-          <Text style={styles.sectionTitle}>Fatura</Text>
+          <Text style={styles.sectionTitle}>
+            {language === 'tr' ? 'Fatura & Belgeler' : 'Receipt & Documents'}
+          </Text>
           <TouchableOpacity
             style={styles.invoiceCard}
             onPress={product.invoice_path ? handleOpenInvoice : undefined}
@@ -410,10 +436,14 @@ export const ProductDetailScreen: React.FC = () => {
               </View>
               <View>
                 <Text style={styles.invoiceFileName}>
-                  {product.invoice_path ? 'Fatura Belgesi' : 'Fatura Eklenmedi'}
+                  {product.invoice_path
+                    ? (language === 'tr' ? 'Fatura Belgesi' : 'Receipt Document')
+                    : (language === 'tr' ? 'Fatura Eklenmedi' : 'No Receipt Attached')}
                 </Text>
                 <Text style={styles.invoiceFileSize}>
-                  {product.invoice_path ? 'Görüntülemek için dokunun' : 'Kayıtlı dosya yok'}
+                  {product.invoice_path
+                    ? (language === 'tr' ? 'Görüntülemek için dokunun' : 'Tap to view document')
+                    : (language === 'tr' ? 'Kayıtlı dosya yok' : 'No file attached')}
                 </Text>
               </View>
             </View>
@@ -427,7 +457,9 @@ export const ProductDetailScreen: React.FC = () => {
 
         {/* Dijital Ürün Etiketi (QR Kod) Bölümü */}
         <View style={styles.qrSection}>
-          <Text style={styles.sectionTitle}>Dijital Ürün Etiketi</Text>
+          <Text style={styles.sectionTitle}>
+            {language === 'tr' ? 'Dijital Ürün Etiketi' : 'Digital Asset Label'}
+          </Text>
           <TouchableOpacity
             style={styles.qrCard}
             onPress={() => setQrModalOpen(true)}
@@ -438,14 +470,20 @@ export const ProductDetailScreen: React.FC = () => {
                 <QrCode size={22} color={colors.primary} />
               </View>
               <View style={styles.qrCardTextBox}>
-                <Text style={styles.qrCardTitle}>Cihaz QR Etiketi</Text>
+                <Text style={styles.qrCardTitle}>
+                  {language === 'tr' ? 'Cihaz QR Etiketi' : 'Asset QR Code'}
+                </Text>
                 <Text style={styles.qrCardSubtitle} numberOfLines={1}>
-                  Çıktı alıp cihaza yapıştırın, kamerayla hızlıca açın
+                  {language === 'tr'
+                    ? 'Çıktı alıp cihaza yapıştırın, kamerayla hızlıca açın'
+                    : 'Print & attach to item for instant scanning'}
                 </Text>
               </View>
             </View>
             <View style={styles.qrActionBadge}>
-              <Text style={styles.qrActionBadgeText}>Görüntüle & Yazdır</Text>
+              <Text style={styles.qrActionBadgeText}>
+                {language === 'tr' ? 'Görüntüle & Yazdır' : 'View & Print'}
+              </Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -453,14 +491,14 @@ export const ProductDetailScreen: React.FC = () => {
         {/* Bakım Takvimi & Geçmişi Bölümü */}
         <View style={styles.maintenanceSection}>
           <View style={styles.maintenanceHeaderRow}>
-            <Text style={styles.sectionTitle}>Bakım Takvimi & Geçmişi</Text>
+            <Text style={styles.sectionTitle}>{t('productDetail.maintenanceTitle')}</Text>
             <TouchableOpacity
               style={styles.addMaintenanceBtn}
               onPress={() => setMaintenanceModalOpen(true)}
               activeOpacity={0.8}
             >
               <Plus size={14} color={colors.onPrimary} />
-              <Text style={styles.addMaintenanceBtnText}>Bakım Ekle</Text>
+              <Text style={styles.addMaintenanceBtnText}>{t('productDetail.addMaintenanceBtn')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -483,8 +521,8 @@ export const ProductDetailScreen: React.FC = () => {
                             <Repeat size={11} color={colors.onSurfaceVariant} />
                             <Text style={styles.maintenanceIntervalBadgeText}>
                               {item.interval_months === 12
-                                ? 'Yıllık Bakım'
-                                : `${item.interval_months} Ayda Bir`}
+                                ? (language === 'tr' ? 'Yıllık Bakım' : 'Annual Maintenance')
+                                : (language === 'tr' ? `${item.interval_months} Ayda Bir` : `Every ${item.interval_months} Months`)}
                             </Text>
                           </View>
                         ) : null}
@@ -492,7 +530,7 @@ export const ProductDetailScreen: React.FC = () => {
                       <Text style={styles.maintenanceTitle}>{item.title}</Text>
                       {item.service_provider ? (
                         <Text style={styles.maintenanceMetaText}>
-                          Servis: {item.service_provider}
+                          {language === 'tr' ? `Servis: ${item.service_provider}` : `Service: ${item.service_provider}`}
                         </Text>
                       ) : null}
                       {item.notes ? (
@@ -502,7 +540,7 @@ export const ProductDetailScreen: React.FC = () => {
                       ) : null}
                       {item.cost ? (
                         <Text style={styles.maintenanceMetaText}>
-                          Tahmini Tutar: {formatCurrency(item.cost)}
+                          {language === 'tr' ? `Tahmini Tutar: ${formatCurrency(item.cost)}` : `Estimated Cost: ${formatCurrency(item.cost)}`}
                         </Text>
                       ) : null}
                     </View>
@@ -515,7 +553,9 @@ export const ProductDetailScreen: React.FC = () => {
                       activeOpacity={0.75}
                     >
                       <CheckCircle2 size={15} color={colors.warranty?.active || '#10b981'} />
-                      <Text style={styles.completeMaintenanceBtnText}>Bakımı Tamamla</Text>
+                      <Text style={styles.completeMaintenanceBtnText}>
+                        {language === 'tr' ? 'Bakımı Tamamla' : 'Complete Log'}
+                      </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -535,7 +575,9 @@ export const ProductDetailScreen: React.FC = () => {
                 <Wrench size={24} color={colors.primary} />
               </View>
               <Text style={styles.emptyMaintenanceText}>
-                Planlanmış periyodik bakım bulunmuyor. Servis, filtre veya düzenli kontrollerinizi takip etmek için yukarıdan ekleyin.
+                {language === 'tr'
+                  ? 'Planlanmış periyodik bakım bulunmuyor. Servis, filtre veya düzenli kontrollerinizi takip etmek için yukarıdan ekleyin.'
+                  : 'No scheduled maintenance yet. Add periodic filter, service or vehicle checks to track them here.'}
               </Text>
             </View>
           )}
@@ -549,7 +591,7 @@ export const ProductDetailScreen: React.FC = () => {
                 activeOpacity={0.7}
               >
                 <Text style={styles.historyToggleText}>
-                  Tamamlanan Bakımlar ({completedMaintenances.length})
+                  {language === 'tr' ? 'Tamamlanan Bakımlar' : 'Completed Maintenance'} ({completedMaintenances.length})
                 </Text>
                 {showHistory ? (
                   <ChevronUp size={16} color={colors.onSurfaceVariant} />
@@ -580,16 +622,20 @@ export const ProductDetailScreen: React.FC = () => {
                                 { color: colors.warranty?.active || '#10b981' },
                               ]}
                             >
-                              Yapıldı: {formatDateTurkish(item.completed_at || item.maintenance_date)}
+                              {language === 'tr' ? 'Yapıldı' : 'Done'}: {formatDateTurkish(item.completed_at || item.maintenance_date)}
                             </Text>
                           </View>
                         </View>
                         <Text style={styles.maintenanceTitle}>{item.title}</Text>
                         {item.service_provider ? (
-                          <Text style={styles.maintenanceMetaText}>Servis: {item.service_provider}</Text>
+                          <Text style={styles.maintenanceMetaText}>
+                            {language === 'tr' ? `Servis: ${item.service_provider}` : `Provider: ${item.service_provider}`}
+                          </Text>
                         ) : null}
                         {item.cost ? (
-                          <Text style={styles.maintenanceMetaText}>Maliyet: {formatCurrency(item.cost)}</Text>
+                          <Text style={styles.maintenanceMetaText}>
+                            {language === 'tr' ? `Maliyet: ${formatCurrency(item.cost)}` : `Cost: ${formatCurrency(item.cost)}`}
+                          </Text>
                         ) : null}
                       </View>
                       <TouchableOpacity
@@ -609,10 +655,10 @@ export const ProductDetailScreen: React.FC = () => {
         {/* Aksiyon Butonları (Düzenle / Sil) */}
         <View style={styles.actionButtonsRow}>
           <TouchableOpacity style={styles.editButton} onPress={handleEdit} activeOpacity={0.8}>
-            <Text style={styles.editButtonText}>Düzenle</Text>
+            <Text style={styles.editButtonText}>{t('productDetail.actionEdit')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.deleteButton} onPress={handleDelete} activeOpacity={0.8}>
-            <Text style={styles.deleteButtonText}>Sil</Text>
+            <Text style={styles.deleteButtonText}>{t('productDetail.actionDelete')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

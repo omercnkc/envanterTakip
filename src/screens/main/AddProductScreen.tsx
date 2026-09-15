@@ -31,6 +31,8 @@ import { useAlert } from '../../context/AlertContext';
 import { calculateWarrantyEndDate, formatDateTurkish, maskDateInput } from '../../utils/warrantyCalculator';
 import { mediaHelper } from '../../utils/mediaHelper';
 import { storageService } from '../../api/storageService';
+import { getCategoryDisplayName } from '../../constants/categories';
+import { useTranslation } from '../../i18n';
 import { CategoryPickerModal } from '../../components/CategoryPickerModal';
 import { MediaPickerModal } from '../../components/MediaPickerModal';
 import { BarcodeScannerModal } from '../../components/BarcodeScannerModal';
@@ -50,6 +52,7 @@ export const AddProductScreen: React.FC = () => {
   const { user } = useAuth();
   const { addProduct, categories } = useInventory();
   const { colors } = useTheme();
+  const { t, language } = useTranslation();
   const { showSuccess, showError, showWarning } = useAlert();
   const styles = useMemo(() => getStyles(colors), [colors]);
 
@@ -231,7 +234,10 @@ export const AddProductScreen: React.FC = () => {
         setValue('image_path', uploadRes.publicUrl);
       }
     } catch {
-      showError('Fotoğraf yüklenirken beklenmeyen bir hata oluştu.', 'Hata');
+      showError(
+        language === 'tr' ? 'Fotoğraf yüklenirken beklenmeyen bir hata oluştu.' : 'An error occurred while uploading photo.',
+        language === 'tr' ? 'Hata' : 'Error'
+      );
       setImageUri(null);
       setValue('image_path', null);
     } finally {
@@ -269,14 +275,17 @@ export const AddProductScreen: React.FC = () => {
       );
 
       if (uploadRes.error) {
-        showError(uploadRes.error, 'Yükleme Hatası');
+        showError(uploadRes.error, language === 'tr' ? 'Yükleme Hatası' : 'Upload Error');
         setInvoiceName(null);
         setValue('invoice_path', null);
       } else if (uploadRes.publicUrl) {
         setValue('invoice_path', uploadRes.publicUrl, { shouldValidate: true });
       }
     } catch {
-      showError('Fatura yüklenirken beklenmeyen bir hata oluştu.', 'Hata');
+      showError(
+        language === 'tr' ? 'Fatura yüklenirken beklenmeyen bir hata oluştu.' : 'An error occurred while uploading receipt.',
+        language === 'tr' ? 'Hata' : 'Error'
+      );
       setInvoiceName(null);
       setValue('invoice_path', null);
     } finally {
@@ -289,11 +298,17 @@ export const AddProductScreen: React.FC = () => {
       setIsSubmitting(true);
       const res = await addProduct(data);
       if (!res.success) {
-        showError(res.error || 'Ürün kaydedilirken bir hata oluştu.', 'Hata');
+        showError(
+          res.error || (language === 'tr' ? 'Ürün kaydedilirken bir hata oluştu.' : 'Failed to save product.'),
+          language === 'tr' ? 'Hata' : 'Error'
+        );
         return;
       }
 
-      showSuccess('Ürün envanterinize başarıyla eklendi.', 'Başarılı');
+      showSuccess(
+        language === 'tr' ? 'Ürün envanterinize başarıyla eklendi.' : 'Item successfully added to inventory.',
+        language === 'tr' ? 'Başarılı' : 'Success'
+      );
       reset();
       setPriceInputText('');
       setImageUri(null);
@@ -301,7 +316,10 @@ export const AddProductScreen: React.FC = () => {
       setSelectedCategory(null);
       navigation.navigate('ProductsTab');
     } catch {
-      showError('Ürün kaydedilemedi. Lütfen tekrar deneyin.', 'Hata');
+      showError(
+        language === 'tr' ? 'Ürün kaydedilemedi. Lütfen tekrar deneyin.' : 'Could not save product. Please try again.',
+        language === 'tr' ? 'Hata' : 'Error'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -322,7 +340,7 @@ export const AddProductScreen: React.FC = () => {
     <SafeAreaView style={styles.safeArea}>
       {/* Üst Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Yeni Ürün Ekle</Text>
+        <Text style={styles.headerTitle}>{t('productForm.addTitle')}</Text>
       </View>
 
       <KeyboardAvoidingView
@@ -336,11 +354,13 @@ export const AddProductScreen: React.FC = () => {
         >
           {/* Bölüm 1: Ürün Fotoğrafı */}
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Ürün Fotoğrafı</Text>
+            <Text style={styles.sectionLabel}>{t('productForm.photoSectionTitle')}</Text>
             {isUploadingImage ? (
               <View style={[styles.imagePreviewContainer, { justifyContent: 'center', alignItems: 'center', backgroundColor: colors.surfaceContainerLow }]}>
                 <ActivityIndicator size="large" color={colors.primary} />
-                <Text style={[styles.photoActionText, { marginTop: 8, color: colors.primary }]}>Görsel Yükleniyor...</Text>
+                <Text style={[styles.photoActionText, { marginTop: 8, color: colors.primary }]}>
+                  {language === 'tr' ? 'Görsel Yükleniyor...' : 'Uploading Photo...'}
+                </Text>
               </View>
             ) : imageUri ? (
               <View style={styles.imagePreviewContainer}>
@@ -364,7 +384,7 @@ export const AddProductScreen: React.FC = () => {
                   activeOpacity={0.7}
                 >
                   <Camera size={26} color={colors.primary} />
-                  <Text style={styles.photoActionText}>Kamera</Text>
+                  <Text style={styles.photoActionText}>{t('common.camera')}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -373,7 +393,9 @@ export const AddProductScreen: React.FC = () => {
                   activeOpacity={0.7}
                 >
                   <ImageIcon size={26} color={colors.primary} />
-                  <Text style={styles.photoActionText}>Galeriden Seç</Text>
+                  <Text style={styles.photoActionText}>
+                    {language === 'tr' ? 'Galeriden Seç' : 'From Gallery'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -381,12 +403,14 @@ export const AddProductScreen: React.FC = () => {
 
           {/* Bölüm 2: Temel Bilgiler */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Temel Bilgiler</Text>
+            <Text style={styles.sectionTitle}>
+              {language === 'tr' ? 'Temel Bilgiler' : 'Basic Information'}
+            </Text>
 
             {/* Ürün Adı */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                Ürün Adı <Text style={styles.requiredStar}>*</Text>
+                {t('productForm.nameLabel')} <Text style={styles.requiredStar}>*</Text>
               </Text>
               <Controller
                 control={control}
@@ -400,7 +424,7 @@ export const AddProductScreen: React.FC = () => {
                   >
                     <TextInput
                       style={styles.textInput}
-                      placeholder="Örn: Samsung QLED TV"
+                      placeholder={t('productForm.namePlaceholder')}
                       placeholderTextColor={colors.outline}
                       value={value}
                       onChangeText={onChange}
@@ -418,7 +442,7 @@ export const AddProductScreen: React.FC = () => {
             <View style={styles.row}>
               <View style={[styles.inputGroup, styles.flex1]}>
                 <Text style={styles.label}>
-                  Marka <Text style={styles.requiredStar}>*</Text>
+                  {t('productForm.brandLabel')} <Text style={styles.requiredStar}>*</Text>
                 </Text>
                 <Controller
                   control={control}
@@ -432,7 +456,7 @@ export const AddProductScreen: React.FC = () => {
                     >
                       <TextInput
                         style={styles.textInput}
-                        placeholder="Örn: Samsung"
+                        placeholder={t('productForm.brandPlaceholder')}
                         placeholderTextColor={colors.outline}
                         value={value}
                         onChangeText={onChange}
@@ -444,7 +468,7 @@ export const AddProductScreen: React.FC = () => {
               </View>
 
               <View style={[styles.inputGroup, styles.flex1]}>
-                <Text style={styles.label}>Model</Text>
+                <Text style={styles.label}>{t('productForm.modelLabel')}</Text>
                 <Controller
                   control={control}
                   name="model"
@@ -452,7 +476,7 @@ export const AddProductScreen: React.FC = () => {
                     <View style={styles.inputBox}>
                       <TextInput
                         style={styles.textInput}
-                        placeholder="Örn: Q60B"
+                        placeholder={t('productForm.modelPlaceholder')}
                         placeholderTextColor={colors.outline}
                         value={value || ''}
                         onChangeText={onChange}
@@ -467,7 +491,7 @@ export const AddProductScreen: React.FC = () => {
             {/* Kategori */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                Kategori <Text style={styles.requiredStar}>*</Text>
+                {t('productForm.categoryLabel')} <Text style={styles.requiredStar}>*</Text>
               </Text>
               <TouchableOpacity
                 style={styles.pickerBox}
@@ -480,7 +504,9 @@ export const AddProductScreen: React.FC = () => {
                     !selectedCategory && styles.placeholderText,
                   ]}
                 >
-                  {selectedCategory ? selectedCategory.name : 'Kategori seçin'}
+                  {selectedCategory
+                    ? getCategoryDisplayName(selectedCategory.name, language)
+                    : (language === 'tr' ? 'Kategori seçin' : 'Select category')}
                 </Text>
                 <ChevronDown size={18} color={colors.outline} />
               </TouchableOpacity>
@@ -489,7 +515,7 @@ export const AddProductScreen: React.FC = () => {
             {/* Seri Numarası */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                Seri Numarası <Text style={styles.requiredStar}>*</Text>
+                {t('productForm.serialNumberLabel')} <Text style={styles.requiredStar}>*</Text>
               </Text>
               <Controller
                 control={control}
@@ -504,7 +530,7 @@ export const AddProductScreen: React.FC = () => {
                   >
                     <TextInput
                       style={styles.textInput}
-                      placeholder="Seri numarasını girin veya okutun"
+                      placeholder={language === 'tr' ? 'Seri numarasını girin veya okutun' : 'Enter or scan serial number'}
                       placeholderTextColor={colors.outline}
                       maxLength={35}
                       value={value || ''}
@@ -518,7 +544,9 @@ export const AddProductScreen: React.FC = () => {
                       hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                     >
                       <ScanBarcode size={16} color={colors.primary} />
-                      <Text style={styles.scanButtonText}>Tara</Text>
+                      <Text style={styles.scanButtonText}>
+                        {language === 'tr' ? 'Tara' : 'Scan'}
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -531,13 +559,15 @@ export const AddProductScreen: React.FC = () => {
 
           {/* Bölüm 3: Satın Alma & Garanti Bilgileri */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Satın Alma & Garanti Bilgileri</Text>
+            <Text style={styles.sectionTitle}>
+              {language === 'tr' ? 'Satın Alma & Garanti Bilgileri' : 'Purchase & Warranty Information'}
+            </Text>
 
             <View style={styles.row}>
               {/* Satın Alma Tarihi */}
               <View style={[styles.inputGroup, styles.flex1]}>
                 <Text style={styles.label}>
-                  Satın Alma Tarihi <Text style={styles.requiredStar}>*</Text>
+                  {t('productForm.purchaseDateLabel')} <Text style={styles.requiredStar}>*</Text>
                 </Text>
                 <Controller
                   control={control}
@@ -551,7 +581,7 @@ export const AddProductScreen: React.FC = () => {
                     >
                       <TextInput
                         style={styles.textInput}
-                        placeholder="GG/AA/YYYY"
+                        placeholder={language === 'tr' ? 'GG/AA/YYYY' : 'DD/MM/YYYY'}
                         placeholderTextColor={colors.outline}
                         keyboardType="number-pad"
                         maxLength={10}
@@ -578,7 +608,7 @@ export const AddProductScreen: React.FC = () => {
               {/* Satın Alma Fiyatı */}
               <View style={[styles.inputGroup, styles.flex1]}>
                 <Text style={styles.label}>
-                  Satın Alma Fiyatı <Text style={styles.requiredStar}>*</Text>
+                  {t('productForm.priceLabel')} <Text style={styles.requiredStar}>*</Text>
                 </Text>
                 <Controller
                   control={control}
@@ -621,7 +651,7 @@ export const AddProductScreen: React.FC = () => {
             {/* Satın Alınan Mağaza */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                Satın Alınan Mağaza <Text style={styles.requiredStar}>*</Text>
+                {language === 'tr' ? 'Satın Alınan Mağaza' : 'Store / Vendor'} <Text style={styles.requiredStar}>*</Text>
               </Text>
               <Controller
                 control={control}
@@ -635,7 +665,7 @@ export const AddProductScreen: React.FC = () => {
                   >
                     <TextInput
                       style={styles.textInput}
-                      placeholder="Örn: Vatan Bilgisayar"
+                      placeholder={language === 'tr' ? 'Örn: Vatan Bilgisayar, MediaMarkt' : 'e.g. Amazon, Best Buy, Apple'}
                       placeholderTextColor={colors.outline}
                       value={value || ''}
                       onChangeText={onChange}
@@ -651,7 +681,7 @@ export const AddProductScreen: React.FC = () => {
 
             {/* Garanti Süresi Seçimi */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Garanti Süresi</Text>
+              <Text style={styles.label}>{t('productForm.warrantyPeriodLabel')}</Text>
               <View style={styles.durationPillsRow}>
                 {DURATION_OPTIONS.map((opt) => (
                   <TouchableOpacity
@@ -670,7 +700,7 @@ export const AddProductScreen: React.FC = () => {
                           styles.durationPillTextActive,
                       ]}
                     >
-                      {opt.label}
+                      {opt.months / 12} {language === 'tr' ? 'Yıl' : (opt.months === 12 ? 'Year' : 'Years')}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -680,7 +710,7 @@ export const AddProductScreen: React.FC = () => {
             {/* Garanti Bitiş Tarihi */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                Garanti Bitiş Tarihi <Text style={styles.requiredStar}>*</Text>
+                {t('productForm.warrantyEndDateLabel')} <Text style={styles.requiredStar}>*</Text>
               </Text>
               <Controller
                 control={control}
@@ -694,7 +724,7 @@ export const AddProductScreen: React.FC = () => {
                   >
                     <TextInput
                       style={styles.textInput}
-                      placeholder="GG/AA/YYYY"
+                      placeholder={language === 'tr' ? 'GG/AA/YYYY' : 'DD/MM/YYYY'}
                       placeholderTextColor={colors.outline}
                       keyboardType="number-pad"
                       maxLength={10}
@@ -716,11 +746,13 @@ export const AddProductScreen: React.FC = () => {
 
           {/* Bölüm 4: Ek Bilgiler */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Ek Bilgiler</Text>
+            <Text style={styles.sectionTitle}>
+              {language === 'tr' ? 'Ek Bilgiler' : 'Additional Information'}
+            </Text>
 
             {/* Açıklama */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Açıklama</Text>
+              <Text style={styles.label}>{t('productForm.notesLabel')}</Text>
               <Controller
                 control={control}
                 name="description"
@@ -728,7 +760,7 @@ export const AddProductScreen: React.FC = () => {
                   <View style={[styles.inputBox, styles.textAreaBox]}>
                     <TextInput
                       style={[styles.textInput, styles.textArea]}
-                      placeholder="Eklemek istediğiniz notlar..."
+                      placeholder={language === 'tr' ? 'Eklemek istediğiniz notlar...' : 'Additional notes, condition, or warranty terms...'}
                       placeholderTextColor={colors.outline}
                       multiline
                       numberOfLines={3}
@@ -745,12 +777,14 @@ export const AddProductScreen: React.FC = () => {
             {/* Fatura Fotoğrafı */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                Fatura Belgesi / Fotoğrafı <Text style={styles.requiredStar}>*</Text>
+                {language === 'tr' ? 'Fatura Belgesi / Fotoğrafı' : 'Receipt / Invoice Document'} <Text style={styles.requiredStar}>*</Text>
               </Text>
               {isUploadingInvoice ? (
                 <View style={[styles.invoiceUploadedBox, { justifyContent: 'center' }]}>
                   <ActivityIndicator size="small" color={colors.primary} style={{ marginRight: 8 }} />
-                  <Text style={styles.invoiceUploadedText}>Fatura Yükleniyor...</Text>
+                  <Text style={styles.invoiceUploadedText}>
+                    {language === 'tr' ? 'Fatura Yükleniyor...' : 'Uploading Receipt...'}
+                  </Text>
                 </View>
               ) : invoiceName ? (
                 <View style={styles.invoiceUploadedBox}>
@@ -783,7 +817,7 @@ export const AddProductScreen: React.FC = () => {
                       errors.invoice_path && { color: colors.error, fontWeight: '600' },
                     ]}
                   >
-                    Fatura, fiş fotoğrafı veya PDF yükle
+                    {language === 'tr' ? 'Fatura, fiş fotoğrafı veya PDF yükle' : 'Upload invoice, receipt photo or PDF'}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -807,7 +841,7 @@ export const AddProductScreen: React.FC = () => {
               {isSubmitting ? (
                 <ActivityIndicator color={colors.onPrimary} />
               ) : (
-                <Text style={styles.submitButtonText}>Ürünü Kaydet</Text>
+                <Text style={styles.submitButtonText}>{t('productForm.saveProductBtn')}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -832,8 +866,8 @@ export const AddProductScreen: React.FC = () => {
           setAppCameraVisible(true);
         }}
         onSelectGallery={() => handlePickProductImage('gallery')}
-        title="Ürün Fotoğrafı Ekle"
-        subtitle="Kamera ile çekin veya galerinizden seçin"
+        title={language === 'tr' ? 'Ürün Fotoğrafı Ekle' : 'Add Product Photo'}
+        subtitle={language === 'tr' ? 'Kamera ile çekin veya galerinizden seçin' : 'Take with camera or pick from gallery'}
       />
 
       {/* Fatura Seçim Modalı */}
@@ -847,8 +881,8 @@ export const AddProductScreen: React.FC = () => {
         onSelectGallery={() => handlePickInvoice('gallery')}
         onSelectDocument={() => handlePickInvoice('document')}
         includeDocumentOption={true}
-        title="Fatura / Belge Ekle"
-        subtitle="Fotoğraf çekin, galeriden veya PDF seçin"
+        title={language === 'tr' ? 'Fatura / Belge Ekle' : 'Add Invoice / Receipt'}
+        subtitle={language === 'tr' ? 'Fotoğraf çekin, galeriden veya PDF seçin' : 'Take photo, pick from gallery or select PDF'}
       />
 
       {/* Barkod / QR Kod Tarayıcı Modalı */}
@@ -868,7 +902,11 @@ export const AddProductScreen: React.FC = () => {
         visible={appCameraVisible}
         onClose={() => setAppCameraVisible(false)}
         onCapture={handleCameraCaptured}
-        title={cameraTarget === 'product' ? 'Ürün Fotoğrafı Çek' : 'Fatura Fotoğrafı Çek'}
+        title={
+          cameraTarget === 'product'
+            ? (language === 'tr' ? 'Ürün Fotoğrafı Çek' : 'Capture Product Photo')
+            : (language === 'tr' ? 'Fatura Fotoğrafı Çek' : 'Capture Receipt Photo')
+        }
         subtitle={
           cameraTarget === 'product'
             ? 'Cihazınızı çerçevenin ortasına hizalayın'

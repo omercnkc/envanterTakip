@@ -26,6 +26,7 @@ import {
 } from 'lucide-react-native';
 
 import { COLORS } from '../constants';
+import { useTranslation } from '../i18n';
 import { permissionHelper } from '../utils/permissionHelper';
 import {
   styles,
@@ -59,6 +60,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   onClose,
   onScan,
 }) => {
+  const { language } = useTranslation();
   const [permission, requestPermission] = useCameraPermissions();
   const [torch, setTorch] = useState<boolean>(false);
   const [hasScanned, setHasScanned] = useState<boolean>(false);
@@ -125,9 +127,13 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
           <CameraIcon size={32} color={COLORS.primary} />
         </View>
 
-        <Text style={styles.permissionTitle}>Kamera İzni Gerekiyor</Text>
+        <Text style={styles.permissionTitle}>
+          {language === 'tr' ? 'Kamera İzni Gerekiyor' : 'Camera Access Required'}
+        </Text>
         <Text style={styles.permissionDescription}>
-          Ürün kutusu veya fatura üzerindeki seri numarasını otomatik okumak için kamera iznine ihtiyaç duyuyoruz.
+          {language === 'tr'
+            ? 'Ürün kutusu veya fatura üzerindeki seri numarasını otomatik okumak için kamera iznine ihtiyaç duyuyoruz.'
+            : 'Camera permission is required to automatically scan serial numbers on boxes or invoices.'}
         </Text>
 
         <TouchableOpacity
@@ -138,7 +144,9 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
           }}
           activeOpacity={0.8}
         >
-          <Text style={styles.permissionButtonText}>Kamera İzni Ver</Text>
+          <Text style={styles.permissionButtonText}>
+            {language === 'tr' ? 'Kamera İzni Ver' : 'Grant Camera Access'}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -146,7 +154,9 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
           onPress={onClose}
           activeOpacity={0.7}
         >
-          <Text style={styles.cancelButtonText}>Vazgeç</Text>
+          <Text style={styles.cancelButtonText}>
+            {language === 'tr' ? 'Vazgeç' : 'Cancel'}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -188,8 +198,12 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                 </TouchableOpacity>
 
                 <View style={styles.topBarTitleContainer}>
-                  <Text style={styles.topBarTitle}>Barkod / QR Tarayıcı</Text>
-                  <Text style={styles.topBarSubtitle}>Seri No Otomatik Okuma</Text>
+                  <Text style={styles.topBarTitle}>
+                    {language === 'tr' ? 'Barkod / QR Tarayıcı' : 'Barcode / QR Scanner'}
+                  </Text>
+                  <Text style={styles.topBarSubtitle}>
+                    {language === 'tr' ? 'Seri No Otomatik Okuma' : 'Auto-Read Serial Number'}
+                  </Text>
                 </View>
 
                 <TouchableOpacity
@@ -266,12 +280,14 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                   <ScanBarcode size={16} color={COLORS.primaryFixed} />
                   <Text style={styles.instructionText}>
                     {hasScanned
-                      ? 'Seri numarası okundu!'
-                      : 'Barkodu çerçeve içine hizalayın'}
+                      ? (language === 'tr' ? 'Seri numarası okundu!' : 'Serial number scanned!')
+                      : (language === 'tr' ? 'Barkodu çerçeve içine hizalayın' : 'Align barcode within frame')}
                   </Text>
                 </View>
                 <Text style={styles.subInstructionText}>
-                  Kutu veya garanti belgesi üzerindeki barkod algılandığında seri numarası otomatik doldurulur.
+                  {language === 'tr'
+                    ? 'Kutu veya garanti belgesi üzerindeki barkod algılandığında seri numarası otomatik doldurulur.'
+                    : 'Serial number is automatically filled once the barcode is detected.'}
                 </Text>
               </View>
             </SafeAreaView>

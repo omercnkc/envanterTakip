@@ -2,6 +2,7 @@ import React from 'react';
 import { FlexWidget, TextWidget } from 'react-native-android-widget';
 
 export interface WarrantyWidgetData {
+  language?: 'tr' | 'en';
   nearestProduct?: {
     id: string;
     name: string;
@@ -18,7 +19,9 @@ export const WarrantyWidget: React.FC<WarrantyWidgetData> = ({
   nearestProduct,
   activeCount = 0,
   totalCount = 0,
+  language = 'tr',
 }) => {
+  const isEn = language === 'en';
   const isExpiring = nearestProduct?.status === 'expiring_soon';
   const isExpired = nearestProduct?.status === 'expired';
 
@@ -37,12 +40,12 @@ export const WarrantyWidget: React.FC<WarrantyWidgetData> = ({
 
   const daysText =
     nearestProduct?.daysRemaining === 0
-      ? 'Bugün Son Gün'
+      ? (isEn ? 'Ends Today' : 'Bugün Son Gün')
       : nearestProduct?.daysRemaining === 1
-      ? 'Yarın Bitiyor'
+      ? (isEn ? 'Ends Tomorrow' : 'Yarın Bitiyor')
       : nearestProduct?.daysRemaining && nearestProduct.daysRemaining > 0
-      ? `${nearestProduct.daysRemaining} Gün Kaldı`
-      : 'Süresi Doldu';
+      ? (isEn ? `${nearestProduct.daysRemaining} Days Left` : `${nearestProduct.daysRemaining} Gün Kaldı`)
+      : (isEn ? 'Expired' : 'Süresi Doldu');
 
   return (
     <FlexWidget
@@ -73,7 +76,7 @@ export const WarrantyWidget: React.FC<WarrantyWidgetData> = ({
       >
         <FlexWidget style={{ flexDirection: 'column' }}>
           <TextWidget
-            text="🛡️ Envanter Takip"
+            text={isEn ? "🛡️ Safe Inventory" : "🛡️ Envanter Takip"}
             style={{
               fontSize: 12,
               fontWeight: '700',
@@ -81,7 +84,7 @@ export const WarrantyWidget: React.FC<WarrantyWidgetData> = ({
             }}
           />
           <TextWidget
-            text={`${activeCount} aktif garanti`}
+            text={`${activeCount} ${isEn ? 'active warranties' : 'aktif garanti'}`}
             style={{
               fontSize: 10,
               color: '#64748b',
@@ -102,10 +105,10 @@ export const WarrantyWidget: React.FC<WarrantyWidgetData> = ({
           <TextWidget
             text={
               isExpiring
-                ? '⚠️ Yaklaşıyor'
+                ? (isEn ? '⚠️ Expiring' : '⚠️ Yaklaşıyor')
                 : isExpired
-                ? '❌ Bitti'
-                : '✅ Güvende'
+                ? (isEn ? '❌ Expired' : '❌ Bitti')
+                : (isEn ? '✅ Safe' : '✅ Güvende')
             }
             style={{
               fontSize: 10,
@@ -151,7 +154,7 @@ export const WarrantyWidget: React.FC<WarrantyWidgetData> = ({
           }}
         >
           <TextWidget
-            text="Garantiler Güvende"
+            text={isEn ? "Warranties Safe" : "Garantiler Güvende"}
             style={{
               fontSize: 14,
               fontWeight: '700',
@@ -159,7 +162,7 @@ export const WarrantyWidget: React.FC<WarrantyWidgetData> = ({
             }}
           />
           <TextWidget
-            text="Bu ay süresi biten ürün yok"
+            text={isEn ? "No products expiring this month" : "Bu ay süresi biten ürün yok"}
             style={{
               fontSize: 11,
               color: '#64748b',
@@ -182,7 +185,7 @@ export const WarrantyWidget: React.FC<WarrantyWidgetData> = ({
         }}
       >
         <TextWidget
-          text={nearestProduct ? daysText : `${totalCount} kayıtlı eşya`}
+          text={nearestProduct ? daysText : `${totalCount} ${isEn ? 'items saved' : 'kayıtlı eşya'}`}
           style={{
             fontSize: 11,
             fontWeight: '700',
@@ -190,7 +193,7 @@ export const WarrantyWidget: React.FC<WarrantyWidgetData> = ({
           }}
         />
         <TextWidget
-          text={nearestProduct?.endDate ? `Son: ${nearestProduct.endDate}` : 'Detaylar →'}
+          text={nearestProduct?.endDate ? `${isEn ? 'Ends: ' : 'Son: '}${nearestProduct.endDate}` : (isEn ? 'Details →' : 'Detaylar →')}
           style={{
             fontSize: 10,
             color: '#64748b',

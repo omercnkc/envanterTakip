@@ -16,11 +16,13 @@ import {
 } from 'lucide-react-native';
 import { useAlert, AlertButton } from '../context/AlertContext';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from '../i18n';
 import { styles } from './AppAlertModal.styles';
 
 export const AppAlertModal: React.FC = () => {
   const { alert, hideAlert } = useAlert();
   const { colors, isDark } = useTheme();
+  const { language } = useTranslation();
 
   const scaleAnim = useRef(new Animated.Value(0.92)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -225,7 +227,7 @@ export const AppAlertModal: React.FC = () => {
                       { color: isDark ? colors.onSurface : colors.secondary },
                     ]}
                   >
-                    {alert.cancelText || 'Vazgeç'}
+                    {alert.cancelText || (language === 'tr' ? 'Vazgeç' : 'Cancel')}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -246,7 +248,7 @@ export const AppAlertModal: React.FC = () => {
                     { color: visuals.confirmBtnText },
                   ]}
                 >
-                  {alert.confirmText || 'Tamam'}
+                  {alert.confirmText || (language === 'tr' ? 'Tamam' : 'OK')}
                 </Text>
               </TouchableOpacity>
             </View>
