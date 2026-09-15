@@ -21,6 +21,7 @@
       }
     },
     "android": {
+      "package": "com.omercnkc.envantertakip",
       "adaptiveIcon": {
         "backgroundColor": "#f8f9ff",
         "foregroundImage": "./assets/android-icon-foreground.png"
