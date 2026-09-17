@@ -3,7 +3,7 @@
  * Görsel ve fatura dosyalarını Supabase Storage bucket'larına yükler ve yönetir.
  */
 
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { decode } from 'base64-arraybuffer';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { formatAppError } from '../utils/errorHandler';
