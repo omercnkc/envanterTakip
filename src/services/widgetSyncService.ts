@@ -62,6 +62,7 @@ export function calculateWidgetData(
       daysRemaining: nearest.daysRemaining,
       endDate: formatDateTurkish(nearest.product.warranty_end_date),
       status: nearest.isExpiringSoon ? 'expiring_soon' : 'active',
+      imageUrl: nearest.product.image_path,
     };
   }
 

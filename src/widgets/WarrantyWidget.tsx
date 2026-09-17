@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlexWidget, TextWidget } from 'react-native-android-widget';
+import { FlexWidget, TextWidget, ImageWidget } from 'react-native-android-widget';
 
 export interface WarrantyWidgetData {
   language?: 'tr' | 'en';
@@ -10,6 +10,7 @@ export interface WarrantyWidgetData {
     daysRemaining: number;
     endDate: string;
     status: 'expired' | 'expiring_soon' | 'active';
+    imageUrl?: string | null;
   } | null;
   activeCount: number;
   totalCount: number;
@@ -142,6 +143,17 @@ export const WarrantyWidget: React.FC<WarrantyWidgetData> = ({
                 fontSize: 11,
                 color: '#64748b',
                 marginTop: 2,
+              }}
+            />
+          ) : null}
+          {nearestProduct.imageUrl ? (
+            <ImageWidget
+              image={nearestProduct.imageUrl}
+              style={{
+                width: 50,
+                height: 50,
+                marginTop: 8,
+                borderRadius: 8,
               }}
             />
           ) : null}
