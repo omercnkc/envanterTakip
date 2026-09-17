@@ -1,248 +1,153 @@
-# 🛡️ envanterTakip — Smart Home Inventory & Warranty Tracker
-### *Ev Envanter & Garanti Takip Mobil Uygulaması*
+# Home Inventory & Warranty Tracker
 
-<p align="center">
-  <img src="https://img.shields.io/badge/React_Native-0.86.3-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React Native" />
-  <img src="https://img.shields.io/badge/Expo-SDK_57-000020?style=for-the-badge&logo=expo&logoColor=white" alt="Expo" />
-  <img src="https://img.shields.io/badge/TypeScript-6.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Supabase-Backend_%26_Auth-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
-  <img src="https://img.shields.io/badge/Platform-iOS_%7C_Android-black?style=for-the-badge&logo=android&logoColor=white" alt="Platforms" />
-  <img src="https://img.shields.io/badge/Languages-TR_%7C_EN-FF5722?style=for-the-badge&logo=google-translate&logoColor=white" alt="Languages" />
-</p>
+![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Expo](https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
 
----
+**A modern cross-platform mobile application to effortlessly manage your household assets and track product warranties.**
 
-<p align="center">
-  <b>🌍 Dil / Language:</b>
-  <a href="#-türkçe-dokümantasyon"> 🇹🇷 Türkçe </a> |
-  <a href="#-english-documentation"> 🇬🇧 English </a>
-</p>
+The Home Inventory & Warranty Tracker solves the common problem of losing purchase receipts, forgetting warranty expiration dates, and struggling to organize home assets. Its main purpose is to provide users with a secure, centralized digital vault for logging product details, storing invoices, and managing periodic maintenance schedules.
 
 ---
 
-<a name="-türkçe-dokümantasyon"></a>
-## 🇹🇷 Türkçe Dokümantasyon
+## Features
 
-**envanterTakip**, evinizdeki tüm elektronik cihazları, beyaz eşyaları, mobilyaları ve kişisel eşyaları dijitalleştirerek garanti sürelerini, faturalarını ve servis geçmişlerini tek merkezden yönetmenizi sağlayan yeni nesil akıllı mobil envanter uygulamasıdır.
-
-React Native (Expo SDK 57), TypeScript ve Supabase ile geliştirilmiş olup iOS ve Android platformlarında tam native performans ve modern bir kullanıcı deneyimi sunar.
-
----
-
-### 📑 İçindekiler
-1. [Öne Çıkan Özellikler](#-öne-çıkan-özellikler)
-2. [Ekranlar & Kullanıcı Deneyimi](#-ekranlar--kullanıcı-deneyimi)
-3. [Teknoloji Mimarisi](#-teknoloji-mimarisi)
-4. [Veritabanı & Güvenlik (Supabase)](#-veritabanı--güvenlik-supabase)
-5. [Garanti Hesaplama & Bildirim Motoru](#-garanti-hesaplama--bildirim-motoru)
-6. [Kurulum & Çalıştırma](#-kurulum--çalıştırma)
-7. [Proje Dizin Yapısı](#-proje-dizin-yapısı)
-8. [Yol Haritası & Sürüm Durumu](#-yol-haritası--sürüm-durumu)
-
----
-
-### ✨ Öne Çıkan Özellikler
-
-- 🌐 **Çoklu Dil Desteği (TR / EN)**: Türkçe ve İngilizce arayüz desteği, dil tercihini dinamik değiştirme ve yerelleştirilmiş bildirim şablonları.
-- 📊 **İnteraktif Kategori Grafikleri (Analytics)**: `react-native-gifted-charts` destekli interaktif pasta/halka (Donut) ve çubuk grafikler. Kategori bazında ürün adedi ve toplam bütçe dağılımı, grafik dilimlerine dokunarak ürün listesini anında filtreleme.
-- 📱 **Ana Ekran Widget Desteği (Android & iOS Widgets)**: Uygulamayı açmadan telefonun ana ekranında yaklaşan garantileri, gün sayaçlarını ve kritik uyarıları canlı widget kartı olarak izleme (`react-native-android-widget`).
-- 🛡️ **Garanti Sağlık Skoru (Warranty Health Score)**: Sahip olduğunuz ürünlerin aktif garanti yüzdesini ve koruma düzeyini gösteren dinamik sağlık puanı ve akıllı analiz panosu.
-- 📄 **Tek Tıkla Resmi A4 PDF Raporu**: Sigorta, taşınma ve servis süreçleri için tüm envanteri, fatura numaralarını ve garanti durumlarını listeleyen resmi tasarımlı A4 PDF dökümü oluşturma ve anında paylaşma.
-- 🔒 **Modern Uygulama İçi İzin Yönetimi (Permission Priming UI)**: İşletim sisteminin ani ve yabancı dildeki izin diyalogları yerine; kamera, galeri ve bildirim izinlerinin neden istendiğini, şifreleme güvencelerini açıklayan şık cam efektli (Glassmorphic) Türkçe/İngilizce hazırlık modalleri.
-- 💾 **Tam Yedekleme & Geri Yükleme (JSON Backup & Restore)**: Envanter verilerini tek dokunuşla JSON olarak dışa aktarma veya daha önce alınan yedekleri dosyadan içe aktararak bildirimleriyle birlikte anında geri yükleme.
-- ⚙️ **Gelişmiş Ayarlar Merkezi**:
-  - Özelleştirilebilir bildirim zamanlaması (`60`, `30`, `14`, `7`, `1` gün hapları)
-  - Periyodik bakım ve servis hatırlatıcıları
-  - Para birimi seçimi (`₺ TRY`, `$ USD`, `€ EUR`, `£ GBP`)
-  - Standart garanti süresi ön tanımları (`12`, `24`, `36`, `60` ay)
-  - KVKK, Gizlilik Politikası ve Kullanım Koşulları modali
-- 📷 **Barkod & QR Kod Okuyucu**: Seri numaralarını ve ürün kodlarını kamerayla saniyeler içinde otomatik forma aktarma.
-- 🔐 **Biyometrik Kimlik Doğrulama**: FaceID / TouchID / Parmak İzi ile uygulamayı kilitleme ve güvenli oturum açma.
-- 🌓 **Dinamik Açık / Koyu Tema**: Sistem tercihiyle senkronize veya manuel seçilebilir modern Dark & Light Mode tasarımı.
+- **Secure Authentication & Access Control:**
+  - Email/Password registration and login powered by Supabase Auth.
+  - Local Biometric App Lock (FaceID/TouchID) for enhanced privacy on the device.
+- **Comprehensive Product Management (CRUD):**
+  - Add, edit, view, and delete household products and appliances.
+  - Organize items using predefined categories and mark important ones as favorites.
+- **Warranty & Maintenance Tracking:**
+  - Automated tracking of warranty periods with visual expiration indicators.
+  - Log and schedule periodic maintenance records, tracking associated costs and service providers.
+- **Media & Document Storage:**
+  - Capture or upload product photos and invoice documents directly to cloud storage.
+- **Advanced Search & Filtering:**
+  - Full-text search capability across product names, brands, models, and serial numbers.
+- **Local Push Notifications:**
+  - Automated local notifications alerting users of upcoming warranty expirations or scheduled maintenance.
+- **User Experience Enhancements:**
+  - Seamless Dark/Light mode switching with smooth animated transitions.
+  - Multi-language support via internal i18n implementation.
+  - Interactive dashboard charts for inventory statistics.
+  - Data export and share functionalities (PDF/Print).
 
 ---
 
-### 📱 Ekranlar & Kullanıcı Deneyimi
+## Tech Stack
 
-| Ekran | Açıklama |
-| :--- | :--- |
-| **Giriş & Kayıt (Auth)** | E-posta/Şifre ile Supabase Auth doğrulaması, şifre sıfırlama, Biyometrik FaceID girişi. |
-| **Ana Sayfa (Dashboard)** | Finansal özet, garanti durum sayaçları, son eklenen ürünler, hızlı işlem butonları. |
-| **İnteraktif Grafikler** | Kategori bütçe dağılımı, donat grafik, etkileşimli filtreleme ve analitik metrikler. |
-| **Ürünler (Envanter)** | Görsel kartlı grid/liste tasarımı, anlık arama, çoklu filtre (Kategori, Garanti durumu). |
-| **Ürün Detay** | Ürün ve fatura fotoğrafları (tam ekran zoom), garanti bitiş sayacı, servis & mağaza bilgileri, QR/Barkod çıktısı. |
-| **Ürün Ekle / Düzenle** | React Hook Form & Zod doğrulamalı, kamera ve galeriden görsel yüklemeli, otomatik tarih hesaplamalı form. |
-| **Bildirim Merkezi** | Planlanmış garanti alarmları, periyodik servis hatırlatıcıları ve geçmiş bildirimler. |
-| **Profil & Kimlik** | Profil fotoğrafı yükleme & görüntüleme, Garanti Sağlık Skoru, Sigorta PDF Raporu oluşturma. |
-| **Ayarlar & Yedekleme** | Para birimi, hatırlatıcı sıklığı, yedek dışa/içe aktarma (Restore), KVKK & yasal sözleşmeler. |
+### Frontend / Mobile
+| Technology | Purpose |
+|---|---|
+| **React Native** (0.86) | Core framework for building the cross-platform mobile application. |
+| **Expo** (v57) | Managed workflow providing native APIs (Camera, FileSystem) and OTA updates. |
+| **TypeScript** | Enforces static typing for robustness and better developer experience. |
 
----
+### Backend & Database
+| Technology | Purpose |
+|---|---|
+| **Supabase** | Backend-as-a-Service (BaaS) providing authentication and APIs. |
+| **PostgreSQL** | Relational database secured with Row Level Security (RLS) policies. |
 
-### 🛠️ Teknoloji Mimarisi
+### State Management & Architecture
+| Technology | Purpose |
+|---|---|
+| **React Context API** | Handles global application state (Auth, Theme, Inventory, Alerts). |
+| **React Hook Form** | Manages complex form states with optimized re-renders. |
+| **Zod** | Provides strict schema validation for form payloads. |
 
-- **Mobil Çekirdek**: React Native `0.86.3` / Expo SDK `57` / React `19.2.3`
-- **Dil**: TypeScript `6.0` (Strict Type Safety)
-- **Navigasyon**: `@react-navigation/native-stack` & `@react-navigation/bottom-tabs`
-- **Grafik & Veri Görselleştirme**: `react-native-gifted-charts`, `react-native-svg`
-- **Widget Altyapısı**: `react-native-android-widget`
-- **Form & Doğrulama**: `react-hook-form`, `zod`, `@hookform/resolvers`
-- **Kamera & Medya**: `expo-camera`, `expo-image-picker`, `expo-document-picker`
-- **PDF & Paylaşım**: `expo-print`, `expo-sharing`, `expo-file-system`
-- **Biyometrik Güvenlik**: `expo-local-authentication`, `expo-crypto`
-- **Bildirimler**: `expo-notifications`
-- **Tasarım & UI**: Vanilla StyleSheet, Lucide React Native, Expo Linear Gradient, Glassmorphism
+### Storage & Native APIs
+| Technology | Purpose |
+|---|---|
+| **Supabase Storage** | Cloud buckets for storing uploaded `product-images` and `invoices`. |
+| **Expo Modules** | Used for local notifications, biometric auth, image/document picking, and sharing. |
 
 ---
 
-### 🗄️ Veritabanı & Güvenlik (Supabase)
+## Architecture
 
-```
-auth.users
-  └── profiles (id, full_name, email, avatar_url, language, currency, created_at)
-        └── products (id, user_id, category_id, name, brand, model, serial_number, 
-                      purchase_date, purchase_price, warranty_end_date, store_name, 
-                      description, image_path, invoice_path, created_at, updated_at)
-              └── categories (id, name, icon, color, created_at)
-```
+The application adopts a **Layered Architecture** leveraging the **Context API** for state management and a **Service Layer** for backend abstraction. This design ensures separation of concerns, keeping the UI components clean and decoupled from data-fetching logic.
 
-- **Row Level Security (RLS)**: Veritabanı seviyesinde `auth.uid() = user_id` kuralı sayesinde her kullanıcı yalnızca kendi ürün ve belgelerine erişebilir.
-- **Storage Buckets**:
-  - `product-images`: Ürün fotoğrafları için güvenli depolama.
-  - `invoices`: Fatura, fiş ve resmi garanti belgeleri için depolama.
-  - `avatars`: Kullanıcı profil fotoğrafları için depolama.
+- **UI Layer (`src/screens`, `src/components`):** Composed of React Native views. Feature-based file grouping is used, where each screen has its own `.tsx` and `.styles.ts` files.
+- **State Management Layer (`src/context`):** Context Providers (e.g., `AuthProvider`, `InventoryContext`) wrap the application, maintaining global states and exposing custom hooks (`useAuth`, `useInventory`) for the UI to consume.
+- **Service Layer (`src/api`):** Abstracts all Supabase SDK interactions. Services like `productService.ts` and `authService.ts` handle data serialization, error formatting, and API requests.
+- **Data & Security Layer (Supabase):** PostgreSQL handles data relations, while Row Level Security (RLS) policies ensure users can only access and modify their own inventory data.
 
----
+```mermaid
+flowchart TD
+    subgraph Client Application
+        UI[Screens & Components\nReact Native]
+        State[State Management\nContext API]
+        Services[API Service Layer\nSupabase Client]
+    end
 
-### ⏳ Garanti Hesaplama & Bildirim Motoru
+    subgraph Backend Infrastructure
+        Auth[Authentication\nSupabase Auth]
+        DB[(Database\nPostgreSQL + RLS)]
+        Storage[Cloud Storage\nSupabase Buckets]
+    end
 
-```
-[Satın Alma Tarihi] ──── (Garanti Süresi: 12/24/36/60 Ay) ────► [Garanti Bitiş Tarihi]
-                                                                        │
-        ┌───────────────────────┬───────────────────────────────┬───────┴───────────────────────┐
-        ▼                       ▼                               ▼                               ▼
-   [> 30 Gün]             [1 - 30 Gün]                      [0 Gün]                         [< 0 Gün]
-🟢 Garanti Devam Ediyor   🟡 Yakında Bitiyor           🔴 Bugün Sona Eriyor              ⚪ Garanti Bitti
-(60g / 30g Uyarısı)     (14g / 7g Uyarısı)             (Son Gün Kritik Bildirimi)      (Arşiv & Servis Modu)
+    UI -->|Custom Hooks| State
+    State -->|API Calls| Services
+    
+    Services <--> Auth
+    Services <--> DB
+    Services <--> Storage
 ```
 
 ---
 
-<a name="-english-documentation"></a>
-## 🇬🇧 English Documentation
+## Getting Started
 
-**envanterTakip** is an intelligent, full-featured Home Inventory and Warranty Tracking mobile application designed to digitize household electronics, appliances, and personal belongings while automating warranty tracking, receipt archival, and service schedules.
+Follow these steps to set up the project locally.
 
-Built on React Native (Expo SDK 57), TypeScript, and Supabase, it delivers a high-performance native experience on both iOS and Android platforms.
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v18 or newer recommended)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+- [Expo CLI](https://docs.expo.dev/get-started/installation/)
+- A [Supabase](https://supabase.com/) account and project.
 
----
+### Installation
 
-### 🌟 Key Highlights
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/omercnkc/envanterTakip.git
+   cd envanterTakip
+   ```
 
-- 🌐 **Dual Language Support (TR / EN)**: Full localization with seamless in-app Turkish & English switching and localized notification schedules.
-- 📊 **Interactive Category Analytics**: Donut and bar charts powered by `react-native-gifted-charts`. Tap any category slice to instantly drill down and filter matching products.
-- 📱 **Home Screen Widgets (Android & iOS)**: Stay updated without launching the app. Real-time glanceable widget displays nearest expiring items, urgency colors, and active counts.
-- 🛡️ **Warranty Health Score**: Dynamic algorithm evaluating total inventory coverage, protection ratios, and imminent warranty risks.
-- 📄 **One-Click Official A4 PDF Export**: Instant export of insurance-ready A4 documentation complete with brand, serial numbers, invoice status, and warranty validity.
-- 🔒 **In-App Permission Priming UI**: Eliminates abrupt English system dialogs with elegant, localized glassmorphic modals explaining permissions (Camera, Gallery, Notifications) before OS triggers.
-- 💾 **JSON Backup & Cloud-Free Restore**: Zero lock-in. One-tap full database JSON export and complete file-based restoration with instant notification re-scheduling.
-- ⚙️ **Comprehensive Settings & Preferences**:
-  - Multi-tier alert thresholds (`60d`, `30d`, `14d`, `7d`, `1d`)
-  - Periodic maintenance and cleaning reminders
-  - Currency selector (`₺ TRY`, `$ USD`, `€ EUR`, `£ GBP`)
-  - Default warranty duration presets (`12`, `24`, `36`, `60` months)
-  - Legal compliance modal (KVKK, Privacy Policy, Terms of Service)
-- 📷 **Barcode & QR Code Scanner**: Automatic serial number capture via device camera.
-- 🔐 **Biometric Security**: Biometric lock screen supporting FaceID, TouchID, and Android Fingerprint.
-- 🌓 **Adaptive Dark & Light Theme**: Polished dark mode palette adhering to WCAG contrast guidelines.
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
----
+3. **Environment Setup:**
+   Create a `.env` file in the root directory based on `.env.example`:
+   ```bash
+   cp .env.example .env
+   ```
+   Populate the variables with your Supabase project credentials:
+   ```env
+   EXPO_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+   EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+   EXPO_PUBLIC_DEMO_MODE=false
+   ```
 
-### 🗂️ Architecture & Folder Structure
+4. **Database Setup:**
+   Run the SQL scripts located in the `database/` directory (e.g., `schema.sql`) in your Supabase SQL Editor to set up the required tables, triggers, and Row Level Security (RLS) policies.
 
-```text
-envanterTakip/
-├── src/
-│   ├── api/             # Supabase client and backend endpoints
-│   ├── components/      # Reusable UI components & modals
-│   │   ├── EditProfileModal.tsx
-│   │   ├── ImportDataModal.tsx      # JSON backup restore workflow
-│   │   ├── LegalModal.tsx           # KVKK & Privacy policy reader
-│   │   ├── PermissionModal.tsx      # In-app localized permission priming
-│   │   ├── ProductCard.tsx
-│   │   └── ...
-│   ├── constants/       # Color palettes, theme tokens, typography
-│   ├── context/         # Auth, Theme, and App state contexts
-│   ├── hooks/           # Custom React hooks (useTheme, useProducts)
-│   ├── navigation/      # Stack & Tab Navigators
-│   ├── screens/         # Main & Auth views
-│   │   ├── auth/        # Login, Register, ForgotPassword
-│   │   └── main/        # Home, Products, Detail, Profile, Settings, Analytics
-│   ├── services/        # Product, Notification, PDF, and Storage services
-│   ├── types/           # TypeScript interfaces & database schemas
-│   ├── utils/           # Date helpers, permissionHelper, appPreferencesHelper
-│   └── widgets/         # Android & iOS Home Screen Widget providers
-├── database/            # Supabase SQL migration files & RLS policies
-├── assets/              # App icons, splash screens, sample invoices
-├── app.json             # Expo config & native permission descriptions
-└── package.json         # Dependencies and scripts
-```
+5. **Run the Application:**
+   ```bash
+   npx expo start
+   ```
+   Press `a` to run on an Android emulator, `i` for iOS simulator, or scan the QR code with the Expo Go app on your physical device.
 
 ---
 
-### ⚡ Kurulum ve Çalıştırma / Quick Start
+## License
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
 
-#### 1. Bağımlılıkları Yükleyin / Install Dependencies
-```bash
-npm install
-```
-
-#### 2. Çevresel Değişkenleri Ayarlayın / Configure Environment
-Kök dizinde `.env` dosyası oluşturup Supabase proje bilgilerinizi ekleyin:
-```env
-EXPO_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
-EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
-```
-
-#### 3. Supabase Veritabanını Başlatın / Database Setup
-`database/schema.sql` dosyasındaki SQL sorgularını Supabase Dashboard > SQL Editor alanında çalıştırarak tabloları, RLS kurallarını ve Storage bucket'larını etkinleştirin.
-
-#### 4. Uygulamayı Başlatın / Run the App
-```bash
-# Metro geliştirici sunucusunu başlat
-npx expo start
-
-# Android simülatör / cihaz
-npx expo run:android
-
-# iOS simülatör / cihaz
-npx expo run:ios
-```
-
----
-
-### 📅 Yol Haritası & Sürüm Durumu / Feature Roadmap
-
-- [x] 🌐 Çoklu Dil Desteği (TR / EN Language Support)
-- [x] 📊 İnteraktif Kategori Grafikleri (Interactive Donut & Bar Charts)
-- [x] 📱 Ana Ekran Widget Desteği (Home Screen Widgets)
-- [x] 📄 Tek Tıkla A4 PDF Envanter & Sigorta Raporu (PDF Generation & Share)
-- [x] 💾 JSON Veri Yedekleme & Geri Yükleme (Backup & Restore Manager)
-- [x] 🛡️ Garanti Sağlık Skoru Panosu (Warranty Health Gauge)
-- [x] 🔒 Uygulama İçi Şık İzin Yönetimi (Contextual In-App Permission Priming)
-- [x] 📷 Barkod & QR Kod ile Seri No Okuma (Barcode & QR Scanner)
-- [x] 🔐 Biyometrik Güvenlik (FaceID / TouchID / Fingerprint)
-- [x] 🌓 Dinamik Koyu / Açık Tema (Dark & Light Mode)
-- [x] ⏳ Akıllı Bildirim Zamanlaması (60, 30, 14, 7, 1 gün eşikleri)
-- [x] 📜 KVKK, Gizlilik Politikası & Yasal Bilgilendirme Modali
-
----
-
-### 📄 Lisans / License
-
-Bu proje **MIT Lisansı** altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına göz atabilirsiniz.
-
----
-
-<p align="center">
-  Geliştirici: <b>Ömer Çanakçı</b> • <a href="https://github.com/omercnkc">GitHub Profile</a>
-</p>
+## Contact
+For any questions or feedback, please reach out via GitHub Issues or contact the repository owner.
