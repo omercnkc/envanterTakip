@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlexWidget, TextWidget, ImageWidget } from 'react-native-android-widget';
+import { FlexWidget, TextWidget } from 'react-native-android-widget';
 
 export interface WarrantyWidgetData {
   language?: 'tr' | 'en';
@@ -99,8 +99,10 @@ export const WarrantyWidget: React.FC<WarrantyWidgetData> = ({
           style={{
             backgroundColor: badgeBg,
             borderRadius: 12,
-            paddingHorizontal: 8,
-            paddingVertical: 3,
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 3,
+            paddingBottom: 3,
           }}
         >
           <TextWidget
@@ -125,7 +127,8 @@ export const WarrantyWidget: React.FC<WarrantyWidgetData> = ({
         <FlexWidget
           style={{
             flexDirection: 'column',
-            marginVertical: 4,
+            marginTop: 4,
+            marginBottom: 4,
           }}
         >
           <TextWidget
@@ -146,23 +149,13 @@ export const WarrantyWidget: React.FC<WarrantyWidgetData> = ({
               }}
             />
           ) : null}
-          {nearestProduct.imageUrl ? (
-            <ImageWidget
-              image={nearestProduct.imageUrl}
-              style={{
-                width: 50,
-                height: 50,
-                marginTop: 8,
-                borderRadius: 8,
-              }}
-            />
-          ) : null}
         </FlexWidget>
       ) : (
         <FlexWidget
           style={{
             flexDirection: 'column',
-            marginVertical: 4,
+            marginTop: 4,
+            marginBottom: 4,
           }}
         >
           <TextWidget
@@ -192,8 +185,10 @@ export const WarrantyWidget: React.FC<WarrantyWidgetData> = ({
           alignItems: 'center',
           backgroundColor: '#f8fafc',
           borderRadius: 10,
-          paddingHorizontal: 8,
-          paddingVertical: 6,
+          paddingLeft: 8,
+          paddingRight: 8,
+          paddingTop: 6,
+          paddingBottom: 6,
         }}
       >
         <TextWidget
