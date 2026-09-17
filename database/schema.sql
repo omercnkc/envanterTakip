@@ -68,12 +68,24 @@ CREATE INDEX IF NOT EXISTS idx_products_search ON public.products USING gin(to_t
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, full_name, email)
+  INSERT INTO public.profiles (id, full_name, email, avatar_url)
   VALUES (
     new.id,
-    COALESCE(new.raw_user_meta_data->>'full_name', ''),
-    new.email
-  );
+    COALESCE(
+      new.raw_user_meta_data->>'full_name',
+      new.raw_user_meta_data->>'name',
+      split_part(new.email, '@', 1)
+    ),
+    new.email,
+    COALESCE(
+      new.raw_user_meta_data->>'avatar_url',
+      new.raw_user_meta_data->>'picture',
+      NULL
+    )
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    full_name = EXCLUDED.full_name,
+    avatar_url = COALESCE(EXCLUDED.avatar_url, profiles.avatar_url);
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

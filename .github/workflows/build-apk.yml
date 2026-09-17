@@ -1,0 +1,93 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    name: Build Android Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Proje Kodlarını Çek
+        uses: actions/checkout@v4
+
+      - name: 🟢 Node.js Ortamını Kur (v20)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: ☕ Java JDK Kur (Java 21)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: 🤖 Android SDK Kur
+        uses: android-actions/setup-android@v3
+
+      - name: 📦 Node Bağımlılıklarını Yükle
+        run: npm ci
+
+      - name: 🔐 Çevre Değişkenlerini (.env) Hazırla
+        run: |
+          echo "EXPO_PUBLIC_SUPABASE_URL=${{ secrets.EXPO_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}" >> .env
+          echo "EXPO_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key' }}" >> .env
+
+      - name: 🛠️ Android Projesini Hazırla
+        run: |
+          if [ ! -d "android" ]; then
+            echo "Android klasörü oluşturuluyor (Expo Prebuild)..."
+            npx expo prebuild --platform android --no-install
+          else
+            echo "Mevcut Android klasörü optimize ediliyor..."
+            sed -i '/org.gradle.java.home/d' android/gradle.properties
+          fi
+
+      - name: 🔑 Gradle İzinlerini Ayarla
+        run: chmod +x android/gradlew
+
+      - name: 🚀 Release APK Derle
+        run: |
+          cd android
+          ./gradlew assembleRelease --no-daemon
+
+      - name: 🏷️ APK Dosyasını İsimlendir
+        run: |
+          mkdir -p build-output
+          cp android/app/build/outputs/apk/release/*.apk build-output/EvEnvanterTakip-v1.0.0.apk
+
+      - name: 📤 APK'yı Artifact Olarak Yükle (Doğrudan İndirme)
+        uses: actions/upload-artifact@v4
+        with:
+          name: EvEnvanterTakip-APK
+          path: build-output/EvEnvanterTakip-v1.0.0.apk
+          retention-days: 30
+
+      - name: 🎉 GitHub Release Oluştur ve APK Ekle
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Ev Envanter & Garanti Takip v1.0.${{ github.run_number }}
+          body: |
+            ## 📱 Ev Envanter & Garanti Takip - Android Yayın Sürümü
+            
+            Bu sürüm GitHub Actions tarafından otomatik olarak derlenmiştir.
+            
+            ### ⬇️ İndirme Bağlantısı:
+            Aşağıdaki `Assets` bölümünden **`EvEnvanterTakip-v1.0.0.apk`** dosyasını telefonunuza indirip doğrudan kurabilirsiniz.
+          files: build-output/EvEnvanterTakip-v1.0.0.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

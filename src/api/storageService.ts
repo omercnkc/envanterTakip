@@ -92,13 +92,12 @@ export const storageService = {
         });
 
       if (error) {
-        console.warn(`[Supabase Storage ${bucket}] Yükleme uyarısı:`, error.message);
-        // Supabase tarafında bucket henüz açılmamışsa veya yetki yoksa kullanıcıyı engelleme, yerel URI ile devam et
+        console.error(`[Supabase Storage ${bucket}] Yükleme hatası:`, error.message);
         return {
-          publicUrl: localUri,
-          path: filePath,
-          error: null,
-          isLocalFallback: true,
+          publicUrl: null,
+          path: null,
+          error: formatAppError(error).fullMessage,
+          isLocalFallback: false,
         };
       }
 
@@ -113,13 +112,12 @@ export const storageService = {
         error: null,
       };
     } catch (err) {
-      console.warn(`[Storage Service] Dosya işleme uyarısı (yerel URI fallback):`, err);
-      // Cihaz içi okuma veya beklenmedik durumda yerel dosya yoluyla kullanıcıyı engellemeden devam ettir
+      console.error(`[Storage Service] Dosya işleme hatası:`, err);
       return {
-        publicUrl: localUri,
+        publicUrl: null,
         path: null,
-        error: null,
-        isLocalFallback: true,
+        error: formatAppError(err).fullMessage,
+        isLocalFallback: false,
       };
     }
   },

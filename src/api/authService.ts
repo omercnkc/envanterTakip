@@ -8,6 +8,7 @@ import * as Linking from 'expo-linking';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase, isSupabaseConfigured } from './supabase';
+import { storageService } from './storageService';
 import { LoginFormData, RegisterFormData, ForgotPasswordFormData, Profile } from '../types';
 import { formatAppError } from '../utils/errorHandler';
 
@@ -296,13 +297,72 @@ export const authService = {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
+
+      let profileData = data as Profile | null;
+
+      // Profil tablosunda kayıt yoksa veya avatar/isim eksikse auth user_metadata ve identities'den tamamla (Google OAuth senkronizasyonu)
+      if (!profileData || !profileData.avatar_url || !profileData.full_name) {
+        try {
+          const { data: userData } = await supabase.auth.getUser();
+          const meta = userData?.user?.user_metadata;
+          const userEmail = userData?.user?.email || '';
+
+          // Google kimlik verilerinden avatar ve isim çıkarma desteği
+          const identities = userData?.user?.identities || [];
+          const googleIdentity = identities.find((item: any) => item.provider === 'google');
+          const googleMeta = (googleIdentity as any)?.identity_data;
+
+          const fallbackName =
+            meta?.full_name ||
+            meta?.name ||
+            googleMeta?.full_name ||
+            googleMeta?.name ||
+            profileData?.full_name ||
+            (userEmail ? userEmail.split('@')[0] : '');
+
+          const fallbackAvatar =
+            meta?.avatar_url ||
+            meta?.picture ||
+            googleMeta?.avatar_url ||
+            googleMeta?.picture ||
+            profileData?.avatar_url ||
+            null;
+
+          if (meta || googleMeta) {
+            if (!profileData) {
+              profileData = {
+                id: userId,
+                full_name: fallbackName,
+                email: userEmail,
+                avatar_url: fallbackAvatar,
+                created_at: new Date().toISOString(),
+              };
+              await supabase.from('profiles').upsert(profileData);
+            } else {
+              const updates: any = {};
+              if (!profileData.full_name && fallbackName) updates.full_name = fallbackName;
+              if (!profileData.avatar_url && fallbackAvatar) updates.avatar_url = fallbackAvatar;
+              if (Object.keys(updates).length > 0) {
+                profileData = { ...profileData, ...updates };
+                await supabase.from('profiles').update(updates).eq('id', userId);
+              }
+            }
+          }
+        } catch {
+          // Metadata senkronizasyon hatası yutulur
+        }
+      }
+
+      if (profileData) {
+        return { data: profileData, error: null };
+      }
 
       if (error) {
         return { data: null, error: formatAuthError(error) };
       }
 
-      return { data: data as Profile, error: null };
+      return { data: null, error: null };
     } catch (err) {
       return { data: null, error: formatAuthError(err) };
     }
@@ -335,13 +395,36 @@ export const authService = {
     }
 
     try {
+      let resolvedAvatarUrl = avatarUrl;
+
+      // Yerel cihaz dosyası seçildiyse (file:/// veya content://) önce kalıcı olarak Supabase Storage'a yükle
+      if (
+        avatarUrl &&
+        (avatarUrl.startsWith('file://') || avatarUrl.startsWith('content://'))
+      ) {
+        const uploadRes = await storageService.uploadFile(
+          avatarUrl,
+          'product-images',
+          userId,
+          {
+            fileName: `avatar_${Date.now()}.jpg`,
+            mimeType: 'image/jpeg',
+          }
+        );
+        if (uploadRes.publicUrl) {
+          resolvedAvatarUrl = uploadRes.publicUrl;
+        } else if (uploadRes.error) {
+          return { error: uploadRes.error };
+        }
+      }
+
       // 1. profiles tablosunu güncelle
       const updatePayload: any = {
         full_name: cleanFullName,
         updated_at: new Date().toISOString(),
       };
-      if (avatarUrl !== undefined) {
-        updatePayload.avatar_url = avatarUrl;
+      if (resolvedAvatarUrl !== undefined) {
+        updatePayload.avatar_url = resolvedAvatarUrl;
       }
 
       const { error: profileError } = await supabase
@@ -358,7 +441,7 @@ export const authService = {
         await supabase.auth.updateUser({
           data: {
             full_name: cleanFullName,
-            ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
+            ...(resolvedAvatarUrl ? { avatar_url: resolvedAvatarUrl } : {}),
           },
         });
       } catch {
